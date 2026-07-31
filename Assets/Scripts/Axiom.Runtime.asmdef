@@ -1,0 +1,9 @@
+{
+  "name": "Axiom.Runtime",
+  "rootNamespace": "Axiom",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "autoReferenced": true
+}
+

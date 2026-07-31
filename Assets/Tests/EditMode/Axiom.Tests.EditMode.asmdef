@@ -1,0 +1,15 @@
+{
+  "name": "Axiom.Tests.EditMode",
+  "rootNamespace": "Axiom.Tests.EditMode",
+  "references": [
+    "Axiom.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": false
+}
+

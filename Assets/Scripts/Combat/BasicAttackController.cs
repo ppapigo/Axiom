@@ -19,6 +19,10 @@ namespace Axiom.Combat
         private CharacterStats _characterStats;
         private CharacterRole _characterRole;
 
+        public float AttackRange => attackProfile == null
+            ? 0f
+            : attackProfile.Parameters.Range;
+
         private void Awake()
         {
             _characterStats = GetComponent<CharacterStats>();
@@ -32,7 +36,7 @@ namespace Axiom.Combat
 
         private void Update()
         {
-            if (attackProfile == null || inputSource == null || !_characterStats.IsConfigured)
+            if (inputSource == null)
             {
                 return;
             }
@@ -49,17 +53,42 @@ namespace Axiom.Combat
 
             transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
 
-            BasicAttackParameters parameters = attackProfile.Parameters;
-            if (!inputSource.WasBasicAttackPressedThisFrame() ||
-                !RoleAttackRules.CanUseBasicAttack(
-                    _characterRole == null ? null : _characterRole.Definition,
-                    attackProfile.DeliveryType) ||
-                !_cooldown.TryStart(Time.time, parameters.Cooldown))
+            if (!inputSource.WasBasicAttackPressedThisFrame())
             {
                 return;
             }
 
+            TryAttack(direction, Time.time);
+        }
+
+        public bool TryAttack(Vector3 direction, float currentTime)
+        {
+            if (attackProfile == null || _characterStats == null ||
+                !_characterStats.IsConfigured)
+            {
+                return false;
+            }
+
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return false;
+            }
+
+            direction.Normalize();
+            BasicAttackParameters parameters = attackProfile.Parameters;
+            if (!RoleAttackRules.CanUseBasicAttack(
+                    _characterRole == null ? null : _characterRole.Definition,
+                    attackProfile.DeliveryType) ||
+                !_cooldown.TryStart(currentTime, parameters.Cooldown))
+            {
+                return false;
+            }
+
+            transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+            Transform originTransform = attackOrigin == null ? transform : attackOrigin;
             ExecuteAttack(originTransform.position, direction, parameters);
+            return true;
         }
 
         private void ExecuteAttack(

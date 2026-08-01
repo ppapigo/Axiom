@@ -14,9 +14,19 @@ namespace Axiom.Combat
         private CharacterHealth _health;
         private CharacterStatusController _crowdControl;
         private GameObject _lastSource;
+        private SkillElement? _markedElement;
+        private float _markExpiresAt;
+        private ElementReactionType _lastReaction;
+        private float _reactionDisplayUntil;
 
         public SkillElement? ActiveDamageOverTime =>
             _damageOverTime.GetActiveElement(Time.time);
+        public SkillElement? ActiveElementMark => Time.time < _markExpiresAt
+            ? _markedElement
+            : null;
+        public ElementReactionType LastReaction => Time.time < _reactionDisplayUntil
+            ? _lastReaction
+            : ElementReactionType.None;
 
         public void Configure(SkillBalanceProfile skillBalance)
         {
@@ -29,7 +39,7 @@ namespace Axiom.Combat
             _crowdControl = GetComponent<CharacterStatusController>();
         }
 
-        public bool ApplyOnHit(
+        public ElementReactionResult ApplyOnHit(
             SkillElement element,
             GameObject source,
             float attackerAttackPower,
@@ -37,10 +47,29 @@ namespace Axiom.Combat
         {
             if (!enabled || balance == null || _health == null || _health.IsDead)
             {
-                return false;
+                return ElementReactionResult.None;
             }
 
             _lastSource = source;
+            ElementReactionResult reaction = ResolveReaction(element, currentTime);
+            if (reaction.Triggered)
+            {
+                _markedElement = null;
+                _markExpiresAt = 0f;
+                _lastReaction = reaction.Type;
+                _reactionDisplayUntil = currentTime + 1f;
+                if (_crowdControl != null &&
+                    reaction.CrowdControl != CrowdControlType.None)
+                {
+                    _crowdControl.Apply(reaction.CrowdControl, currentTime);
+                }
+            }
+            else
+            {
+                _markedElement = element;
+                _markExpiresAt = currentTime + balance.ElementMarkDuration;
+            }
+
             switch (element)
             {
                 case SkillElement.Fire:
@@ -49,26 +78,47 @@ namespace Axiom.Combat
                         balance.BurnDuration,
                         balance.ElementTickInterval,
                         attackerAttackPower * balance.BurnAttackCoefficient);
-                    return true;
+                    break;
                 case SkillElement.Poison:
                     _damageOverTime.ApplyPoison(
                         currentTime,
                         balance.PoisonDuration,
                         balance.ElementTickInterval,
                         _health.MaximumHealth * balance.PoisonMaximumHealthCoefficient);
-                    return true;
+                    break;
                 case SkillElement.Ice:
-                    return _crowdControl != null &&
-                           _crowdControl.Apply(CrowdControlType.Slow, currentTime);
-                default:
-                    return false;
+                    _crowdControl?.Apply(CrowdControlType.Slow, currentTime);
+                    break;
             }
+
+            return reaction;
+        }
+
+        private ElementReactionResult ResolveReaction(
+            SkillElement incoming,
+            float currentTime)
+        {
+            if (!_markedElement.HasValue || currentTime >= _markExpiresAt)
+            {
+                return ElementReactionResult.None;
+            }
+
+            return ElementReactionResolver.Resolve(
+                _markedElement.Value,
+                incoming,
+                balance.FireWaterDamageMultiplier,
+                balance.WaterIceDamageMultiplier,
+                balance.FireIceDamageMultiplier);
         }
 
         public void Clear()
         {
             _damageOverTime.Clear();
             _lastSource = null;
+            _markedElement = null;
+            _markExpiresAt = 0f;
+            _lastReaction = ElementReactionType.None;
+            _reactionDisplayUntil = 0f;
         }
 
         private void Update()

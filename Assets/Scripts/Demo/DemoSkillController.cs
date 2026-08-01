@@ -213,6 +213,15 @@ namespace Axiom.Demo
                     }
                 }
 
+                ElementStatusController elementStatus =
+                    health.GetComponent<ElementStatusController>();
+                ElementReactionResult reaction = elementStatus == null
+                    ? ElementReactionResult.None
+                    : elementStatus.ApplyOnHit(
+                        definition.Element,
+                        gameObject,
+                        _stats.AttackPower,
+                        Time.time);
                 float distance = Vector3.Distance(health.transform.position, plan.Center);
                 DamageRequest request = SkillRuntimeRules.CreateDamageRequest(
                     gameObject,
@@ -221,6 +230,10 @@ namespace Axiom.Demo
                     _role.Definition,
                     _balance,
                     distance);
+                if (reaction.Triggered)
+                {
+                    request = MultiplyDamage(request, reaction.DamageMultiplier);
+                }
                 health.ApplyDamage(request);
                 CharacterStatusController targetStatus =
                     health.GetComponent<CharacterStatusController>();
@@ -229,22 +242,24 @@ namespace Axiom.Demo
                     targetStatus.Apply(definition.CrowdControl, Time.time);
                 }
 
-                ElementStatusController elementStatus =
-                    health.GetComponent<ElementStatusController>();
-                if (elementStatus != null)
-                {
-                    elementStatus.ApplyOnHit(
-                        definition.Element,
-                        gameObject,
-                        _stats.AttackPower,
-                        Time.time);
-                }
-
                 if (definition.Type == SkillType.Target)
                 {
                     break;
                 }
             }
+        }
+
+        private static DamageRequest MultiplyDamage(
+            in DamageRequest request,
+            float multiplier)
+        {
+            return new DamageRequest(
+                request.Attacker,
+                request.AttackPower,
+                request.DamageCoefficient * Mathf.Max(0f, multiplier),
+                request.CastDelayBonus,
+                request.DistanceMultiplier,
+                request.DamageLimit);
         }
 
         private static Collider[] GetColliders(

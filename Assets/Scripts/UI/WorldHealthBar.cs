@@ -84,6 +84,15 @@ namespace Axiom.UI
             {
                 statusText += $" [{elementStatus.ActiveDamageOverTime.Value.ToString().ToUpperInvariant()}]";
             }
+            if (elementStatus != null && elementStatus.ActiveElementMark.HasValue)
+            {
+                statusText += $" [{elementStatus.ActiveElementMark.Value.ToString().ToUpperInvariant()} MARK]";
+            }
+            if (elementStatus != null &&
+                elementStatus.LastReaction != Skill.ElementReactionType.None)
+            {
+                statusText += $" [{elementStatus.LastReaction.ToString().ToUpperInvariant()}!]";
+            }
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),
                 $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}" +

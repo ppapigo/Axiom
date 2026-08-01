@@ -43,6 +43,10 @@ namespace Axiom.Data
         [SerializeField, Min(0f)] private float stunDuration = 1f;
         [SerializeField, Min(0f)] private float knockUpDuration = 0.7f;
         [Header("Elements")]
+        [SerializeField, Min(0f)] private float elementMarkDuration = 5f;
+        [SerializeField, Min(0f)] private float fireWaterDamageMultiplier = 1.25f;
+        [SerializeField, Min(0f)] private float waterIceDamageMultiplier = 1.15f;
+        [SerializeField, Min(0f)] private float fireIceDamageMultiplier = 1.35f;
         [SerializeField, Min(0f)] private float elementTickInterval = 1f;
         [SerializeField, Min(0f)] private float burnDuration = 4f;
         [SerializeField, Min(0f)] private float burnAttackCoefficient = 0.08f;
@@ -62,6 +66,10 @@ namespace Axiom.Data
         public float TankMaximumNonUltimateRange => tankMaximumNonUltimateRange;
         public float SlowMovementMultiplier => 1f - slowMovementReduction;
         public float ElementTickInterval => elementTickInterval;
+        public float ElementMarkDuration => elementMarkDuration;
+        public float FireWaterDamageMultiplier => fireWaterDamageMultiplier;
+        public float WaterIceDamageMultiplier => waterIceDamageMultiplier;
+        public float FireIceDamageMultiplier => fireIceDamageMultiplier;
         public float BurnDuration => burnDuration;
         public float BurnAttackCoefficient => burnAttackCoefficient;
         public float PoisonDuration => poisonDuration;
@@ -177,6 +185,10 @@ namespace Axiom.Data
             stunDuration = Mathf.Max(0f, stunDuration);
             knockUpDuration = Mathf.Max(0f, knockUpDuration);
             elementTickInterval = Mathf.Max(0.01f, elementTickInterval);
+            elementMarkDuration = Mathf.Max(0f, elementMarkDuration);
+            fireWaterDamageMultiplier = Mathf.Max(0f, fireWaterDamageMultiplier);
+            waterIceDamageMultiplier = Mathf.Max(0f, waterIceDamageMultiplier);
+            fireIceDamageMultiplier = Mathf.Max(0f, fireIceDamageMultiplier);
             burnDuration = Mathf.Max(0f, burnDuration);
             burnAttackCoefficient = Mathf.Max(0f, burnAttackCoefficient);
             poisonDuration = Mathf.Max(0f, poisonDuration);

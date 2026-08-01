@@ -388,7 +388,48 @@ namespace Axiom.Tests.EditMode
             Assert.That(balance.PoisonMaximumHealthCoefficient, Is.EqualTo(0.01f));
             Assert.That(balance.GetElementDamageMultiplier(SkillElement.Lightning), Is.EqualTo(1.2f));
             Assert.That(balance.WaterHealingRatio, Is.EqualTo(0.1f));
+            Assert.That(balance.ElementMarkDuration, Is.EqualTo(5f));
+            Assert.That(balance.FireWaterDamageMultiplier, Is.EqualTo(1.25f));
+            Assert.That(balance.WaterIceDamageMultiplier, Is.EqualTo(1.15f));
+            Assert.That(balance.FireIceDamageMultiplier, Is.EqualTo(1.35f));
             Object.DestroyImmediate(balance);
+        }
+
+        [TestCase(
+            SkillElement.Fire,
+            SkillElement.Water,
+            ElementReactionType.FireWater,
+            1.25f,
+            CrowdControlType.None)]
+        [TestCase(
+            SkillElement.Water,
+            SkillElement.Ice,
+            ElementReactionType.WaterIce,
+            1.15f,
+            CrowdControlType.Root)]
+        [TestCase(
+            SkillElement.Fire,
+            SkillElement.Ice,
+            ElementReactionType.FireIce,
+            1.35f,
+            CrowdControlType.None)]
+        public void ElementReactionResolver_UsesRequestedDamageReactions(
+            SkillElement first,
+            SkillElement second,
+            ElementReactionType expectedType,
+            float expectedMultiplier,
+            CrowdControlType expectedCrowdControl)
+        {
+            ElementReactionResult result = ElementReactionResolver.Resolve(
+                first,
+                second,
+                1.25f,
+                1.15f,
+                1.35f);
+
+            Assert.That(result.Type, Is.EqualTo(expectedType));
+            Assert.That(result.DamageMultiplier, Is.EqualTo(expectedMultiplier));
+            Assert.That(result.CrowdControl, Is.EqualTo(expectedCrowdControl));
         }
 
         [Test]

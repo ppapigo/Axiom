@@ -135,6 +135,9 @@ Packages/packages-lock.json linguist-generated
 *.tiff                  lfs
 *.webp                  lfs
 
+# GitHub Pages must receive WebGL template images as regular files.
+docs/TemplateData/*.png -filter -diff -merge
+
 # Compressed Archive
 *.7z                    lfs
 *.bz2                   lfs

@@ -13,6 +13,33 @@
           "processors": "",
           "interactions": "",
           "initialStateCheck": true
+        },
+        {
+          "name": "Aim",
+          "type": "Value",
+          "id": "8cb70a92-b5eb-46fb-ad54-60c0b0d52ea2",
+          "expectedControlType": "Vector2",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": true
+        },
+        {
+          "name": "BasicAttack",
+          "type": "Button",
+          "id": "ff0897cb-4666-43a5-9072-a718a3bb7b2c",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
+        },
+        {
+          "name": "Dash",
+          "type": "Button",
+          "id": "14c923df-5424-48b9-8345-65c39dd5d8da",
+          "expectedControlType": "Button",
+          "processors": "",
+          "interactions": "",
+          "initialStateCheck": false
         }
       ],
       "bindings": [
@@ -70,6 +97,39 @@
           "action": "Move",
           "isComposite": false,
           "isPartOfComposite": true
+        },
+        {
+          "name": "",
+          "id": "e62d7f45-baad-4769-88ae-ed288c84c467",
+          "path": "<Pointer>/position",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard&Mouse",
+          "action": "Aim",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "9a393cd8-3117-44d2-af4a-84261e0968b6",
+          "path": "<Mouse>/leftButton",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard&Mouse",
+          "action": "BasicAttack",
+          "isComposite": false,
+          "isPartOfComposite": false
+        },
+        {
+          "name": "",
+          "id": "a820b96a-a752-4c8c-8229-21e69f083242",
+          "path": "<Keyboard>/space",
+          "interactions": "",
+          "processors": "",
+          "groups": "Keyboard&Mouse",
+          "action": "Dash",
+          "isComposite": false,
+          "isPartOfComposite": false
         }
       ]
     }
@@ -93,4 +153,3 @@
     }
   ]
 }
-

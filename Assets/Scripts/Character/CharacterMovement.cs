@@ -1,5 +1,6 @@
 using Axiom.Data;
 using Axiom.Input;
+using Axiom.Role;
 using UnityEngine;
 
 namespace Axiom.Character
@@ -9,16 +10,18 @@ namespace Axiom.Character
     public sealed class CharacterMovement : MonoBehaviour
     {
         [SerializeField] private CharacterMovementProfile movementProfile;
-        [SerializeField] private MonoBehaviour inputSourceBehaviour;
+        [SerializeField] private InputActionMovementSource inputSourceBehaviour;
 
         private readonly CharacterMovementMotor _motor = new CharacterMovementMotor();
         private CharacterController _characterController;
         private IMovementInputSource _inputSource;
+        private CharacterRole _characterRole;
 
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
-            _inputSource = inputSourceBehaviour as IMovementInputSource;
+            _inputSource = inputSourceBehaviour;
+            _characterRole = GetComponent<CharacterRole>();
         }
 
         private void OnDisable()
@@ -33,24 +36,21 @@ namespace Axiom.Character
                 return;
             }
 
+            MovementParameters parameters = movementProfile.Parameters;
+            if (_characterRole != null && _characterRole.IsConfigured)
+            {
+                parameters = parameters.WithSpeedMultiplier(
+                    _characterRole.Definition.MovementSpeedMultiplier);
+            }
+
             Vector3 velocity = _motor.Tick(
                 _inputSource.ReadMovement(),
                 _characterController.isGrounded,
-                movementProfile.Parameters,
+                parameters,
                 Time.deltaTime);
 
             _characterController.Move(velocity * Time.deltaTime);
         }
 
-        private void OnValidate()
-        {
-            if (inputSourceBehaviour != null && inputSourceBehaviour is not IMovementInputSource)
-            {
-                Debug.LogWarning(
-                    $"{nameof(inputSourceBehaviour)}는 {nameof(IMovementInputSource)}를 구현해야 합니다.",
-                    this);
-            }
-        }
     }
 }
-

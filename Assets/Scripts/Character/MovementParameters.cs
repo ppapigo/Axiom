@@ -38,6 +38,20 @@ namespace Axiom.Character
         public float Deceleration { get; }
         public float Gravity { get; }
         public float GroundedVerticalSpeed { get; }
+
+        public MovementParameters WithSpeedMultiplier(float multiplier)
+        {
+            if (multiplier < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(multiplier));
+            }
+
+            return new MovementParameters(
+                MaximumSpeed * multiplier,
+                Acceleration,
+                Deceleration,
+                Gravity,
+                GroundedVerticalSpeed);
+        }
     }
 }
-

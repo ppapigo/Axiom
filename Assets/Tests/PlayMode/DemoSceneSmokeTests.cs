@@ -3,6 +3,7 @@ using Axiom.Combat;
 using Axiom.Demo;
 using Axiom.Manager;
 using Axiom.Role;
+using Axiom.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -28,11 +29,18 @@ namespace Axiom.Tests.PlayMode
                 FindObjectsSortMode.None);
             ThreeVsThreeMatchManager match =
                 Object.FindFirstObjectByType<ThreeVsThreeMatchManager>();
+            WorldHealthBar[] healthBars = Object.FindObjectsByType<WorldHealthBar>(
+                FindObjectsSortMode.None);
 
             Assert.That(combatants, Has.Length.EqualTo(6));
+            Assert.That(healthBars, Has.Length.EqualTo(6));
+            Assert.That(healthBars, Has.All.Matches<WorldHealthBar>(bar => bar.Health != null));
             Assert.That(match, Is.Not.Null);
             Assert.That(match.Phase, Is.EqualTo(MatchPhase.RoundActive));
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);
+            Assert.That(GameObject.Find("Tank Visual"), Is.Not.Null);
+            Assert.That(GameObject.Find("Mage Visual"), Is.Not.Null);
+            Assert.That(GameObject.Find("Assassin Visual"), Is.Not.Null);
         }
     }
 }

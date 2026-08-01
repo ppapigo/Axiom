@@ -2,6 +2,8 @@
 
 Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스타일의 논타겟 전투와 ScriptableObject 기반 사용자 스킬 제작 시스템을 목표로 합니다.
 
+스킬 및 역할 수치의 초기 기준은 [스킬 밸런스 기준안](Documentation/SkillBalanceBaseline.md)에 정리되어 있습니다.
+
 ## 바로 플레이
 
 **[GitHub Pages에서 Axiom 실행](https://ppapigo.github.io/Axiom/)**
@@ -66,6 +68,9 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - 역할 선택부터 AI 5명과의 3vs3 전투, 라운드 HUD, 재경기까지 이어지는 데모 씬
 - GitHub Pages에서 직접 실행할 수 있는 Unity WebGL 빌드
 - Brotli 압축과 브라우저 압축 해제 fallback을 적용한 약 10MB 배포 패키지
+- 캐릭터 머리 위에 표시되는 팀 색상 체력바와 100 HP 단위 구간 눈금
+- Tank 방패·중갑, Mage 지팡이·오브·로브, Assassin 후드·쌍단검 경량 외형
+- 프리팹 또는 기본 도형 파츠를 조합하는 ScriptableObject 장비 외형 커스터마이징
 
 ## Unity 구성
 
@@ -100,6 +105,15 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 2. `Create > Axiom > Skill > Skill Data`로 각 스킬의 타입, 피해 계수, 쿨다운, 사거리, 반경, 투사체 속도, CC, 속성과 비용을 설정합니다.
 3. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
 4. `ValidateLoadout` 결과가 유효한 데이터만 전투 실행 계층에 전달합니다.
+
+### 장비 외형
+
+1. `Create > Axiom > Appearance > Equipment Appearance`로 외형 데이터를 생성합니다.
+2. 적용할 역할과 장비 파츠 배열을 설정합니다.
+3. 각 파츠는 실제 저폴리 Prefab 또는 Unity 기본 Primitive를 사용할 수 있습니다.
+4. 위치, 회전, 크기, 고유 색상 또는 팀 강조색 사용 여부를 Inspector에서 조정합니다.
+5. `Axiom Demo Bootstrap`의 Equipment Appearances 배열에 역할별 데이터를 연결합니다.
+6. 장비 파츠의 Collider는 전투 판정에 영향을 주지 않도록 런타임에서 제거됩니다.
 
 ## GitHub 브라우저 실행
 

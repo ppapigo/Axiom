@@ -7,6 +7,7 @@ using Axiom.Data;
 using Axiom.Input;
 using Axiom.Manager;
 using Axiom.Role;
+using Axiom.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,6 +21,8 @@ namespace Axiom.Demo
         private readonly List<CharacterHealth> _teamBHealth = new List<CharacterHealth>();
         private readonly Dictionary<CharacterRoleId, CharacterRoleDefinition> _roles =
             new Dictionary<CharacterRoleId, CharacterRoleDefinition>();
+
+        [SerializeField] private EquipmentAppearanceDefinition[] equipmentAppearances;
 
         private UnityEngine.Camera _mainCamera;
         private CharacterMovementProfile _movementProfile;
@@ -198,6 +201,11 @@ namespace Axiom.Demo
             SetColor(renderer, team == TeamId.TeamA
                 ? RoleColor(roleId, true)
                 : RoleColor(roleId, false));
+            DemoRoleVisualBuilder.Build(
+                character.transform,
+                roleId,
+                team == TeamId.TeamA,
+                FindEquipmentAppearance(roleId));
 
             CharacterController controller = character.AddComponent<CharacterController>();
             controller.height = 2f;
@@ -208,6 +216,8 @@ namespace Axiom.Demo
             role.SetDefinition(_roles[roleId]);
             character.AddComponent<CharacterStats>();
             CharacterHealth health = character.AddComponent<CharacterHealth>();
+            WorldHealthBar healthBar = character.AddComponent<WorldHealthBar>();
+            healthBar.Configure(health, _mainCamera, team, characterName);
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
 
             var combatBehaviours = new List<Behaviour>();
@@ -243,6 +253,24 @@ namespace Axiom.Demo
             }
 
             return participant;
+        }
+
+        private EquipmentAppearanceDefinition FindEquipmentAppearance(CharacterRoleId roleId)
+        {
+            if (equipmentAppearances == null)
+            {
+                return null;
+            }
+
+            foreach (EquipmentAppearanceDefinition appearance in equipmentAppearances)
+            {
+                if (appearance != null && appearance.Role == roleId)
+                {
+                    return appearance;
+                }
+            }
+
+            return null;
         }
 
         private void ConfigurePlayer(

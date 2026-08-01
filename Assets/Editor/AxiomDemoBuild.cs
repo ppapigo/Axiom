@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Axiom.Demo;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
@@ -23,11 +24,24 @@ namespace Axiom.Editor
                 AssetDatabase.CreateFolder("Assets", "Scenes");
             }
 
-            Scene scene = EditorSceneManager.NewScene(
-                NewSceneSetup.EmptyScene,
-                NewSceneMode.Single);
-            var bootstrap = new GameObject("Axiom Demo Bootstrap");
-            bootstrap.AddComponent<DemoArenaBootstrap>();
+            Scene scene;
+            if (File.Exists(ScenePath))
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+                if (UnityEngine.Object.FindFirstObjectByType<DemoArenaBootstrap>() == null)
+                {
+                    var bootstrap = new GameObject("Axiom Demo Bootstrap");
+                    bootstrap.AddComponent<DemoArenaBootstrap>();
+                }
+            }
+            else
+            {
+                scene = EditorSceneManager.NewScene(
+                    NewSceneSetup.EmptyScene,
+                    NewSceneMode.Single);
+                var bootstrap = new GameObject("Axiom Demo Bootstrap");
+                bootstrap.AddComponent<DemoArenaBootstrap>();
+            }
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             EditorBuildSettings.scenes = new[]

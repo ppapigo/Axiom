@@ -1,4 +1,6 @@
+using System;
 using Axiom.Role;
+using UnityEngine;
 
 namespace Axiom.Combat
 {
@@ -25,6 +27,19 @@ namespace Axiom.Combat
 
             return float.PositiveInfinity;
         }
+
+        public static float ClampAreaRadius(
+            CharacterRoleDefinition role,
+            float requestedRadius)
+        {
+            if (requestedRadius < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(requestedRadius));
+            }
+
+            return role == null
+                ? requestedRadius
+                : Mathf.Min(requestedRadius, role.MaximumAreaRadius);
+        }
     }
 }
-

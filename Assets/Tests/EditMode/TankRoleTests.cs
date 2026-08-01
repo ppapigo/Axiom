@@ -21,6 +21,7 @@ namespace Axiom.Tests.EditMode
             Assert.That(definition.DashCooldown, Is.EqualTo(12f));
             Assert.That(definition.AllowsRangedAttacks, Is.False);
             Assert.That(definition.AllowsAreaDamage, Is.False);
+            Assert.That(definition.MaximumAreaRadius, Is.EqualTo(0f));
 
             Object.DestroyImmediate(definition);
         }

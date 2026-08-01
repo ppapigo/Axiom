@@ -24,6 +24,7 @@ namespace Axiom.Role
         public override float DashCooldown => dashCooldown;
         public override bool AllowsRangedAttacks => false;
         public override bool AllowsAreaDamage => false;
+        public override float MaximumAreaRadius => 0f;
 
         private void OnValidate()
         {
@@ -35,4 +36,3 @@ namespace Axiom.Role
         }
     }
 }
-

@@ -39,6 +39,18 @@ namespace Axiom.Tests.PlayMode
             Assert.That(skillBuilder.Model.ToggleElement(SkillElement.Fire), Is.True);
             Assert.That(skillBuilder.TrySaveDraft(), Is.True);
             yield return null;
+
+            Assert.That(skillBuilder.CurrentSlot, Is.EqualTo(SkillSlot.E));
+            Assert.That(skillBuilder.IsVisible, Is.True);
+            Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
+            Assert.That(skillBuilder.TrySaveDraft(), Is.True);
+            yield return null;
+
+            Assert.That(skillBuilder.CurrentSlot, Is.EqualTo(SkillSlot.Ultimate));
+            Assert.That(skillBuilder.IsVisible, Is.True);
+            Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
+            Assert.That(skillBuilder.TrySaveDraft(), Is.True);
+            yield return null;
             yield return null;
 
             CharacterHealth[] combatants = Object.FindObjectsByType<CharacterHealth>(

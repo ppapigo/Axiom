@@ -83,7 +83,9 @@ namespace Axiom.Demo
             {
                 if (_selectedRole.HasValue)
                 {
-                    DrawSkillSetup(_selectedRole.Value);
+                    DrawSkillSetup(
+                        _selectedRole.Value,
+                        _skillBuilderPanel.CurrentSlot);
                 }
                 else
                 {
@@ -130,15 +132,15 @@ namespace Axiom.Demo
             }
         }
 
-        private static void DrawSkillSetup(CharacterRoleId role)
+        private static void DrawSkillSetup(CharacterRoleId role, SkillSlot slot)
         {
             float width = 420f;
             float left = (Screen.width - width) * 0.5f;
             float top = Screen.height * 0.22f;
-            GUI.Box(new Rect(left, top, width, 86f), $"{role} SKILL SETUP");
+            GUI.Box(new Rect(left, top, width, 86f), $"{role} {slot} SKILL SETUP");
             GUI.Label(
                 new Rect(left + 34f, top + 38f, width - 68f, 28f),
-                "Create your Q skill and SAVE DRAFT to start the match.");
+                "Save Q, E and R drafts to start the match.");
         }
 
         private void DrawTeamHealth()
@@ -172,11 +174,21 @@ namespace Axiom.Demo
             }
 
             _selectedRole = selectedRole;
-            _roundMessage = $"{selectedRole}: Create your Q skill";
             RegisterDefaultElements(selectedRole);
+            PrepareSkillSlot(SkillSlot.Q);
+        }
+
+        private void PrepareSkillSlot(SkillSlot slot)
+        {
+            if (!_selectedRole.HasValue)
+            {
+                return;
+            }
+
+            _roundMessage = $"{_selectedRole.Value}: Create {slot} skill";
             _skillBuilderPanel.SetContext(
-                selectedRole,
-                SkillSlot.Q,
+                _selectedRole.Value,
+                slot,
                 _roleElementPool);
             if (!_skillBuilderPanel.IsVisible)
             {
@@ -186,9 +198,22 @@ namespace Axiom.Demo
 
         private void StartMatchAfterSkillSaved(SkillDraft draft)
         {
-            if (!_gameStarted && _selectedRole.HasValue)
+            if (_gameStarted || !_selectedRole.HasValue)
             {
-                StartMatch(_selectedRole.Value);
+                return;
+            }
+
+            switch (draft.Slot)
+            {
+                case SkillSlot.Q:
+                    PrepareSkillSlot(SkillSlot.E);
+                    break;
+                case SkillSlot.E:
+                    PrepareSkillSlot(SkillSlot.Ultimate);
+                    break;
+                case SkillSlot.Ultimate:
+                    StartMatch(_selectedRole.Value);
+                    break;
             }
         }
 

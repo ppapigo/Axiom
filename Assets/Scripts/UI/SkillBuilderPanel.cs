@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Axiom.Data;
 using Axiom.Role;
 using Axiom.Skill;
@@ -11,6 +12,8 @@ namespace Axiom.UI
     public sealed class SkillBuilderPanel : MonoBehaviour
     {
         private readonly SkillBuilderModel _model = new SkillBuilderModel();
+        private readonly Dictionary<SkillSlot, SkillDraft> _savedDrafts =
+            new Dictionary<SkillSlot, SkillDraft>();
         private SkillBalanceProfile _balance;
         private bool _isVisible;
         private bool _isAvailable;
@@ -28,7 +31,13 @@ namespace Axiom.UI
         public bool IsAvailable => _isAvailable;
         public bool HasSavedDraft => _hasSavedDraft;
         public SkillDraft SavedDraft => _savedDraft;
+        public SkillSlot CurrentSlot => _slot;
         public SkillBuilderModel Model => _model;
+
+        public bool TryGetSavedDraft(SkillSlot slot, out SkillDraft draft)
+        {
+            return _savedDrafts.TryGetValue(slot, out draft);
+        }
 
         public void Configure(SkillBalanceProfile balance)
         {
@@ -48,14 +57,16 @@ namespace Axiom.UI
             SkillSlot slot,
             RoleElementPool roleElementPool)
         {
+            bool contextChanged = !_hasContext || _role != role || _slot != slot;
             _role = role;
             _slot = slot;
             _roleElementPool = roleElementPool ??
                 throw new ArgumentNullException(nameof(roleElementPool));
             _hasContext = true;
             _isAvailable = true;
-            if (!_model.Type.HasValue)
+            if (contextChanged)
             {
+                _model.Reset();
                 _model.SelectType(GetDefaultType());
             }
         }
@@ -68,7 +79,7 @@ namespace Axiom.UI
                 return false;
             }
 
-            _savedDraft = _model.CreateDraft();
+            _savedDraft = _model.CreateDraft(_slot);
             if (_savedDraft.Element.HasValue &&
                 !_roleElementPool.TryAssign(
                     _role,
@@ -79,6 +90,7 @@ namespace Axiom.UI
             }
 
             _hasSavedDraft = true;
+            _savedDrafts[_slot] = _savedDraft;
             _isVisible = false;
             DraftSaved?.Invoke(_savedDraft);
             return true;
@@ -103,8 +115,8 @@ namespace Axiom.UI
             if (!_isVisible)
             {
                 string buttonLabel = _hasSavedDraft
-                    ? "SKILL FORGE [B] - Q DRAFT"
-                    : "SKILL FORGE [B]";
+                    ? $"SKILL FORGE [B] - {_slot}"
+                    : $"SKILL FORGE [B] - {_slot}";
                 if (GUI.Button(new Rect(326f, 12f, 210f, 38f), buttonLabel))
                 {
                     _isVisible = true;
@@ -117,7 +129,9 @@ namespace Axiom.UI
             float height = 690f;
             float left = (Screen.width - width) * 0.5f;
             float top = Mathf.Max(8f, (Screen.height - height) * 0.5f);
-            GUI.Box(new Rect(left, top, width, height), "SKILL FORGE - 100 POINT BUILD");
+            GUI.Box(
+                new Rect(left, top, width, height),
+                $"SKILL FORGE - {_slot} - 100 POINT BUILD");
 
             DrawStepper(left, top + 42f, "Damage", $"+{_model.DamageIncreasePercent:0}%", _balance.DamageCostPerTenPercent, _model.AdjustDamage);
             DrawStepper(left, top + 82f, "Radius", $"+{_model.RadiusIncrease:0}m", _balance.RadiusCostPerMeter, _model.AdjustRadius);
@@ -280,9 +294,21 @@ namespace Axiom.UI
 
         private SkillType GetDefaultType()
         {
-            return _role == CharacterRoleId.Tank
-                ? SkillType.Cone
-                : SkillType.Projectile;
+            if (_slot == SkillSlot.Ultimate)
+            {
+                return _role == CharacterRoleId.Mage
+                    ? SkillType.GroundArea
+                    : SkillType.Projectile;
+            }
+
+            if (_slot == SkillSlot.E)
+            {
+                return _role == CharacterRoleId.Tank
+                    ? SkillType.Cone
+                    : SkillType.GroundArea;
+            }
+
+            return _role == CharacterRoleId.Tank ? SkillType.Cone : SkillType.Projectile;
         }
     }
 }

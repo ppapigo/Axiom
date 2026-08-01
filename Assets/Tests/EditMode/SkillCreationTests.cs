@@ -202,6 +202,35 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillBuilderPanel_StoresSeparateDraftsForQERSlots()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var gameObject = new GameObject("QER Skill Builder Test");
+            SkillBuilderPanel panel = gameObject.AddComponent<SkillBuilderPanel>();
+            var pool = new RoleElementPool();
+            panel.Configure(balance);
+
+            panel.SetContext(CharacterRoleId.Mage, SkillSlot.Q, pool);
+            panel.Model.AdjustDamage(1);
+            Assert.That(panel.TrySaveDraft(), Is.True);
+            panel.SetContext(CharacterRoleId.Mage, SkillSlot.E, pool);
+            panel.Model.AdjustRadius(1);
+            Assert.That(panel.TrySaveDraft(), Is.True);
+            panel.SetContext(CharacterRoleId.Mage, SkillSlot.Ultimate, pool);
+            Assert.That(panel.TrySaveDraft(), Is.True);
+
+            Assert.That(panel.TryGetSavedDraft(SkillSlot.Q, out SkillDraft q), Is.True);
+            Assert.That(panel.TryGetSavedDraft(SkillSlot.E, out SkillDraft e), Is.True);
+            Assert.That(panel.TryGetSavedDraft(
+                SkillSlot.Ultimate, out SkillDraft ultimate), Is.True);
+            Assert.That(q.Modifiers.DamageIncreasePercent, Is.EqualTo(10f));
+            Assert.That(e.Modifiers.RadiusIncrease, Is.EqualTo(1f));
+            Assert.That(ultimate.Slot, Is.EqualTo(SkillSlot.Ultimate));
+            Object.DestroyImmediate(gameObject);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void SkillDraftApplier_AppliesQNumericModifiersAndCost()
         {
             SkillBalanceProfile balance = CreateBalance();

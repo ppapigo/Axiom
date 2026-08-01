@@ -152,10 +152,10 @@ namespace Axiom.Skill
                 heals: _healing);
         }
 
-        public SkillDraft CreateDraft()
+        public SkillDraft CreateDraft(SkillSlot slot = SkillSlot.Q)
         {
             SkillPointModifiers modifiers = CreateModifiers();
-            return new SkillDraft(modifiers, _element, _type);
+            return new SkillDraft(modifiers, _element, _type, slot);
         }
 
         public void Reset()

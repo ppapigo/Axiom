@@ -26,6 +26,8 @@ namespace Axiom.Demo
         private TeamMember _team;
         private SkillBuilderPanel _skillBuilder;
         private SkillDraft _qDraft;
+        private SkillDraft _eDraft;
+        private SkillDraft _ultimateDraft;
         private CharacterStatusController _status;
         private CharacterHealth _health;
 
@@ -45,7 +47,7 @@ namespace Axiom.Demo
         {
             if (_skillBuilder != null)
             {
-                _skillBuilder.DraftSaved -= ApplyQDraft;
+                _skillBuilder.DraftSaved -= ApplyDraft;
             }
 
             _aimCamera = aimCamera;
@@ -53,11 +55,10 @@ namespace Axiom.Demo
             _skillBuilder = skillBuilder;
             if (_skillBuilder != null)
             {
-                _skillBuilder.DraftSaved += ApplyQDraft;
-                if (_skillBuilder.HasSavedDraft)
-                {
-                    ApplyQDraft(_skillBuilder.SavedDraft);
-                }
+                _skillBuilder.DraftSaved += ApplyDraft;
+                ApplySavedDraft(SkillSlot.Q);
+                ApplySavedDraft(SkillSlot.E);
+                ApplySavedDraft(SkillSlot.Ultimate);
             }
         }
 
@@ -79,13 +80,32 @@ namespace Axiom.Demo
         {
             if (_skillBuilder != null)
             {
-                _skillBuilder.DraftSaved -= ApplyQDraft;
+                _skillBuilder.DraftSaved -= ApplyDraft;
             }
         }
 
-        private void ApplyQDraft(SkillDraft draft)
+        private void ApplySavedDraft(SkillSlot slot)
         {
-            _qDraft = draft;
+            if (_skillBuilder.TryGetSavedDraft(slot, out SkillDraft draft))
+            {
+                ApplyDraft(draft);
+            }
+        }
+
+        private void ApplyDraft(SkillDraft draft)
+        {
+            switch (draft.Slot)
+            {
+                case SkillSlot.Q:
+                    _qDraft = draft;
+                    break;
+                case SkillSlot.E:
+                    _eDraft = draft;
+                    break;
+                case SkillSlot.Ultimate:
+                    _ultimateDraft = draft;
+                    break;
+            }
         }
 
         private void Update()
@@ -264,8 +284,13 @@ namespace Axiom.Demo
                 : SkillType.GroundArea;
             float range = type == SkillType.Cone ? 3f : 6f;
             SkillElement element = GetDefaultEElement(_role.Definition.RoleId);
-            return CreateDefinition(
+            SkillDefinition baseDefinition = CreateDefinition(
                 "E Skill", SkillSlot.E, type, 1.8f, 7f, range, 3f, element);
+            return SkillDraftApplier.Apply(
+                baseDefinition,
+                _eDraft,
+                _role == null ? null : _role.Definition,
+                _balance);
         }
 
         private SkillDefinition CreateUltimate()
@@ -274,9 +299,14 @@ namespace Axiom.Demo
                 ? SkillType.GroundArea
                 : SkillType.Projectile;
             SkillElement element = GetDefaultUltimateElement(_role.Definition.RoleId);
-            return CreateDefinition(
+            SkillDefinition baseDefinition = CreateDefinition(
                 "Ultimate", SkillSlot.Ultimate, type, 3f, 15f, 8f, 3f,
                 element);
+            return SkillDraftApplier.Apply(
+                baseDefinition,
+                _ultimateDraft,
+                _role == null ? null : _role.Definition,
+                _balance);
         }
 
         public static SkillElement GetDefaultQElement(CharacterRoleId role)

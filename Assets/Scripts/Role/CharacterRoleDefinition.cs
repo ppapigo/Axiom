@@ -11,6 +11,6 @@ namespace Axiom.Role
         public abstract float DashDistance { get; }
         public abstract float DashCooldown { get; }
         public abstract bool AllowsRangedAttacks { get; }
+        public abstract bool AllowsAreaDamage { get; }
     }
 }
-

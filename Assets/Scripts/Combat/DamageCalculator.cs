@@ -11,8 +11,7 @@ namespace Axiom.Combat
                 * request.CastDelayBonus
                 * request.DistanceMultiplier;
 
-            return Mathf.Max(0f, damage);
+            return Mathf.Min(Mathf.Max(0f, damage), request.DamageLimit);
         }
     }
 }
-

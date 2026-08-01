@@ -10,7 +10,8 @@ namespace Axiom.Combat
             float attackPower,
             float damageCoefficient,
             float castDelayBonus,
-            float distanceMultiplier)
+            float distanceMultiplier,
+            float damageLimit = float.PositiveInfinity)
         {
             if (attackPower < 0f)
             {
@@ -32,11 +33,17 @@ namespace Axiom.Combat
                 throw new ArgumentOutOfRangeException(nameof(distanceMultiplier));
             }
 
+            if (damageLimit < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(damageLimit));
+            }
+
             Attacker = attacker;
             AttackPower = attackPower;
             DamageCoefficient = damageCoefficient;
             CastDelayBonus = castDelayBonus;
             DistanceMultiplier = distanceMultiplier;
+            DamageLimit = damageLimit;
         }
 
         public GameObject Attacker { get; }
@@ -44,5 +51,6 @@ namespace Axiom.Combat
         public float DamageCoefficient { get; }
         public float CastDelayBonus { get; }
         public float DistanceMultiplier { get; }
+        public float DamageLimit { get; }
     }
 }

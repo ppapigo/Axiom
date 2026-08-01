@@ -49,7 +49,10 @@ namespace Axiom.Skill
                     : balance.CalculatePointCost(
                         modifiers,
                         draft.SelectedElementCount,
-                        resolvedType));
+                        resolvedType),
+                baseDefinition.AddsMobility || modifiers.AddsMobility,
+                baseDefinition.CreatesShield || modifiers.CreatesShield,
+                baseDefinition.Heals || modifiers.Heals);
         }
 
         private static CrowdControlType ResolveCrowdControl(

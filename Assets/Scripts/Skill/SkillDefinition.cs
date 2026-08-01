@@ -14,7 +14,10 @@ namespace Axiom.Skill
             float projectileSpeed,
             CrowdControlType crowdControl,
             SkillElement element,
-            int pointCost)
+            int pointCost,
+            bool addsMobility = false,
+            bool createsShield = false,
+            bool heals = false)
         {
             DisplayName = displayName;
             Slot = slot;
@@ -28,6 +31,9 @@ namespace Axiom.Skill
             CrowdControl = crowdControl;
             Element = element;
             PointCost = pointCost;
+            AddsMobility = addsMobility;
+            CreatesShield = createsShield;
+            Heals = heals;
         }
 
         public string DisplayName { get; }
@@ -42,5 +48,8 @@ namespace Axiom.Skill
         public CrowdControlType CrowdControl { get; }
         public SkillElement Element { get; }
         public int PointCost { get; }
+        public bool AddsMobility { get; }
+        public bool CreatesShield { get; }
+        public bool Heals { get; }
     }
 }

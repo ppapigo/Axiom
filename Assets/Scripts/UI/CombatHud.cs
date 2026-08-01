@@ -15,6 +15,7 @@ namespace Axiom.UI
         [SerializeField] private CharacterDashController dash;
         [SerializeField] private CharacterRole role;
         [SerializeField] private CharacterStatusController status;
+        [SerializeField] private CharacterShieldController shield;
 
         public bool IsConfigured => health != null && skills != null && dash != null && role != null;
         public CharacterHealth Health => health;
@@ -32,6 +33,9 @@ namespace Axiom.UI
             status = playerHealth == null
                 ? null
                 : playerHealth.GetComponent<CharacterStatusController>();
+            shield = playerHealth == null
+                ? null
+                : playerHealth.GetComponent<CharacterShieldController>();
         }
 
         private void OnGUI()
@@ -82,7 +86,8 @@ namespace Axiom.UI
                 : "PLAYER";
             GUI.Label(new Rect(left + 8f, top + 4f, width - 16f, 22f),
                 $"{roleName}   HP {Mathf.CeilToInt(health.CurrentHealth)} / " +
-                $"{Mathf.CeilToInt(health.MaximumHealth)}");
+                $"{Mathf.CeilToInt(health.MaximumHealth)}" +
+                $"{(shield != null && shield.CurrentShield > 0f ? $"   SHIELD {Mathf.CeilToInt(shield.CurrentShield)}" : string.Empty)}");
         }
 
         private static void DrawSkillSlot(Rect rect, string key, float duration, float remaining)

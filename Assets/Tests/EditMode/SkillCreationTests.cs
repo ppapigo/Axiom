@@ -272,6 +272,25 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillDraftApplier_AppliesSelectedUtilityEffects()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            SkillDefinition baseSkill = CreateSkill(SkillSlot.Q, SkillType.Projectile);
+            var modifiers = new SkillPointModifiers(
+                addsMobility: true,
+                createsShield: true,
+                heals: true);
+
+            SkillDefinition result = SkillDraftApplier.Apply(
+                baseSkill, modifiers, null, balance);
+
+            Assert.That(result.AddsMobility, Is.True);
+            Assert.That(result.CreatesShield, Is.True);
+            Assert.That(result.Heals, Is.True);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void SkillDraftApplier_PreservesTankNonUltimateRangeRule()
         {
             SkillBalanceProfile balance = CreateBalance();
@@ -370,6 +389,30 @@ namespace Axiom.Tests.EditMode
             Assert.That(balance.GetElementDamageMultiplier(SkillElement.Lightning), Is.EqualTo(1.2f));
             Assert.That(balance.WaterHealingRatio, Is.EqualTo(0.1f));
             Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillBalance_UsesUtilityEffectBaselines()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+
+            Assert.That(balance.SkillMobilityDistance, Is.EqualTo(4f));
+            Assert.That(balance.SkillShieldMaximumHealthRatio, Is.EqualTo(0.15f));
+            Assert.That(balance.SkillShieldDuration, Is.EqualTo(5f));
+            Assert.That(balance.SkillHealingMaximumHealthRatio, Is.EqualTo(0.15f));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void ShieldState_AbsorbsDamageBeforeExpiring()
+        {
+            var shield = new ShieldState();
+            shield.Apply(150f, 10f, 5f);
+
+            Assert.That(shield.Absorb(80f, 11f), Is.Zero);
+            Assert.That(shield.GetAmount(11f), Is.EqualTo(70f));
+            Assert.That(shield.Absorb(100f, 12f), Is.EqualTo(30f));
+            Assert.That(shield.GetAmount(15f), Is.Zero);
         }
 
         [Test]

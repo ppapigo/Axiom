@@ -10,6 +10,7 @@ namespace Axiom.Combat
     {
         private CharacterStats _stats;
         private HealthModel _health;
+        private CharacterShieldController _shield;
 
         public event Action<float, float> HealthChanged;
         public event Action Died;
@@ -29,6 +30,7 @@ namespace Axiom.Combat
             }
 
             _health = new HealthModel(_stats.MaximumHealth);
+            _shield = GetComponent<CharacterShieldController>();
         }
 
         public float ApplyDamage(in DamageRequest request)
@@ -39,7 +41,13 @@ namespace Axiom.Combat
             }
 
             bool wasAlive = !_health.IsDead;
-            float appliedDamage = _health.ApplyDamage(DamageCalculator.Calculate(request));
+            float damage = DamageCalculator.Calculate(request);
+            if (_shield != null)
+            {
+                damage = _shield.AbsorbDamage(damage);
+            }
+
+            float appliedDamage = _health.ApplyDamage(damage);
 
             if (appliedDamage > 0f)
             {
@@ -90,8 +98,8 @@ namespace Axiom.Combat
             }
 
             _health.Reset();
+            _shield?.Clear();
             HealthChanged?.Invoke(_health.CurrentHealth, _health.MaximumHealth);
         }
     }
 }
-

@@ -13,6 +13,7 @@ namespace Axiom.UI
         [SerializeField] private string displayName;
         [SerializeField] private CharacterStatusController status;
         [SerializeField] private ElementStatusController elementStatus;
+        [SerializeField] private CharacterShieldController shield;
         [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.45f, 0f);
         [SerializeField, Min(24f)] private float width = 92f;
         [SerializeField, Min(4f)] private float height = 11f;
@@ -37,6 +38,9 @@ namespace Axiom.UI
             elementStatus = targetHealth == null
                 ? null
                 : targetHealth.GetComponent<ElementStatusController>();
+            shield = targetHealth == null
+                ? null
+                : targetHealth.GetComponent<CharacterShieldController>();
         }
 
         private void OnGUI()
@@ -82,7 +86,9 @@ namespace Axiom.UI
             }
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),
-                $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}{statusText}");
+                $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}" +
+                $"{(shield != null && shield.CurrentShield > 0f ? $" +{Mathf.CeilToInt(shield.CurrentShield)} SH" : string.Empty)}" +
+                statusText);
 
             if (status != null && status.ActiveEffect != Skill.CrowdControlType.None)
             {

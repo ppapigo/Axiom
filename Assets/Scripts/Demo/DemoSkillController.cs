@@ -30,6 +30,8 @@ namespace Axiom.Demo
         private SkillDraft _ultimateDraft;
         private CharacterStatusController _status;
         private CharacterHealth _health;
+        private CharacterShieldController _shield;
+        private CharacterController _characterController;
 
         public SkillDefinition QSkillDefinition => CreateQSkill();
         public SkillDefinition ESkillDefinition => CreateESkill();
@@ -69,6 +71,8 @@ namespace Axiom.Demo
             _team = GetComponent<TeamMember>();
             _status = GetComponent<CharacterStatusController>();
             _health = GetComponent<CharacterHealth>();
+            _shield = GetComponent<CharacterShieldController>();
+            _characterController = GetComponent<CharacterController>();
         }
 
         private void OnDisable()
@@ -145,11 +149,44 @@ namespace Axiom.Demo
             }
 
             ResolveHits(definition, plan);
+            ApplyUtilityEffects(definition, aimPoint);
             if (definition.Element == SkillElement.Water && _health != null)
             {
                 _health.RestoreHealth(_health.MaximumHealth * _balance.WaterHealingRatio);
             }
             ShowEffect(plan);
+        }
+
+        private void ApplyUtilityEffects(
+            in SkillDefinition definition,
+            Vector3 aimPoint)
+        {
+            if (definition.Heals && _health != null)
+            {
+                _health.RestoreHealth(
+                    _health.MaximumHealth * _balance.SkillHealingMaximumHealthRatio);
+            }
+
+            if (definition.CreatesShield && _shield != null && _health != null)
+            {
+                _shield.ApplySkillShield(_health.MaximumHealth);
+            }
+
+            if (!definition.AddsMobility || _characterController == null ||
+                (_status != null && _status.IsMovementBlocked))
+            {
+                return;
+            }
+
+            Vector3 direction = aimPoint - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= Mathf.Epsilon)
+            {
+                direction = transform.forward;
+            }
+
+            _characterController.Move(
+                direction.normalized * _balance.SkillMobilityDistance);
         }
 
         private void ResolveHits(in SkillDefinition definition, in SkillCastPlan plan)

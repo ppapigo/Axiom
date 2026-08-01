@@ -296,6 +296,9 @@ namespace Axiom.Demo
             CharacterRole role = character.AddComponent<CharacterRole>();
             role.SetDefinition(_roles[roleId]);
             character.AddComponent<CharacterStats>();
+            CharacterShieldController shield =
+                character.AddComponent<CharacterShieldController>();
+            shield.Configure(_skillBalance);
             CharacterHealth health = character.AddComponent<CharacterHealth>();
             CharacterStatusController status =
                 character.AddComponent<CharacterStatusController>();

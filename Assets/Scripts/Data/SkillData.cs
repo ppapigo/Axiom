@@ -34,7 +34,10 @@ namespace Axiom.Data
             projectileSpeed,
             crowdControl,
             element,
-            pointCost);
+            pointCost,
+            pointModifiers.AddsMobility,
+            pointModifiers.CreatesShield,
+            pointModifiers.Heals);
 
         public SkillDefinition CreateDefinition(SkillBalanceProfile balance)
         {
@@ -53,7 +56,10 @@ namespace Axiom.Data
                 projectileSpeed,
                 crowdControl,
                 element,
-                calculatedPointCost);
+                calculatedPointCost,
+                pointModifiers.AddsMobility,
+                pointModifiers.CreatesShield,
+                pointModifiers.Heals);
         }
 
         private void OnValidate()

@@ -59,6 +59,8 @@ namespace Axiom.Tests.PlayMode
                 Object.FindObjectsByType<CharacterStatusController>(FindObjectsSortMode.None);
             ElementStatusController[] elementStatuses =
                 Object.FindObjectsByType<ElementStatusController>(FindObjectsSortMode.None);
+            CharacterShieldController[] shields =
+                Object.FindObjectsByType<CharacterShieldController>(FindObjectsSortMode.None);
             ThreeVsThreeMatchManager match =
                 Object.FindFirstObjectByType<ThreeVsThreeMatchManager>();
             WorldHealthBar[] healthBars = Object.FindObjectsByType<WorldHealthBar>(
@@ -68,6 +70,7 @@ namespace Axiom.Tests.PlayMode
             Assert.That(combatants, Has.Length.EqualTo(6));
             Assert.That(statuses, Has.Length.EqualTo(6));
             Assert.That(elementStatuses, Has.Length.EqualTo(6));
+            Assert.That(shields, Has.Length.EqualTo(6));
             Assert.That(statuses[0].Apply(CrowdControlType.Stun, Time.time), Is.True);
             Assert.That(statuses[0].ActiveEffect, Is.EqualTo(CrowdControlType.Stun));
             Assert.That(statuses[0].IsActionBlocked, Is.True);

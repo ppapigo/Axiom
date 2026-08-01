@@ -28,6 +28,12 @@ namespace Axiom.Data
         [SerializeField, Min(0)] private int shieldCost = 15;
         [SerializeField, Min(0)] private int healingCost = 15;
 
+        [Header("Skill Utility Effects")]
+        [SerializeField, Min(0f)] private float skillMobilityDistance = 4f;
+        [SerializeField, Range(0f, 1f)] private float skillShieldMaximumHealthRatio = 0.15f;
+        [SerializeField, Min(0f)] private float skillShieldDuration = 5f;
+        [SerializeField, Range(0f, 1f)] private float skillHealingMaximumHealthRatio = 0.15f;
+
         [Header("Runtime Rules")]
         [SerializeField, Min(0f)] private float tankMaximumNonUltimateRange = 3f;
         [Header("Crowd Control")]
@@ -61,6 +67,10 @@ namespace Axiom.Data
         public float PoisonDuration => poisonDuration;
         public float PoisonMaximumHealthCoefficient => poisonMaximumHealthCoefficient;
         public float WaterHealingRatio => waterHealingRatio;
+        public float SkillMobilityDistance => skillMobilityDistance;
+        public float SkillShieldMaximumHealthRatio => skillShieldMaximumHealthRatio;
+        public float SkillShieldDuration => skillShieldDuration;
+        public float SkillHealingMaximumHealthRatio => skillHealingMaximumHealthRatio;
 
         public float GetElementDamageMultiplier(SkillElement element)
         {
@@ -156,6 +166,10 @@ namespace Axiom.Data
             mobilityCost = Mathf.Max(0, mobilityCost);
             shieldCost = Mathf.Max(0, shieldCost);
             healingCost = Mathf.Max(0, healingCost);
+            skillMobilityDistance = Mathf.Max(0f, skillMobilityDistance);
+            skillShieldMaximumHealthRatio = Mathf.Clamp01(skillShieldMaximumHealthRatio);
+            skillShieldDuration = Mathf.Max(0f, skillShieldDuration);
+            skillHealingMaximumHealthRatio = Mathf.Clamp01(skillHealingMaximumHealthRatio);
             tankMaximumNonUltimateRange = Mathf.Max(0f, tankMaximumNonUltimateRange);
             slowMovementReduction = Mathf.Clamp01(slowMovementReduction);
             slowDuration = Mathf.Max(0f, slowDuration);

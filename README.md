@@ -14,10 +14,10 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 6. Mage — 완료
 7. Assassin — 완료
 8. 역할 기반 AI — 완료
-9. 3vs3 경기 시스템 — 미구현
+9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 미구현
 
-현재 Unity EditMode 테스트 45개가 모두 통과합니다.
+현재 Unity EditMode 테스트 50개가 모두 통과합니다.
 
 ## 구현된 시스템
 
@@ -35,6 +35,11 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - Mage AI: 설정된 거리 유지, 적 밀집 시 광역 스킬 우선
 - Assassin AI: 체력이 가장 낮은 적 우선, 대상 후방으로 진입
 - 팀 식별 기반 아군 제외 및 적 탐색
+- 팀당 3명의 참가자와 개별 스폰 지점을 사용하는 3vs3 경기 관리
+- 한 팀 전멸 시 상대 팀에 라운드 1승 부여
+- 3판 2선승제: 2:0 또는 2:1에서 경기 종료
+- 라운드 사이 전투 비활성화, 체력 회복, 위치 초기화 및 자동 재시작
+- 라운드 시작·종료와 최종 승리 이벤트 제공
 
 ## Unity 구성
 
@@ -55,8 +60,16 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 4. 탐지 대상 레이어를 AI 프로필의 Target Layers에 지정합니다.
 5. 스킬 시스템 연결 시 `AISkillUserBehaviour` 구현체를 AI Controller의 Skill User에 연결합니다.
 
+### 3vs3 경기
+
+1. 빈 GameObject에 `ThreeVsThreeMatchManager`를 추가합니다.
+2. Team A와 Team B 배열에 각각 정확히 3명의 `MatchParticipant`를 등록합니다.
+3. 각 참가자에 `TeamMember`, `CharacterHealth`, 스폰 지점과 라운드 중 활성화할 조작·AI Behaviour를 지정합니다.
+4. 기본값은 2승 필요, 라운드 간 대기 2초이며 Inspector에서 수정할 수 있습니다.
+5. 한 팀의 세 캐릭터가 모두 사망하면 상대 팀이 1승하고, 먼저 2승한 팀이 최종 승리합니다.
+
 EditMode 테스트는 `Window > General > Test Runner`에서 실행합니다.
 
 ## 다음 단계
 
-3vs3 경기 시스템을 구현합니다. 양 팀 편성, 스폰, 전투 시작, 전멸 판정과 경기 종료를 작은 단위로 추가합니다.
+ScriptableObject 기반 스킬 제작 시스템을 구현합니다. 공통 스킬 데이터와 타입별 실행 로직을 분리하고, 이후 자연어 기반 스킬 생성기가 데이터를 안전하게 만들 수 있는 검증 구조를 추가합니다.

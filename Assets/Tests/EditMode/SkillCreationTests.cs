@@ -104,6 +104,49 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillDraftApplier_AppliesQNumericModifiersAndCost()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            SkillDefinition baseSkill = CreateSkill(SkillSlot.Q, SkillType.Projectile);
+            var modifiers = new SkillPointModifiers(
+                damageIncreasePercent: 20f,
+                radiusIncrease: 1f,
+                rangeIncrease: 2f,
+                cooldownReduction: 1f,
+                appliesStun: true);
+
+            SkillDefinition result = SkillDraftApplier.Apply(
+                baseSkill, modifiers, null, balance);
+
+            Assert.That(result.DamageCoefficient, Is.EqualTo(1.44f).Within(0.001f));
+            Assert.That(result.Radius, Is.EqualTo(2f));
+            Assert.That(result.Range, Is.EqualTo(8f));
+            Assert.That(result.Cooldown, Is.EqualTo(4f));
+            Assert.That(result.CrowdControl, Is.EqualTo(CrowdControlType.Stun));
+            Assert.That(result.PointCost, Is.EqualTo(52));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillDraftApplier_PreservesTankNonUltimateRangeRule()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            TankRoleDefinition tank = ScriptableObject.CreateInstance<TankRoleDefinition>();
+            SkillDefinition baseSkill = new SkillDefinition(
+                "Tank Q", SkillSlot.Q, SkillType.Cone,
+                1.2f, 4f, 0.3f, 3f, 1.5f, 0f,
+                CrowdControlType.None, SkillElement.Earth, 0);
+            var modifiers = new SkillPointModifiers(rangeIncrease: 5f);
+
+            SkillDefinition result = SkillDraftApplier.Apply(
+                baseSkill, modifiers, tank, balance);
+
+            Assert.That(result.Range, Is.EqualTo(balance.TankMaximumNonUltimateRange));
+            Object.DestroyImmediate(tank);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void MageProjectile_WithSupportedValues_IsValid()
         {
             SkillBalanceProfile balance = CreateBalance();

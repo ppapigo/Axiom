@@ -5,6 +5,7 @@ using Axiom.Data;
 using Axiom.Manager;
 using Axiom.Role;
 using Axiom.Skill;
+using Axiom.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,11 +24,32 @@ namespace Axiom.Demo
         private CharacterStats _stats;
         private CharacterRole _role;
         private TeamMember _team;
+        private SkillBuilderPanel _skillBuilder;
+        private SkillPointModifiers _qDraft;
 
-        public void Configure(UnityEngine.Camera aimCamera, SkillBalanceProfile balance)
+        public SkillDefinition QSkillDefinition => CreateQSkill();
+
+        public void Configure(
+            UnityEngine.Camera aimCamera,
+            SkillBalanceProfile balance,
+            SkillBuilderPanel skillBuilder = null)
         {
+            if (_skillBuilder != null)
+            {
+                _skillBuilder.DraftSaved -= ApplyQDraft;
+            }
+
             _aimCamera = aimCamera;
             _balance = balance;
+            _skillBuilder = skillBuilder;
+            if (_skillBuilder != null)
+            {
+                _skillBuilder.DraftSaved += ApplyQDraft;
+                if (_skillBuilder.HasSavedDraft)
+                {
+                    ApplyQDraft(_skillBuilder.SavedDraft);
+                }
+            }
         }
 
         private void Awake()
@@ -40,6 +62,19 @@ namespace Axiom.Demo
         private void OnDisable()
         {
             _cooldowns.Reset();
+        }
+
+        private void OnDestroy()
+        {
+            if (_skillBuilder != null)
+            {
+                _skillBuilder.DraftSaved -= ApplyQDraft;
+            }
+        }
+
+        private void ApplyQDraft(SkillPointModifiers modifiers)
+        {
+            _qDraft = modifiers;
         }
 
         private void Update()
@@ -162,7 +197,13 @@ namespace Axiom.Demo
                 ? SkillType.Cone
                 : SkillType.Projectile;
             float range = type == SkillType.Cone ? 3f : 7f;
-            return CreateDefinition("Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f);
+            SkillDefinition baseDefinition = CreateDefinition(
+                "Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f);
+            return SkillDraftApplier.Apply(
+                baseDefinition,
+                _qDraft,
+                _role == null ? null : _role.Definition,
+                _balance);
         }
 
         private SkillDefinition CreateESkill()

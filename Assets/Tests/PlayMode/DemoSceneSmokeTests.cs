@@ -41,6 +41,16 @@ namespace Axiom.Tests.PlayMode
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);
             Assert.That(skillBuilder, Is.Not.Null);
             Assert.That(skillBuilder.IsConfigured, Is.True);
+            DemoSkillController playerSkills =
+                Object.FindFirstObjectByType<DemoSkillController>();
+            Assert.That(playerSkills, Is.Not.Null);
+            skillBuilder.Model.AdjustDamage(1);
+            skillBuilder.Model.AdjustCooldownReduction(1);
+            Assert.That(skillBuilder.TrySaveDraft(), Is.True);
+            yield return null;
+            Assert.That(playerSkills.QSkillDefinition.DamageCoefficient,
+                Is.EqualTo(1.32f).Within(0.001f));
+            Assert.That(playerSkills.QSkillDefinition.Cooldown, Is.EqualTo(3f));
             Assert.That(GameObject.Find("Tank Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Mage Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Assassin Visual"), Is.Not.Null);

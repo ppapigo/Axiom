@@ -33,6 +33,7 @@ namespace Axiom.Demo
         private BasicAttackProfile _rangedAttack;
         private ThreeVsThreeMatchManager _matchManager;
         private CharacterHealth _playerHealth;
+        private SkillBuilderPanel _skillBuilderPanel;
         private bool _gameStarted;
         private TeamId? _winner;
         private string _roundMessage = "Choose your role";
@@ -305,7 +306,7 @@ namespace Axiom.Demo
             dashController.Configure(dashSource, movementSource);
             basicAttack.Configure(GetAttackProfile(roleId), attackSource);
             DemoSkillController skills = character.AddComponent<DemoSkillController>();
-            skills.Configure(_mainCamera, _skillBalance);
+            skills.Configure(_mainCamera, _skillBalance, _skillBuilderPanel);
 
             combatBehaviours.Add(movement);
             combatBehaviours.Add(aimController);
@@ -351,8 +352,8 @@ namespace Axiom.Demo
             _aiProfile = ScriptableObject.CreateInstance<AIBehaviourProfile>();
             _aiProfile.ConfigureForDemo(20f, 4.5f, 4f, 6f);
             _skillBalance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
-            SkillBuilderPanel skillBuilder = gameObject.AddComponent<SkillBuilderPanel>();
-            skillBuilder.Configure(_skillBalance);
+            _skillBuilderPanel = gameObject.AddComponent<SkillBuilderPanel>();
+            _skillBuilderPanel.Configure(_skillBalance);
             _meleeAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
             _meleeAttack.Configure(BasicAttackDeliveryType.Melee, 2.2f, 0.6f, 0.75f);
             _rangedAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();

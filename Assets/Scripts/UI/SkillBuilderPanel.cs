@@ -1,3 +1,4 @@
+using System;
 using Axiom.Data;
 using Axiom.Skill;
 using UnityEngine;
@@ -13,6 +14,8 @@ namespace Axiom.UI
         private bool _isVisible;
         private bool _hasSavedDraft;
         private SkillPointModifiers _savedDraft;
+
+        public event Action<SkillPointModifiers> DraftSaved;
 
         public bool IsConfigured => _balance != null;
         public bool IsVisible => _isVisible;
@@ -40,6 +43,7 @@ namespace Axiom.UI
             _savedDraft = _model.CreateModifiers();
             _hasSavedDraft = true;
             _isVisible = false;
+            DraftSaved?.Invoke(_savedDraft);
             return true;
         }
 
@@ -60,7 +64,10 @@ namespace Axiom.UI
 
             if (!_isVisible)
             {
-                if (GUI.Button(new Rect(326f, 12f, 170f, 38f), "SKILL FORGE [B]"))
+                string buttonLabel = _hasSavedDraft
+                    ? "SKILL FORGE [B] - Q DRAFT"
+                    : "SKILL FORGE [B]";
+                if (GUI.Button(new Rect(326f, 12f, 210f, 38f), buttonLabel))
                 {
                     _isVisible = true;
                 }

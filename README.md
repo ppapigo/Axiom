@@ -107,6 +107,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 4. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
 5. `ValidateLoadout` 결과가 유효하고 총비용이 100포인트 이하인 데이터만 전투 실행 계층에 전달합니다.
 6. 데모에서는 화면 상단의 `SKILL FORGE` 버튼 또는 `B` 키로 제작 패널을 열 수 있습니다. 수치와 효과를 조합하면 비용과 예산 초과 여부가 즉시 표시되며, 유효한 조합만 런타임 초안으로 저장됩니다.
+7. 저장한 초안의 피해, 범위, 사거리, 쿨타임과 대표 CC 데이터는 플레이어 Q 스킬에 즉시 반영됩니다. 탱커의 비궁극기 사거리 제한 등 역할 규칙은 자동으로 유지됩니다.
 
 ### 장비 외형
 
@@ -130,4 +131,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-저장한 스킬 초안을 실제 Q 슬롯 전투 효과에 연결하고, 이후 AI 자연어 요청을 검증된 `SkillDefinition`으로 변환하는 생성 계층을 추가합니다.
+Q 스킬에 저장된 CC·속성 효과를 실제 전투 상태이상으로 적용하고, 이후 AI 자연어 요청을 검증된 `SkillDefinition`으로 변환하는 생성 계층을 추가합니다.

@@ -40,7 +40,7 @@ namespace Axiom.Data
         {
             int calculatedPointCost = balance == null
                 ? pointCost
-                : balance.CalculatePointCost(pointModifiers, 1);
+                : balance.CalculatePointCost(pointModifiers, 1, type);
             return new SkillDefinition(
                 displayName,
                 slot,

@@ -15,7 +15,8 @@ namespace Axiom.Skill
             Vector3 offset = aimPoint - origin;
             offset.y = 0f;
 
-            if (definition.Type == SkillType.SelfArea)
+            if (definition.Type == SkillType.SelfArea ||
+                definition.Type == SkillType.Global)
             {
                 plan = new SkillCastPlan(
                     definition.Type,

@@ -35,6 +35,20 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillBalance_UsesDifferentAttackTypeCosts()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+
+            Assert.That(balance.GetSkillTypeCost(SkillType.Projectile), Is.Zero);
+            Assert.That(balance.GetSkillTypeCost(SkillType.Target), Is.EqualTo(8));
+            Assert.That(balance.GetSkillTypeCost(SkillType.Cone), Is.EqualTo(8));
+            Assert.That(balance.GetSkillTypeCost(SkillType.SelfArea), Is.EqualTo(12));
+            Assert.That(balance.GetSkillTypeCost(SkillType.GroundArea), Is.EqualTo(15));
+            Assert.That(balance.GetSkillTypeCost(SkillType.Global), Is.EqualTo(35));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void SkillPointCost_UsesConfiguredBaselineCosts()
         {
             SkillBalanceProfile balance = CreateBalance();
@@ -101,6 +115,32 @@ namespace Axiom.Tests.EditMode
             Assert.That(builder.GetPointCost(balance), Is.EqualTo(125));
             Assert.That(builder.IsWithinBudget(balance), Is.False);
             Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillBuilderModel_AllowsOnlyOneCrowdControlEffect()
+        {
+            var builder = new SkillBuilderModel();
+
+            builder.Toggle(SkillPointEffect.Slow);
+            builder.Toggle(SkillPointEffect.Stun);
+
+            Assert.That(builder.IsEnabled(SkillPointEffect.Slow), Is.False);
+            Assert.That(builder.IsEnabled(SkillPointEffect.Stun), Is.True);
+            Assert.That(builder.IsEnabled(SkillPointEffect.KnockUp), Is.False);
+        }
+
+        [Test]
+        public void SkillBuilderModel_StoresOneSelectedAttackType()
+        {
+            var builder = new SkillBuilderModel();
+
+            builder.SelectType(SkillType.GroundArea);
+            builder.SelectType(SkillType.Cone);
+
+            Assert.That(builder.IsTypeSelected(SkillType.GroundArea), Is.False);
+            Assert.That(builder.IsTypeSelected(SkillType.Cone), Is.True);
+            Assert.That(builder.CreateDraft().Type, Is.EqualTo(SkillType.Cone));
         }
 
         [Test]
@@ -182,6 +222,23 @@ namespace Axiom.Tests.EditMode
             Assert.That(result.Cooldown, Is.EqualTo(4f));
             Assert.That(result.CrowdControl, Is.EqualTo(CrowdControlType.Stun));
             Assert.That(result.PointCost, Is.EqualTo(52));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillDraftApplier_AppliesSelectedAttackType()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            SkillDefinition baseSkill = CreateSkill(SkillSlot.Q, SkillType.Projectile);
+            var draft = new SkillDraft(
+                new SkillPointModifiers(),
+                SkillElement.Fire,
+                SkillType.SelfArea);
+
+            SkillDefinition result = SkillDraftApplier.Apply(
+                baseSkill, draft, null, balance);
+
+            Assert.That(result.Type, Is.EqualTo(SkillType.SelfArea));
             Object.DestroyImmediate(balance);
         }
 
@@ -408,6 +465,19 @@ namespace Axiom.Tests.EditMode
                 skill, null, Vector3.zero, Vector3.forward * 10f, out _);
 
             Assert.That(created, Is.False);
+        }
+
+        [Test]
+        public void GlobalCastPlanner_DoesNotRequireAimOrRange()
+        {
+            SkillDefinition skill = CreateSkill(SkillSlot.Q, SkillType.Global);
+
+            bool created = SkillCastPlanner.TryCreate(
+                skill, null, Vector3.zero, Vector3.zero, out SkillCastPlan plan);
+
+            Assert.That(created, Is.True);
+            Assert.That(plan.Type, Is.EqualTo(SkillType.Global));
+            Assert.That(SkillRuntimeRules.IsArea(SkillType.Global), Is.True);
         }
 
         [Test]

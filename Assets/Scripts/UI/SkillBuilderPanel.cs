@@ -54,11 +54,15 @@ namespace Axiom.UI
                 throw new ArgumentNullException(nameof(roleElementPool));
             _hasContext = true;
             _isAvailable = true;
+            if (!_model.Type.HasValue)
+            {
+                _model.SelectType(GetDefaultType());
+            }
         }
 
         public bool TrySaveDraft()
         {
-            if (_balance == null || !_hasContext ||
+            if (_balance == null || !_hasContext || !_model.Type.HasValue ||
                 !_model.IsWithinBudget(_balance))
             {
                 return false;
@@ -109,10 +113,10 @@ namespace Axiom.UI
                 return;
             }
 
-            float width = 520f;
-            float height = 640f;
+            float width = 560f;
+            float height = 690f;
             float left = (Screen.width - width) * 0.5f;
-            float top = Mathf.Max(18f, (Screen.height - height) * 0.5f);
+            float top = Mathf.Max(8f, (Screen.height - height) * 0.5f);
             GUI.Box(new Rect(left, top, width, height), "SKILL FORGE - 100 POINT BUILD");
 
             DrawStepper(left, top + 42f, "Damage", $"+{_model.DamageIncreasePercent:0}%", _balance.DamageCostPerTenPercent, _model.AdjustDamage);
@@ -120,8 +124,16 @@ namespace Axiom.UI
             DrawStepper(left, top + 122f, "Range", $"+{_model.RangeIncrease:0}m", _balance.RangeCostPerMeter, _model.AdjustRange);
             DrawStepper(left, top + 162f, "Cooldown", $"-{_model.CooldownReduction:0}s", _balance.CooldownCostPerSecond, _model.AdjustCooldownReduction);
 
+            GUI.Label(new Rect(left + 24f, top + 202f, 500f, 24f), "ATTACK TYPE (SELECT 1)");
+            DrawType(left + 24f, top + 228f, SkillType.Target, "TARGET");
+            DrawType(left + 198f, top + 228f, SkillType.Projectile, "PROJECTILE");
+            DrawType(left + 372f, top + 228f, SkillType.SelfArea, "SELF AREA");
+            DrawType(left + 24f, top + 260f, SkillType.GroundArea, "GROUND AREA");
+            DrawType(left + 198f, top + 260f, SkillType.Global, "GLOBAL");
+            DrawType(left + 372f, top + 260f, SkillType.Cone, "CONE");
+
             GUI.Label(
-                new Rect(left + 24f, top + 205f, 460f, 24f),
+                new Rect(left + 24f, top + 298f, 500f, 24f),
                 $"ELEMENT ({_balance.ElementCost}P, 1 PER SKILL)  " +
                 $"ROLE POOL {_roleElementPool.GetDistinctElementCount(_role)}/2");
             SkillElement[] elements =
@@ -140,22 +152,22 @@ namespace Axiom.UI
                 int row = i / 3;
                 DrawElement(
                     left + 24f + (column * 154f),
-                    top + 232f + (row * 34f),
+                    top + 324f + (row * 32f),
                     elements[i]);
             }
 
             GUI.Label(
-                new Rect(left + 24f, top + 342f, 460f, 24f),
-                "CC EFFECTS (APPLIED ON HIT)");
-            DrawEffect(left, top + 370f, SkillPointEffect.Slow,
+                new Rect(left + 24f, top + 426f, 500f, 24f),
+                "CC (SELECT MAX 1, APPLIED ON HIT)");
+            DrawEffect(left, top + 454f, SkillPointEffect.Slow,
                 $"Slow {_balance.GetCrowdControlDuration(CrowdControlType.Slow):0.0}s");
-            DrawEffect(left, top + 406f, SkillPointEffect.Stun,
+            DrawEffect(left, top + 488f, SkillPointEffect.Stun,
                 $"Stun {_balance.GetCrowdControlDuration(CrowdControlType.Stun):0.0}s");
-            DrawEffect(left, top + 442f, SkillPointEffect.KnockUp,
+            DrawEffect(left, top + 522f, SkillPointEffect.KnockUp,
                 $"Knock Up {_balance.GetCrowdControlDuration(CrowdControlType.KnockUp):0.0}s");
-            DrawEffect(left + 250f, top + 370f, SkillPointEffect.Mobility, "Mobility");
-            DrawEffect(left + 250f, top + 406f, SkillPointEffect.Shield, "Shield");
-            DrawEffect(left + 250f, top + 442f, SkillPointEffect.Healing, "Healing");
+            DrawEffect(left + 280f, top + 454f, SkillPointEffect.Mobility, "Mobility");
+            DrawEffect(left + 280f, top + 488f, SkillPointEffect.Shield, "Shield");
+            DrawEffect(left + 280f, top + 522f, SkillPointEffect.Healing, "Healing");
 
             int cost = _model.GetPointCost(_balance);
             bool valid = cost <= _balance.LoadoutPointBudget;
@@ -163,23 +175,24 @@ namespace Axiom.UI
             GUI.color = valid ? new Color(0.4f, 1f, 0.65f) : new Color(1f, 0.35f, 0.3f);
             string status = valid ? "READY" : $"OVER BUDGET +{cost - _balance.LoadoutPointBudget}";
             GUI.Box(
-                new Rect(left + 24f, top + 492f, width - 48f, 54f),
+                new Rect(left + 24f, top + 562f, width - 48f, 48f),
                 $"{cost} / {_balance.LoadoutPointBudget} POINTS   {status}");
             GUI.color = previousColor;
 
-            if (GUI.Button(new Rect(left + 24f, top + 566f, 135f, 48f), "RESET"))
+            if (GUI.Button(new Rect(left + 24f, top + 626f, 135f, 44f), "RESET"))
             {
                 _model.Reset();
+                _model.SelectType(GetDefaultType());
             }
 
             GUI.enabled = valid;
-            if (GUI.Button(new Rect(left + 176f, top + 566f, 190f, 48f), "SAVE DRAFT"))
+            if (GUI.Button(new Rect(left + 184f, top + 626f, 190f, 44f), "SAVE DRAFT"))
             {
                 TrySaveDraft();
             }
 
             GUI.enabled = true;
-            if (GUI.Button(new Rect(left + 383f, top + 566f, 113f, 48f), "CLOSE"))
+            if (GUI.Button(new Rect(left + 399f, top + 626f, 137f, 44f), "CLOSE"))
             {
                 _isVisible = false;
             }
@@ -236,6 +249,40 @@ namespace Axiom.UI
             }
 
             GUI.enabled = true;
+        }
+
+        private void DrawType(float left, float top, SkillType type, string label)
+        {
+            bool selected = _model.IsTypeSelected(type);
+            bool allowed = IsTypeAllowed(type);
+            GUI.enabled = allowed;
+            string marker = selected ? "[ON]" : "[  ]";
+            int pointCost = _balance.GetSkillTypeCost(type);
+            if (GUI.Button(
+                    new Rect(left, top, 164f, 28f),
+                    $"{marker} {label}  {pointCost}P"))
+            {
+                _model.SelectType(type);
+            }
+
+            GUI.enabled = true;
+        }
+
+        private bool IsTypeAllowed(SkillType type)
+        {
+            if (_role != CharacterRoleId.Tank || _slot == SkillSlot.Ultimate)
+            {
+                return true;
+            }
+
+            return type == SkillType.Cone || type == SkillType.SelfArea;
+        }
+
+        private SkillType GetDefaultType()
+        {
+            return _role == CharacterRoleId.Tank
+                ? SkillType.Cone
+                : SkillType.Projectile;
         }
     }
 }

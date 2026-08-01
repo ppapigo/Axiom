@@ -44,7 +44,7 @@ namespace Axiom.Skill
         public static bool IsArea(SkillType type)
         {
             return type == SkillType.GroundArea || type == SkillType.Cone ||
-                   type == SkillType.SelfArea;
+                   type == SkillType.SelfArea || type == SkillType.Global;
         }
     }
 }

@@ -8,6 +8,7 @@ namespace Axiom.Skill
         public static int Calculate(
             in SkillPointModifiers modifiers,
             int selectedElementCount,
+            int attackTypeCost,
             int damageCostPerTenPercent,
             int radiusCostPerMeter,
             int rangeCostPerMeter,
@@ -21,6 +22,7 @@ namespace Axiom.Skill
             int healingCost)
         {
             int cost = 0;
+            cost += Mathf.Max(0, attackTypeCost);
             cost += IncrementCost(modifiers.DamageIncreasePercent, 10f, damageCostPerTenPercent);
             cost += IncrementCost(modifiers.RadiusIncrease, 1f, radiusCostPerMeter);
             cost += IncrementCost(modifiers.RangeIncrease, 1f, rangeCostPerMeter);

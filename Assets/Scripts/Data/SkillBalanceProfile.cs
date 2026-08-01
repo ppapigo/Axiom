@@ -13,6 +13,14 @@ namespace Axiom.Data
         [SerializeField, Min(0)] private int rangeCostPerMeter = 5;
         [SerializeField, Min(0)] private int cooldownCostPerSecond = 6;
         [SerializeField, Min(0)] private int elementCost = 10;
+        [Header("Attack Type Costs")]
+        [SerializeField, Min(0)] private int targetTypeCost = 8;
+        [SerializeField, Min(0)] private int projectileTypeCost = 0;
+        [SerializeField, Min(0)] private int selfAreaTypeCost = 12;
+        [SerializeField, Min(0)] private int groundAreaTypeCost = 15;
+        [SerializeField, Min(0)] private int globalTypeCost = 35;
+        [SerializeField, Min(0)] private int coneTypeCost = 8;
+        [Header("Effect Costs")]
         [SerializeField, Min(0)] private int slowCost = 10;
         [SerializeField, Min(0)] private int stunCost = 20;
         [SerializeField, Min(0)] private int knockUpCost = 18;
@@ -87,13 +95,29 @@ namespace Axiom.Data
             };
         }
 
+        public int GetSkillTypeCost(SkillType type)
+        {
+            return type switch
+            {
+                SkillType.Target => targetTypeCost,
+                SkillType.Projectile => projectileTypeCost,
+                SkillType.SelfArea => selfAreaTypeCost,
+                SkillType.GroundArea => groundAreaTypeCost,
+                SkillType.Global => globalTypeCost,
+                SkillType.Cone => coneTypeCost,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(type), type, null)
+            };
+        }
+
         public int CalculatePointCost(
             in SkillPointModifiers modifiers,
-            int selectedElementCount = 0)
+            int selectedElementCount = 0,
+            SkillType? selectedType = null)
         {
             return SkillPointCostCalculator.Calculate(
                 modifiers,
                 selectedElementCount,
+                selectedType.HasValue ? GetSkillTypeCost(selectedType.Value) : 0,
                 damageCostPerTenPercent,
                 radiusCostPerMeter,
                 rangeCostPerMeter,
@@ -120,6 +144,12 @@ namespace Axiom.Data
             rangeCostPerMeter = Mathf.Max(0, rangeCostPerMeter);
             cooldownCostPerSecond = Mathf.Max(0, cooldownCostPerSecond);
             elementCost = Mathf.Max(0, elementCost);
+            targetTypeCost = Mathf.Max(0, targetTypeCost);
+            projectileTypeCost = Mathf.Max(0, projectileTypeCost);
+            selfAreaTypeCost = Mathf.Max(0, selfAreaTypeCost);
+            groundAreaTypeCost = Mathf.Max(0, groundAreaTypeCost);
+            globalTypeCost = Mathf.Max(0, globalTypeCost);
+            coneTypeCost = Mathf.Max(0, coneTypeCost);
             slowCost = Mathf.Max(0, slowCost);
             stunCost = Mathf.Max(0, stunCost);
             knockUpCost = Mathf.Max(0, knockUpCost);

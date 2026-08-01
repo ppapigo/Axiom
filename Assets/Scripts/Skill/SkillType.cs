@@ -6,6 +6,7 @@ namespace Axiom.Skill
         Projectile,
         GroundArea,
         Cone,
-        SelfArea
+        SelfArea,
+        Global
     }
 }

@@ -80,6 +80,7 @@ namespace Axiom.Skill
             bool isRanged = definition.Type == SkillType.Target ||
                             definition.Type == SkillType.Projectile ||
                             definition.Type == SkillType.GroundArea ||
+                            definition.Type == SkillType.Global ||
                             definition.Range > balance.TankMaximumNonUltimateRange;
             if (!role.AllowsRangedAttacks && !isUltimate && isRanged)
             {
@@ -88,7 +89,8 @@ namespace Axiom.Skill
 
             bool isArea = definition.Type == SkillType.GroundArea ||
                           definition.Type == SkillType.Cone ||
-                          definition.Type == SkillType.SelfArea;
+                          definition.Type == SkillType.SelfArea ||
+                          definition.Type == SkillType.Global;
             if (isArea && definition.DamageCoefficient > 0f && !role.AllowsAreaDamage)
             {
                 result.AddError("This role cannot use damaging area skills.");
@@ -97,7 +99,7 @@ namespace Axiom.Skill
 
         private static bool RequiresRange(SkillType type)
         {
-            return type != SkillType.SelfArea;
+            return type != SkillType.SelfArea && type != SkillType.Global;
         }
 
         private static bool RequiresRadius(SkillType type)

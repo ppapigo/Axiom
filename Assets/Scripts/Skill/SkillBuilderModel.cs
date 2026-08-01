@@ -17,12 +17,14 @@ namespace Axiom.Skill
         private bool _shield;
         private bool _healing;
         private SkillElement? _element;
+        private SkillType? _type;
 
         public float DamageIncreasePercent => _damageSteps * 10f;
         public float RadiusIncrease => _radiusSteps;
         public float RangeIncrease => _rangeSteps;
         public float CooldownReduction => _cooldownSteps;
         public SkillElement? Element => _element;
+        public SkillType? Type => _type;
         public int SelectedElementCount => _element.HasValue ? 1 : 0;
 
         public void AdjustDamage(int steps)
@@ -64,13 +66,19 @@ namespace Axiom.Skill
             switch (effect)
             {
                 case SkillPointEffect.Slow:
-                    _slow = !_slow;
+                    bool enableSlow = !_slow;
+                    ClearCrowdControl();
+                    _slow = enableSlow;
                     break;
                 case SkillPointEffect.Stun:
-                    _stun = !_stun;
+                    bool enableStun = !_stun;
+                    ClearCrowdControl();
+                    _stun = enableStun;
                     break;
                 case SkillPointEffect.KnockUp:
-                    _knockUp = !_knockUp;
+                    bool enableKnockUp = !_knockUp;
+                    ClearCrowdControl();
+                    _knockUp = enableKnockUp;
                     break;
                 case SkillPointEffect.Mobility:
                     _mobility = !_mobility;
@@ -103,6 +111,16 @@ namespace Axiom.Skill
             return true;
         }
 
+        public void SelectType(SkillType type)
+        {
+            _type = type;
+        }
+
+        public bool IsTypeSelected(SkillType type)
+        {
+            return _type == type;
+        }
+
         public int GetPointCost(SkillBalanceProfile balance)
         {
             if (balance == null)
@@ -111,7 +129,7 @@ namespace Axiom.Skill
             }
 
             SkillPointModifiers modifiers = CreateModifiers();
-            return balance.CalculatePointCost(modifiers, SelectedElementCount);
+            return balance.CalculatePointCost(modifiers, SelectedElementCount, _type);
         }
 
         public bool IsWithinBudget(SkillBalanceProfile balance)
@@ -137,7 +155,7 @@ namespace Axiom.Skill
         public SkillDraft CreateDraft()
         {
             SkillPointModifiers modifiers = CreateModifiers();
-            return new SkillDraft(modifiers, _element);
+            return new SkillDraft(modifiers, _element, _type);
         }
 
         public void Reset()
@@ -153,6 +171,14 @@ namespace Axiom.Skill
             _shield = false;
             _healing = false;
             _element = null;
+            _type = null;
+        }
+
+        private void ClearCrowdControl()
+        {
+            _slow = false;
+            _stun = false;
+            _knockUp = false;
         }
     }
 }

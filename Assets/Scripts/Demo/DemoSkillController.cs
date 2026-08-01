@@ -182,6 +182,11 @@ namespace Axiom.Demo
                         _stats.AttackPower,
                         Time.time);
                 }
+
+                if (definition.Type == SkillType.Target)
+                {
+                    break;
+                }
             }
         }
 
@@ -193,6 +198,18 @@ namespace Axiom.Demo
                 definition.Type == SkillType.SelfArea)
             {
                 return Physics.OverlapSphere(plan.Center, plan.Radius);
+            }
+
+            if (definition.Type == SkillType.Global)
+            {
+                return Physics.OverlapSphere(plan.Origin, 1000f);
+            }
+
+            if (definition.Type == SkillType.Target)
+            {
+                return Physics.OverlapSphere(
+                    plan.Center,
+                    Mathf.Max(0.5f, definition.Radius));
             }
 
             if (definition.Type == SkillType.Cone)
@@ -310,12 +327,15 @@ namespace Axiom.Demo
             effect.name = "SkillEffect";
             Object.Destroy(effect.GetComponent<Collider>());
             effect.transform.position = plan.Type == SkillType.GroundArea ||
-                                        plan.Type == SkillType.SelfArea
+                                        plan.Type == SkillType.SelfArea ||
+                                        plan.Type == SkillType.Global
                 ? plan.Center + (Vector3.up * 0.15f)
                 : plan.Origin + (plan.Direction * 2f) + (Vector3.up * 0.5f);
-            float size = plan.Type == SkillType.GroundArea || plan.Type == SkillType.SelfArea
-                ? plan.Radius * 2f
-                : 0.8f;
+            float size = plan.Type == SkillType.Global
+                ? 18f
+                : plan.Type == SkillType.GroundArea || plan.Type == SkillType.SelfArea
+                    ? plan.Radius * 2f
+                    : 0.8f;
             effect.transform.localScale = new Vector3(size, 0.2f, size);
             Renderer renderer = effect.GetComponent<Renderer>();
             renderer.material = DemoArenaBootstrap.CreateDemoMaterial(

@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-현재 Unity EditMode 테스트 82개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
+현재 Unity EditMode 테스트 87개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
 
 ## 구현된 시스템
 
@@ -104,7 +104,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 
 1. `Create > Axiom > Skill > Balance Profile`로 기본 100포인트 예산, 항목별 비용과 시전 시간 피해 곡선을 설정합니다.
 2. `Create > Axiom > Skill > Skill Data`로 각 스킬의 타입, 피해 계수, 쿨다운, 사거리, 반경, 투사체 속도, CC와 속성 1개를 설정합니다.
-3. `100 Point Build Modifiers`에서 피해·범위·사거리·쿨타임 보정과 CC·이동·보호막·회복 효과를 선택하면 Balance Profile 기준으로 비용이 자동 계산됩니다. 속성은 별도 속성 칸에서 선택하며 하나당 기본 10포인트를 사용합니다.
+3. `100 Point Build Modifiers`에서 피해·범위·사거리·쿨타임 보정과 CC·이동·보호막·회복 효과를 선택하면 Balance Profile 기준으로 비용이 자동 계산됩니다. 공격 방식은 Target 8P, Projectile(논타겟) 0P, Self Area(자기 중심) 12P, Ground Area(지역 지정) 15P, Global 35P, Cone(부채꼴) 8P 중 정확히 하나를 선택합니다. 비용은 모두 Balance Profile에서 수정할 수 있습니다. CC도 Slow, Stun, KnockUp 중 하나만 선택할 수 있습니다. 속성은 별도 속성 칸에서 선택하며 하나당 기본 10포인트를 사용합니다.
 4. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
 5. `ValidateLoadout` 결과가 유효하고 총비용이 100포인트 이하인 데이터만 전투 실행 계층에 전달합니다.
 6. 데모는 `역할 선택 → Q 스킬 제작 → SAVE DRAFT → 3vs3 전투 시작` 순서로 진행됩니다. 역할을 선택하기 전에는 스킬 제작 UI가 숨겨지고, 스킬을 저장하기 전에는 전투 캐릭터와 매치가 생성되지 않습니다. 각 스킬은 속성 1개를 선택하며, 같은 역할군의 Q/E/R 전체에서 서로 다른 속성은 최대 2개까지만 사용할 수 있습니다. 이미 채택한 속성은 여러 스킬에서 재사용할 수 있습니다.

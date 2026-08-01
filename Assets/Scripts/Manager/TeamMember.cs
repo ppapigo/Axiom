@@ -8,5 +8,10 @@ namespace Axiom.Manager
         [SerializeField] private TeamId team;
 
         public TeamId Team => team;
+
+        public void SetTeam(TeamId teamId)
+        {
+            team = teamId;
+        }
     }
 }

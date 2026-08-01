@@ -16,6 +16,14 @@ namespace Axiom.Character
         private CharacterController _characterController;
         private CharacterRole _characterRole;
 
+        public void Configure(
+            InputActionDashSource inputSource,
+            InputActionMovementSource movementSource)
+        {
+            dashInput = inputSource;
+            movementInput = movementSource;
+        }
+
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();
@@ -58,4 +66,3 @@ namespace Axiom.Character
         }
     }
 }
-

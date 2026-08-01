@@ -9,6 +9,10 @@ namespace Axiom.Role
 
         public bool IsConfigured => definition != null;
         public CharacterRoleDefinition Definition => definition;
+
+        public void SetDefinition(CharacterRoleDefinition roleDefinition)
+        {
+            definition = roleDefinition;
+        }
     }
 }
-

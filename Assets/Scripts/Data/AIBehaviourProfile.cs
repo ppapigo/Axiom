@@ -36,6 +36,20 @@ namespace Axiom.Data
         public int MageClusterCount => mageClusterCount;
         public float AssassinRearOffset => assassinRearOffset;
 
+        public void ConfigureForDemo(
+            float configuredDetectionRange,
+            float configuredBaseMoveSpeed,
+            float configuredPreferredMinimumRange,
+            float configuredPreferredMaximumRange)
+        {
+            detectionRange = Mathf.Max(0f, configuredDetectionRange);
+            baseMoveSpeed = Mathf.Max(0f, configuredBaseMoveSpeed);
+            preferredMinimumRange = Mathf.Max(0f, configuredPreferredMinimumRange);
+            preferredMaximumRange = Mathf.Max(
+                preferredMinimumRange,
+                configuredPreferredMaximumRange);
+        }
+
         private void OnValidate()
         {
             detectionRange = Mathf.Max(0f, detectionRange);

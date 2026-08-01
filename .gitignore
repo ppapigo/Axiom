@@ -109,3 +109,9 @@ InitTestScene*.unity*
 # Local Unity batch-mode verification output
 /Unity*.log
 /TestResults*.xml
+/PlayModeResults.xml
+
+# Unity Performance Testing package runtime artifacts
+/Assets/Resources.meta
+/Assets/Resources/PerformanceTestRunInfo.json*
+/Assets/Resources/PerformanceTestRunSettings.json*

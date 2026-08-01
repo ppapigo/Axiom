@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Axiom.Character;
 using Axiom.Data;
 using Axiom.Input;
+using Axiom.Manager;
 using Axiom.Role;
 using UnityEngine;
 
@@ -18,6 +19,16 @@ namespace Axiom.Combat
         private readonly BasicAttackCooldown _cooldown = new BasicAttackCooldown();
         private CharacterStats _characterStats;
         private CharacterRole _characterRole;
+
+        public void Configure(
+            BasicAttackProfile profile,
+            InputActionBasicAttackSource configuredInputSource = null,
+            Transform configuredAttackOrigin = null)
+        {
+            attackProfile = profile;
+            inputSource = configuredInputSource;
+            attackOrigin = configuredAttackOrigin;
+        }
 
         public float AttackRange => attackProfile == null
             ? 0f
@@ -105,6 +116,7 @@ namespace Axiom.Combat
                 attackProfile.TriggerInteraction);
 
             var notifiedReceivers = new HashSet<IBasicAttackReceiver>();
+            TeamMember attackerTeam = GetComponent<TeamMember>();
             var hit = new BasicAttackHit(
                 gameObject,
                 origin,
@@ -120,6 +132,13 @@ namespace Axiom.Combat
                 if (receiverComponent is not IBasicAttackReceiver receiver ||
                     receiverComponent.transform.root == transform.root ||
                     !notifiedReceivers.Add(receiver))
+                {
+                    continue;
+                }
+
+                TeamMember receiverTeam = receiverComponent.GetComponent<TeamMember>();
+                if (attackerTeam != null && receiverTeam != null &&
+                    attackerTeam.Team == receiverTeam.Team)
                 {
                     continue;
                 }

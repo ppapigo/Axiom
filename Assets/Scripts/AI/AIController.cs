@@ -37,6 +37,14 @@ namespace Axiom.AI
         public AIState CurrentState => _stateMachine.CurrentState;
         public Transform CurrentTarget => _target;
 
+        public void Configure(
+            AIBehaviourProfile profile,
+            AISkillUserBehaviour configuredSkillUser = null)
+        {
+            behaviourProfile = profile;
+            skillUser = configuredSkillUser;
+        }
+
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();

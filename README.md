@@ -2,7 +2,21 @@
 
 Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스타일의 논타겟 전투와 ScriptableObject 기반 사용자 스킬 제작 시스템을 목표로 합니다.
 
-기능은 작은 단위로 구현하고 EditMode 테스트를 통과한 뒤 다음 단계로 진행합니다.
+## 바로 플레이
+
+**[GitHub Pages에서 Axiom 실행](https://ppapigo.github.io/Axiom/)**
+
+별도 설치 없이 WebGL 지원 데스크톱 브라우저에서 실행할 수 있습니다.
+
+- 시작 화면에서 Tank, Mage, Assassin 중 하나를 선택합니다.
+- `WASD`: 이동
+- 마우스: 조준
+- 좌클릭: 기본 공격
+- `Q`, `E`, `R`: 역할별 스킬
+- `Space`: 회피
+- 한 팀을 전멸시키면 라운드 1승이며, 먼저 2승하면 경기가 끝납니다.
+
+기능은 작은 단위로 구현하고 테스트를 통과한 뒤 다음 단계로 진행합니다.
 
 ## 현재 단계
 
@@ -17,7 +31,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-현재 Unity EditMode 테스트 65개가 모두 통과합니다.
+현재 Unity EditMode 테스트 65개와 PlayMode 데모 스모크 테스트 1개가 모두 통과합니다.
 
 ## 구현된 시스템
 
@@ -48,6 +62,9 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - Self Area와 Ground Area의 거리별 계단식 피해 감소
 - Tank 원거리 제한, Mage 광역 피해 상한, Assassin 광역 반경 제한
 - 자연어 스킬 생성 결과를 런타임 사용 전에 검증할 수 있는 `SkillDefinition` 파이프라인
+- 런타임에서 생성되는 대칭형 Arena, 좌우 엄폐물과 투사체 차단 벽
+- 역할 선택부터 AI 5명과의 3vs3 전투, 라운드 HUD, 재경기까지 이어지는 데모 씬
+- GitHub Pages에서 직접 실행할 수 있는 Unity WebGL 빌드
 
 ## Unity 구성
 
@@ -85,10 +102,14 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 
 ## GitHub 브라우저 실행
 
-Unity WebGL 빌드를 GitHub Pages에 배포하면 별도 설치 없이 링크로 실행할 수 있습니다. 현재 저장소에는 실행 씬이 아직 등록되지 않아 Pages 배포 전 단계입니다.
+배포 파일은 저장소의 `docs/`에 있으며 GitHub Pages가 `main` 브랜치의 `/docs`를 게시합니다.
 
-EditMode 테스트는 `Window > General > Test Runner`에서 실행합니다.
+- 실행 주소: https://ppapigo.github.io/Axiom/
+- 데모 씬: `Assets/Scenes/AxiomDemo.unity`
+- WebGL 빌드 메뉴: `Axiom > Create Demo Scene`, `Axiom > Build WebGL`
+
+EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행합니다.
 
 ## 다음 단계
 
-플레이 가능한 데모 씬을 구성하고 Unity WebGL 빌드와 GitHub Pages 자동 배포를 연결합니다. 완료 후 README 상단에 심사용 실행 링크를 제공합니다.
+AI 자연어 요청을 검증된 `SkillDefinition`으로 변환하는 생성 계층과 데모 연출·UI 품질을 개선합니다.

@@ -19,6 +19,12 @@ namespace Axiom.Camera
             SnapToTarget();
         }
 
+        public void SetProfile(CameraFollowProfile profile)
+        {
+            followProfile = profile;
+            SnapToTarget();
+        }
+
         private void OnEnable()
         {
             _followVelocity = Vector3.zero;
@@ -73,4 +79,3 @@ namespace Axiom.Camera
         }
     }
 }
-

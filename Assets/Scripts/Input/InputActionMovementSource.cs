@@ -7,21 +7,33 @@ namespace Axiom.Input
     public sealed class InputActionMovementSource : MonoBehaviour, IMovementInputSource
     {
         [SerializeField] private InputActionReference moveAction;
+        private InputAction _runtimeAction;
+
+        public void Configure(InputAction action)
+        {
+            _runtimeAction = action;
+            if (isActiveAndEnabled)
+            {
+                _runtimeAction?.Enable();
+            }
+        }
 
         public Vector2 ReadMovement()
         {
-            InputAction action = moveAction?.action;
+            InputAction action = moveAction?.action ?? _runtimeAction;
             return action == null ? Vector2.zero : action.ReadValue<Vector2>();
         }
 
         private void OnEnable()
         {
             moveAction?.action?.Enable();
+            _runtimeAction?.Enable();
         }
 
         private void OnDisable()
         {
             moveAction?.action?.Disable();
+            _runtimeAction?.Disable();
         }
 
         private void OnValidate()

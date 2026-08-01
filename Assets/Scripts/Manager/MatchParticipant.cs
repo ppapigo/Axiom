@@ -18,6 +18,16 @@ namespace Axiom.Manager
             ? null
             : teamMember.GetComponent<CharacterHealth>();
 
+        public void Configure(
+            TeamMember configuredTeamMember,
+            Transform configuredSpawnPoint,
+            Behaviour[] configuredRoundBehaviours)
+        {
+            teamMember = configuredTeamMember;
+            spawnPoint = configuredSpawnPoint;
+            roundBehaviours = configuredRoundBehaviours;
+        }
+
         public bool IsValid(TeamId expectedTeam)
         {
             return teamMember != null && spawnPoint != null &&

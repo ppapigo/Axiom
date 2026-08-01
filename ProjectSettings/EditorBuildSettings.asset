@@ -4,6 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/AxiomDemo.unity
+    guid: 33497d020ad0ea244b0e77fb4d6b113a
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

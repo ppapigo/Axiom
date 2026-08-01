@@ -17,6 +17,15 @@ namespace Axiom.Character
         private IMovementInputSource _inputSource;
         private CharacterRole _characterRole;
 
+        public void Configure(
+            CharacterMovementProfile profile,
+            InputActionMovementSource inputSource)
+        {
+            movementProfile = profile;
+            inputSourceBehaviour = inputSource;
+            _inputSource = inputSource;
+        }
+
         private void Awake()
         {
             _characterController = GetComponent<CharacterController>();

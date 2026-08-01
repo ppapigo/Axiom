@@ -1,0 +1,11 @@
+{
+  "name": "Axiom.Tests.PlayMode",
+  "rootNamespace": "Axiom.Tests.PlayMode",
+  "references": [
+    "Axiom.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false
+}

@@ -33,6 +33,20 @@ namespace Axiom.Manager
         public int TeamAWins => _match?.TeamAWins ?? 0;
         public int TeamBWins => _match?.TeamBWins ?? 0;
 
+        public void Configure(
+            MatchParticipant[] configuredTeamA,
+            MatchParticipant[] configuredTeamB,
+            int configuredWinsRequired = 2,
+            float configuredNextRoundDelay = 2f,
+            bool configuredStartAutomatically = true)
+        {
+            teamA = configuredTeamA;
+            teamB = configuredTeamB;
+            winsRequired = Mathf.Max(1, configuredWinsRequired);
+            nextRoundDelay = Mathf.Max(0f, configuredNextRoundDelay);
+            startAutomatically = configuredStartAutomatically;
+        }
+
         private void Start()
         {
             if (!ValidateConfiguration())

@@ -12,15 +12,33 @@ namespace Axiom.Input
         [SerializeField] private LayerMask aimSurfaceLayers = ~0;
         [SerializeField, Min(0.01f)] private float maximumAimDistance = 200f;
         [SerializeField] private float fallbackAimPlaneHeight;
+        private InputAction _runtimeAimAction;
+        private InputAction _runtimeAttackAction;
+
+        public void Configure(
+            InputAction aim,
+            InputAction attack,
+            UnityEngine.Camera camera)
+        {
+            _runtimeAimAction = aim;
+            _runtimeAttackAction = attack;
+            aimCamera = camera;
+            if (isActiveAndEnabled)
+            {
+                _runtimeAimAction?.Enable();
+                _runtimeAttackAction?.Enable();
+            }
+        }
 
         public bool WasBasicAttackPressedThisFrame()
         {
-            return basicAttackAction?.action?.WasPressedThisFrame() ?? false;
+            InputAction action = basicAttackAction?.action ?? _runtimeAttackAction;
+            return action?.WasPressedThisFrame() ?? false;
         }
 
         public bool TryGetAimPoint(out Vector3 worldPoint)
         {
-            InputAction action = aimAction?.action;
+            InputAction action = aimAction?.action ?? _runtimeAimAction;
             if (action == null || aimCamera == null)
             {
                 worldPoint = default;
@@ -56,12 +74,16 @@ namespace Axiom.Input
         {
             aimAction?.action?.Enable();
             basicAttackAction?.action?.Enable();
+            _runtimeAimAction?.Enable();
+            _runtimeAttackAction?.Enable();
         }
 
         private void OnDisable()
         {
             aimAction?.action?.Disable();
             basicAttackAction?.action?.Disable();
+            _runtimeAimAction?.Disable();
+            _runtimeAttackAction?.Disable();
         }
 
         private void OnValidate()
@@ -70,4 +92,3 @@ namespace Axiom.Input
         }
     }
 }
-

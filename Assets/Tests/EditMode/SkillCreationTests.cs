@@ -231,6 +231,16 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void CrowdControlState_ReportsVisibleRemainingDuration()
+        {
+            var state = new CrowdControlState();
+            state.Apply(CrowdControlType.Stun, 10f, 1f);
+
+            Assert.That(state.GetRemainingDuration(10.25f), Is.EqualTo(0.75f));
+            Assert.That(state.GetRemainingDuration(11f), Is.Zero);
+        }
+
+        [Test]
         public void SkillBalance_UsesRequestedCrowdControlBaselines()
         {
             SkillBalanceProfile balance = CreateBalance();

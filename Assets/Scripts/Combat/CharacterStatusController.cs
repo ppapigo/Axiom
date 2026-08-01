@@ -11,6 +11,7 @@ namespace Axiom.Combat
         private readonly CrowdControlState _state = new CrowdControlState();
 
         public CrowdControlType ActiveEffect => _state.GetActiveEffect(Time.time);
+        public float ActiveRemainingDuration => _state.GetRemainingDuration(Time.time);
         public bool IsMovementBlocked => _state.IsMovementBlocked(Time.time);
         public bool IsActionBlocked => _state.IsActionBlocked(Time.time);
         public float MovementSpeedMultiplier => balance == null

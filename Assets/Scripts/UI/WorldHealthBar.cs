@@ -19,6 +19,7 @@ namespace Axiom.UI
         [SerializeField, Min(1f)] private float healthPerSegment = 100f;
 
         public CharacterHealth Health => health;
+        public CharacterStatusController Status => status;
 
         public void Configure(
             CharacterHealth targetHealth,
@@ -74,9 +75,7 @@ namespace Axiom.UI
                 DrawRect(new Rect(x, top, 1f, height), new Color(0f, 0f, 0f, 0.7f));
             }
 
-            string statusText = status != null && status.ActiveEffect != Skill.CrowdControlType.None
-                ? $"  [{status.ActiveEffect.ToString().ToUpperInvariant()}]"
-                : string.Empty;
+            string statusText = string.Empty;
             if (elementStatus != null && elementStatus.ActiveDamageOverTime.HasValue)
             {
                 statusText += $" [{elementStatus.ActiveDamageOverTime.Value.ToString().ToUpperInvariant()}]";
@@ -84,6 +83,35 @@ namespace Axiom.UI
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),
                 $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}{statusText}");
+
+            if (status != null && status.ActiveEffect != Skill.CrowdControlType.None)
+            {
+                DrawCrowdControlBadge(
+                    new Rect(left, top + height + 5f, width, 20f),
+                    status.ActiveEffect,
+                    status.ActiveRemainingDuration);
+            }
+        }
+
+        internal static void DrawCrowdControlBadge(
+            Rect rect,
+            Skill.CrowdControlType effect,
+            float remaining)
+        {
+            Color color = effect switch
+            {
+                Skill.CrowdControlType.Stun => new Color(1f, 0.72f, 0.08f, 0.96f),
+                Skill.CrowdControlType.KnockUp => new Color(0.72f, 0.38f, 1f, 0.96f),
+                Skill.CrowdControlType.Root => new Color(0.25f, 0.82f, 0.45f, 0.96f),
+                Skill.CrowdControlType.Slow => new Color(0.2f, 0.7f, 1f, 0.96f),
+                _ => new Color(0.8f, 0.3f, 0.3f, 0.96f)
+            };
+            DrawRect(new Rect(rect.x - 1f, rect.y - 1f, rect.width + 2f, rect.height + 2f),
+                Color.black);
+            DrawRect(rect, color);
+            GUI.Label(
+                new Rect(rect.x + 5f, rect.y + 1f, rect.width - 10f, rect.height - 2f),
+                $"CC  {effect.ToString().ToUpperInvariant()}  {remaining:0.0}s");
         }
 
         private static void DrawRect(Rect rect, Color color)

@@ -72,6 +72,19 @@ namespace Axiom.Skill
                 : CrowdControlType.None;
         }
 
+        public float GetRemainingDuration(float currentTime)
+        {
+            float until = GetActiveEffect(currentTime) switch
+            {
+                CrowdControlType.Stun => _stunUntil,
+                CrowdControlType.KnockUp => _knockUpUntil,
+                CrowdControlType.Root => _rootUntil,
+                CrowdControlType.Slow => _slowUntil,
+                _ => currentTime
+            };
+            return Mathf.Max(0f, until - currentTime);
+        }
+
         public void Clear()
         {
             _slowUntil = 0f;

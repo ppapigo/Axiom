@@ -144,10 +144,15 @@ namespace Axiom.UI
                     elements[i]);
             }
 
-            GUI.Label(new Rect(left + 24f, top + 342f, 460f, 24f), "EFFECTS");
-            DrawEffect(left, top + 370f, SkillPointEffect.Slow, "Slow");
-            DrawEffect(left, top + 406f, SkillPointEffect.Stun, "Stun");
-            DrawEffect(left, top + 442f, SkillPointEffect.KnockUp, "Knock Up");
+            GUI.Label(
+                new Rect(left + 24f, top + 342f, 460f, 24f),
+                "CC EFFECTS (APPLIED ON HIT)");
+            DrawEffect(left, top + 370f, SkillPointEffect.Slow,
+                $"Slow {_balance.GetCrowdControlDuration(CrowdControlType.Slow):0.0}s");
+            DrawEffect(left, top + 406f, SkillPointEffect.Stun,
+                $"Stun {_balance.GetCrowdControlDuration(CrowdControlType.Stun):0.0}s");
+            DrawEffect(left, top + 442f, SkillPointEffect.KnockUp,
+                $"Knock Up {_balance.GetCrowdControlDuration(CrowdControlType.KnockUp):0.0}s");
             DrawEffect(left + 250f, top + 370f, SkillPointEffect.Mobility, "Mobility");
             DrawEffect(left + 250f, top + 406f, SkillPointEffect.Shield, "Shield");
             DrawEffect(left + 250f, top + 442f, SkillPointEffect.Healing, "Healing");

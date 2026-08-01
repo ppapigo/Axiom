@@ -14,6 +14,7 @@ namespace Axiom.UI
         [SerializeField] private DemoSkillController skills;
         [SerializeField] private CharacterDashController dash;
         [SerializeField] private CharacterRole role;
+        [SerializeField] private CharacterStatusController status;
 
         public bool IsConfigured => health != null && skills != null && dash != null && role != null;
         public CharacterHealth Health => health;
@@ -28,6 +29,9 @@ namespace Axiom.UI
             skills = skillController;
             dash = dashController;
             role = characterRole;
+            status = playerHealth == null
+                ? null
+                : playerHealth.GetComponent<CharacterStatusController>();
         }
 
         private void OnGUI()
@@ -40,6 +44,13 @@ namespace Axiom.UI
             float center = Screen.width * 0.5f;
             float slotTop = Screen.height - 100f;
             DrawHealth(center, slotTop - 42f);
+            if (status != null && status.ActiveEffect != CrowdControlType.None)
+            {
+                WorldHealthBar.DrawCrowdControlBadge(
+                    new Rect(center - 80f, slotTop - 70f, 160f, 22f),
+                    status.ActiveEffect,
+                    status.ActiveRemainingDuration);
+            }
             const float slotSize = 68f;
             const float gap = 8f;
             float left = center - (((slotSize * 4f) + (gap * 3f)) * 0.5f);

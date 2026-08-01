@@ -62,6 +62,7 @@ namespace Axiom.Tests.PlayMode
             statuses[0].Clear();
             Assert.That(healthBars, Has.Length.EqualTo(6));
             Assert.That(healthBars, Has.All.Matches<WorldHealthBar>(bar => bar.Health != null));
+            Assert.That(healthBars, Has.All.Matches<WorldHealthBar>(bar => bar.Status != null));
             Assert.That(match, Is.Not.Null);
             Assert.That(match.Phase, Is.EqualTo(MatchPhase.RoundActive));
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);

@@ -12,6 +12,7 @@ namespace Axiom.Editor
     {
         private const string SceneFolder = "Assets/Scenes";
         private const string ScenePath = SceneFolder + "/AxiomDemo.unity";
+        private const string DemoShaderPath = "Assets/Shaders/AxiomDemoUnlit.shader";
         private const string WebOutputPath = "docs";
 
         [MenuItem("Axiom/Demo/Create Demo Scene")]
@@ -40,11 +41,12 @@ namespace Axiom.Editor
         [MenuItem("Axiom/Demo/Build WebGL")]
         public static void BuildWebGL()
         {
+            EnsureDemoShaderIncluded();
             CreateDemoScene();
             PlayerSettings.companyName = "Axiom Team";
             PlayerSettings.productName = "Axiom";
-            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
-            PlayerSettings.WebGL.decompressionFallback = false;
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Brotli;
+            PlayerSettings.WebGL.decompressionFallback = true;
             PlayerSettings.defaultWebScreenWidth = 1280;
             PlayerSettings.defaultWebScreenHeight = 720;
 
@@ -66,6 +68,36 @@ namespace Axiom.Editor
             Debug.Log(
                 $"Axiom WebGL build completed: {WebOutputPath}, " +
                 $"{report.summary.totalSize} bytes");
+        }
+
+        private static void EnsureDemoShaderIncluded()
+        {
+            Shader demoShader = AssetDatabase.LoadAssetAtPath<Shader>(DemoShaderPath);
+            if (demoShader == null)
+            {
+                throw new InvalidOperationException(
+                    $"Demo shader is missing: {DemoShaderPath}");
+            }
+
+            UnityEngine.Object graphicsSettings =
+                AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")[0];
+            var serializedSettings = new SerializedObject(graphicsSettings);
+            SerializedProperty includedShaders =
+                serializedSettings.FindProperty("m_AlwaysIncludedShaders");
+
+            for (int i = 0; i < includedShaders.arraySize; i++)
+            {
+                if (includedShaders.GetArrayElementAtIndex(i).objectReferenceValue == demoShader)
+                {
+                    return;
+                }
+            }
+
+            includedShaders.InsertArrayElementAtIndex(includedShaders.arraySize);
+            includedShaders.GetArrayElementAtIndex(includedShaders.arraySize - 1)
+                .objectReferenceValue = demoShader;
+            serializedSettings.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssets();
         }
     }
 }

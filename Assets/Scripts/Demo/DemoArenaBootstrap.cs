@@ -195,7 +195,7 @@ namespace Axiom.Demo
             character.transform.position = spawnPosition;
             Destroy(character.GetComponent<CapsuleCollider>());
             Renderer renderer = character.GetComponent<Renderer>();
-            renderer.material = CreateMaterial(team == TeamId.TeamA
+            SetColor(renderer, team == TeamId.TeamA
                 ? RoleColor(roleId, true)
                 : RoleColor(roleId, false));
 
@@ -270,6 +270,9 @@ namespace Axiom.Demo
 
             CharacterMovement movement = character.AddComponent<CharacterMovement>();
             movement.Configure(_movementProfile, movementSource);
+            CharacterAimController aimController =
+                character.AddComponent<CharacterAimController>();
+            aimController.Configure(attackSource);
             CharacterDashController dashController = character.AddComponent<CharacterDashController>();
             dashController.Configure(dashSource, movementSource);
             basicAttack.Configure(GetAttackProfile(roleId), attackSource);
@@ -277,6 +280,7 @@ namespace Axiom.Demo
             skills.Configure(_mainCamera, _skillBalance);
 
             combatBehaviours.Add(movement);
+            combatBehaviours.Add(aimController);
             combatBehaviours.Add(dashController);
             combatBehaviours.Add(basicAttack);
             combatBehaviours.Add(skills);
@@ -389,12 +393,23 @@ namespace Axiom.Demo
             block.name = blockName;
             block.transform.position = position;
             block.transform.localScale = scale;
-            block.GetComponent<Renderer>().material = CreateMaterial(color);
+            SetColor(block.GetComponent<Renderer>(), color);
         }
 
-        private static Material CreateMaterial(Color color)
+        private static void SetColor(Renderer renderer, Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            renderer.material = CreateDemoMaterial(color);
+        }
+
+        internal static Material CreateDemoMaterial(Color color)
+        {
+            Shader shader = Shader.Find("Axiom/DemoUnlit");
+            if (shader == null)
+            {
+                throw new MissingReferenceException(
+                    "The Axiom/DemoUnlit shader must be included in the player build.");
+            }
+
             var material = new Material(shader);
             material.color = color;
             return material;

@@ -35,7 +35,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 
 ## 구현된 시스템
 
-- New Input System 기반 WASD 이동, 마우스 조준, 좌클릭 기본 공격, Space 회피
+- New Input System 기반 WASD 이동, 마우스 조준 및 몸 방향 회전, 좌클릭 기본 공격, Space 회피
 - 높이와 각도를 Inspector에서 조정하는 고정 쿼터뷰 추적 카메라
 - 캡슐 판정 기반 논타겟 기본 공격
 - `Attack × DamageCoefficient × CastDelayBonus × DistanceMultiplier` 피해 공식
@@ -65,6 +65,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - 런타임에서 생성되는 대칭형 Arena, 좌우 엄폐물과 투사체 차단 벽
 - 역할 선택부터 AI 5명과의 3vs3 전투, 라운드 HUD, 재경기까지 이어지는 데모 씬
 - GitHub Pages에서 직접 실행할 수 있는 Unity WebGL 빌드
+- Brotli 압축과 브라우저 압축 해제 fallback을 적용한 약 10MB 배포 패키지
 
 ## Unity 구성
 
@@ -107,6 +108,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - 실행 주소: https://ppapigo.github.io/Axiom/
 - 데모 씬: `Assets/Scenes/AxiomDemo.unity`
 - WebGL 빌드 메뉴: `Axiom > Create Demo Scene`, `Axiom > Build WebGL`
+- 현재 전체 배포 파일 크기: 약 10MB
 
 EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행합니다.
 

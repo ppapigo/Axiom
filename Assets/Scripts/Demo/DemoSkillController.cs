@@ -211,7 +211,8 @@ namespace Axiom.Demo
                 : 0.8f;
             effect.transform.localScale = new Vector3(size, 0.2f, size);
             Renderer renderer = effect.GetComponent<Renderer>();
-            renderer.material.color = new Color(0.2f, 0.8f, 1f, 0.7f);
+            renderer.material = DemoArenaBootstrap.CreateDemoMaterial(
+                new Color(0.2f, 0.8f, 1f, 0.7f));
             Object.Destroy(effect, 0.3f);
         }
     }

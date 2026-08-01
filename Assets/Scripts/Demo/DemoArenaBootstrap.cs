@@ -78,7 +78,7 @@ namespace Axiom.Demo
 
             GUI.Box(
                 new Rect(12f, Screen.height - 78f, 520f, 62f),
-                "WASD Move  |  Mouse Aim  |  Left Click Attack  |  Space Dash  |  Q E R Skills");
+                "WASD Move | Mouse Aim | Left Click Attack | Space Dash | Q E R Skills | B Forge");
             DrawTeamHealth();
 
             if (_winner.HasValue && GUI.Button(
@@ -351,6 +351,8 @@ namespace Axiom.Demo
             _aiProfile = ScriptableObject.CreateInstance<AIBehaviourProfile>();
             _aiProfile.ConfigureForDemo(20f, 4.5f, 4f, 6f);
             _skillBalance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            SkillBuilderPanel skillBuilder = gameObject.AddComponent<SkillBuilderPanel>();
+            skillBuilder.Configure(_skillBalance);
             _meleeAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
             _meleeAttack.Configure(BasicAttackDeliveryType.Melee, 2.2f, 0.6f, 0.75f);
             _rangedAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();

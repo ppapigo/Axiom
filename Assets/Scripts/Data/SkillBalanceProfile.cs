@@ -26,7 +26,26 @@ namespace Axiom.Data
             AnimationCurve.Linear(0f, 1f, 1.5f, 1.5f);
 
         public int LoadoutPointBudget => loadoutPointBudget;
+        public int DamageCostPerTenPercent => damageCostPerTenPercent;
+        public int RadiusCostPerMeter => radiusCostPerMeter;
+        public int RangeCostPerMeter => rangeCostPerMeter;
+        public int CooldownCostPerSecond => cooldownCostPerSecond;
         public float TankMaximumNonUltimateRange => tankMaximumNonUltimateRange;
+
+        public int GetEffectCost(SkillPointEffect effect)
+        {
+            return effect switch
+            {
+                SkillPointEffect.BurnOrPoison => burnOrPoisonCost,
+                SkillPointEffect.Slow => slowCost,
+                SkillPointEffect.Stun => stunCost,
+                SkillPointEffect.KnockUp => knockUpCost,
+                SkillPointEffect.Mobility => mobilityCost,
+                SkillPointEffect.Shield => shieldCost,
+                SkillPointEffect.Healing => healingCost,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(effect), effect, null)
+            };
+        }
 
         public int CalculatePointCost(in SkillPointModifiers modifiers)
         {

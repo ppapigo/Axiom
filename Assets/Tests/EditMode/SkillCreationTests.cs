@@ -73,6 +73,37 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillBuilderModel_TracksOptionsAndCalculatedCost()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var builder = new SkillBuilderModel();
+            builder.AdjustDamage(2);
+            builder.AdjustRadius(1);
+            builder.AdjustRange(1);
+            builder.AdjustCooldownReduction(1);
+            builder.Toggle(SkillPointEffect.Stun);
+            builder.Toggle(SkillPointEffect.Shield);
+
+            Assert.That(builder.DamageIncreasePercent, Is.EqualTo(20f));
+            Assert.That(builder.GetPointCost(balance), Is.EqualTo(62));
+            Assert.That(builder.IsWithinBudget(balance), Is.True);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillBuilderModel_RejectsOverBudgetDraft()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var builder = new SkillBuilderModel();
+            builder.AdjustDamage(20);
+            builder.Toggle(SkillPointEffect.Mobility);
+
+            Assert.That(builder.GetPointCost(balance), Is.EqualTo(125));
+            Assert.That(builder.IsWithinBudget(balance), Is.False);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void MageProjectile_WithSupportedValues_IsValid()
         {
             SkillBalanceProfile balance = CreateBalance();

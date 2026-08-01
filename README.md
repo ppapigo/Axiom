@@ -101,10 +101,11 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 
 ### 스킬 제작
 
-1. `Create > Axiom > Skill > Balance Profile`로 포인트 예산과 시전 시간 피해 곡선을 설정합니다.
-2. `Create > Axiom > Skill > Skill Data`로 각 스킬의 타입, 피해 계수, 쿨다운, 사거리, 반경, 투사체 속도, CC, 속성과 비용을 설정합니다.
-3. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
-4. `ValidateLoadout` 결과가 유효한 데이터만 전투 실행 계층에 전달합니다.
+1. `Create > Axiom > Skill > Balance Profile`로 기본 100포인트 예산, 항목별 비용과 시전 시간 피해 곡선을 설정합니다.
+2. `Create > Axiom > Skill > Skill Data`로 각 스킬의 타입, 피해 계수, 쿨다운, 사거리, 반경, 투사체 속도, CC와 속성을 설정합니다.
+3. `100 Point Build Modifiers`에서 피해·범위·사거리·쿨타임 보정과 상태이상·이동·보호막·회복 효과를 선택하면 Balance Profile 기준으로 비용이 자동 계산됩니다. 불완전한 증가량도 한 단계 비용으로 올림 처리합니다.
+4. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
+5. `ValidateLoadout` 결과가 유효하고 총비용이 100포인트 이하인 데이터만 전투 실행 계층에 전달합니다.
 
 ### 장비 외형
 
@@ -128,4 +129,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-AI 자연어 요청을 검증된 `SkillDefinition`으로 변환하는 생성 계층과 데모 연출·UI 품질을 개선합니다.
+100포인트 제작 결과를 화면에서 확인하는 스킬 제작 UI를 추가하고, 이후 AI 자연어 요청을 검증된 `SkillDefinition`으로 변환하는 생성 계층을 연결합니다.

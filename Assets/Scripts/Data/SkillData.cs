@@ -17,7 +17,10 @@ namespace Axiom.Data
         [SerializeField, Min(0f)] private float projectileSpeed = 10f;
         [SerializeField] private CrowdControlType crowdControl;
         [SerializeField] private SkillElement element = SkillElement.Fire;
-        [SerializeField, Min(0)] private int pointCost = 1;
+        [SerializeField, Min(0), Tooltip("Fallback used only without a Skill Balance Profile.")]
+        private int pointCost = 1;
+        [Header("100 Point Build Modifiers")]
+        [SerializeField] private SkillPointModifiers pointModifiers;
 
         public SkillDefinition Definition => new SkillDefinition(
             displayName,
@@ -32,6 +35,26 @@ namespace Axiom.Data
             crowdControl,
             element,
             pointCost);
+
+        public SkillDefinition CreateDefinition(SkillBalanceProfile balance)
+        {
+            int calculatedPointCost = balance == null
+                ? pointCost
+                : balance.CalculatePointCost(pointModifiers);
+            return new SkillDefinition(
+                displayName,
+                slot,
+                type,
+                damageCoefficient,
+                cooldown,
+                castDelay,
+                range,
+                radius,
+                projectileSpeed,
+                crowdControl,
+                element,
+                calculatedPointCost);
+        }
 
         private void OnValidate()
         {

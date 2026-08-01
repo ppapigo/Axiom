@@ -25,6 +25,54 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void SkillBalance_DefaultBudget_IsOneHundredPoints()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+
+            Assert.That(balance.LoadoutPointBudget, Is.EqualTo(100));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillPointCost_UsesConfiguredBaselineCosts()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var modifiers = new SkillPointModifiers(
+                damageIncreasePercent: 20f,
+                radiusIncrease: 2f,
+                rangeIncrease: 1f,
+                cooldownReduction: 1f,
+                appliesBurnOrPoison: true,
+                appliesSlow: true,
+                appliesStun: true,
+                appliesKnockUp: true,
+                addsMobility: true,
+                createsShield: true,
+                heals: true);
+
+            int cost = balance.CalculatePointCost(modifiers);
+
+            Assert.That(cost, Is.EqualTo(146));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillPointCost_RoundsPartialIncrementsUp()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var modifiers = new SkillPointModifiers(
+                damageIncreasePercent: 1f,
+                radiusIncrease: 0.1f,
+                rangeIncrease: 0.1f,
+                cooldownReduction: 0.1f);
+
+            int cost = balance.CalculatePointCost(modifiers);
+
+            Assert.That(cost, Is.EqualTo(22));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void MageProjectile_WithSupportedValues_IsValid()
         {
             SkillBalanceProfile balance = CreateBalance();
@@ -125,8 +173,8 @@ namespace Axiom.Tests.EditMode
         public void Loadout_RejectsDuplicateSlotsAndExcessPointCost()
         {
             SkillBalanceProfile balance = CreateBalance();
-            SkillDefinition first = CreateSkill(SkillSlot.Q, SkillType.Projectile, pointCost: 6);
-            SkillDefinition second = CreateSkill(SkillSlot.Q, SkillType.Projectile, pointCost: 6);
+            SkillDefinition first = CreateSkill(SkillSlot.Q, SkillType.Projectile, pointCost: 60);
+            SkillDefinition second = CreateSkill(SkillSlot.Q, SkillType.Projectile, pointCost: 60);
 
             SkillValidationResult result = SkillLoadoutValidator.Validate(
                 new[] { first, second }, null, balance);

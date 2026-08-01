@@ -30,7 +30,7 @@ namespace Axiom.Data
             {
                 if (skill != null)
                 {
-                    definitions.Add(skill.Definition);
+                    definitions.Add(skill.CreateDefinition(balance));
                 }
             }
 

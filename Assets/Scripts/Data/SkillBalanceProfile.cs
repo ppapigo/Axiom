@@ -12,7 +12,7 @@ namespace Axiom.Data
         [SerializeField, Min(0)] private int radiusCostPerMeter = 6;
         [SerializeField, Min(0)] private int rangeCostPerMeter = 5;
         [SerializeField, Min(0)] private int cooldownCostPerSecond = 6;
-        [SerializeField, Min(0)] private int burnOrPoisonCost = 10;
+        [SerializeField, Min(0)] private int elementCost = 10;
         [SerializeField, Min(0)] private int slowCost = 10;
         [SerializeField, Min(0)] private int stunCost = 20;
         [SerializeField, Min(0)] private int knockUpCost = 18;
@@ -28,6 +28,14 @@ namespace Axiom.Data
         [SerializeField, Min(0f)] private float rootDuration = 1.5f;
         [SerializeField, Min(0f)] private float stunDuration = 1f;
         [SerializeField, Min(0f)] private float knockUpDuration = 0.7f;
+        [Header("Elements")]
+        [SerializeField, Min(0f)] private float elementTickInterval = 1f;
+        [SerializeField, Min(0f)] private float burnDuration = 4f;
+        [SerializeField, Min(0f)] private float burnAttackCoefficient = 0.08f;
+        [SerializeField, Min(0f)] private float poisonDuration = 5f;
+        [SerializeField, Min(0f)] private float poisonMaximumHealthCoefficient = 0.01f;
+        [SerializeField, Min(0f)] private float lightningDamageMultiplier = 1.2f;
+        [SerializeField, Range(0f, 1f)] private float waterHealingRatio = 0.1f;
         [SerializeField] private AnimationCurve castDelayBonus =
             AnimationCurve.Linear(0f, 1f, 1.5f, 1.5f);
 
@@ -36,8 +44,22 @@ namespace Axiom.Data
         public int RadiusCostPerMeter => radiusCostPerMeter;
         public int RangeCostPerMeter => rangeCostPerMeter;
         public int CooldownCostPerSecond => cooldownCostPerSecond;
+        public int ElementCost => elementCost;
         public float TankMaximumNonUltimateRange => tankMaximumNonUltimateRange;
         public float SlowMovementMultiplier => 1f - slowMovementReduction;
+        public float ElementTickInterval => elementTickInterval;
+        public float BurnDuration => burnDuration;
+        public float BurnAttackCoefficient => burnAttackCoefficient;
+        public float PoisonDuration => poisonDuration;
+        public float PoisonMaximumHealthCoefficient => poisonMaximumHealthCoefficient;
+        public float WaterHealingRatio => waterHealingRatio;
+
+        public float GetElementDamageMultiplier(SkillElement element)
+        {
+            return element == SkillElement.Lightning
+                ? lightningDamageMultiplier
+                : 1f;
+        }
 
         public float GetCrowdControlDuration(CrowdControlType type)
         {
@@ -55,7 +77,6 @@ namespace Axiom.Data
         {
             return effect switch
             {
-                SkillPointEffect.BurnOrPoison => burnOrPoisonCost,
                 SkillPointEffect.Slow => slowCost,
                 SkillPointEffect.Stun => stunCost,
                 SkillPointEffect.KnockUp => knockUpCost,
@@ -66,15 +87,18 @@ namespace Axiom.Data
             };
         }
 
-        public int CalculatePointCost(in SkillPointModifiers modifiers)
+        public int CalculatePointCost(
+            in SkillPointModifiers modifiers,
+            int selectedElementCount = 0)
         {
             return SkillPointCostCalculator.Calculate(
                 modifiers,
+                selectedElementCount,
                 damageCostPerTenPercent,
                 radiusCostPerMeter,
                 rangeCostPerMeter,
                 cooldownCostPerSecond,
-                burnOrPoisonCost,
+                elementCost,
                 slowCost,
                 stunCost,
                 knockUpCost,
@@ -95,7 +119,7 @@ namespace Axiom.Data
             radiusCostPerMeter = Mathf.Max(0, radiusCostPerMeter);
             rangeCostPerMeter = Mathf.Max(0, rangeCostPerMeter);
             cooldownCostPerSecond = Mathf.Max(0, cooldownCostPerSecond);
-            burnOrPoisonCost = Mathf.Max(0, burnOrPoisonCost);
+            elementCost = Mathf.Max(0, elementCost);
             slowCost = Mathf.Max(0, slowCost);
             stunCost = Mathf.Max(0, stunCost);
             knockUpCost = Mathf.Max(0, knockUpCost);
@@ -108,6 +132,13 @@ namespace Axiom.Data
             rootDuration = Mathf.Max(0f, rootDuration);
             stunDuration = Mathf.Max(0f, stunDuration);
             knockUpDuration = Mathf.Max(0f, knockUpDuration);
+            elementTickInterval = Mathf.Max(0.01f, elementTickInterval);
+            burnDuration = Mathf.Max(0f, burnDuration);
+            burnAttackCoefficient = Mathf.Max(0f, burnAttackCoefficient);
+            poisonDuration = Mathf.Max(0f, poisonDuration);
+            poisonMaximumHealthCoefficient = Mathf.Max(0f, poisonMaximumHealthCoefficient);
+            lightningDamageMultiplier = Mathf.Max(0f, lightningDamageMultiplier);
+            waterHealingRatio = Mathf.Clamp01(waterHealingRatio);
             castDelayBonus ??= AnimationCurve.Linear(0f, 1f, 1.5f, 1.5f);
         }
     }

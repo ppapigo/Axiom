@@ -7,6 +7,7 @@ using Axiom.Data;
 using Axiom.Input;
 using Axiom.Manager;
 using Axiom.Role;
+using Axiom.Skill;
 using Axiom.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -21,6 +22,7 @@ namespace Axiom.Demo
         private readonly List<CharacterHealth> _teamBHealth = new List<CharacterHealth>();
         private readonly Dictionary<CharacterRoleId, CharacterRoleDefinition> _roles =
             new Dictionary<CharacterRoleId, CharacterRoleDefinition>();
+        private readonly RoleElementPool _roleElementPool = new RoleElementPool();
 
         [SerializeField] private EquipmentAppearanceDefinition[] equipmentAppearances;
 
@@ -34,6 +36,7 @@ namespace Axiom.Demo
         private ThreeVsThreeMatchManager _matchManager;
         private CharacterHealth _playerHealth;
         private SkillBuilderPanel _skillBuilderPanel;
+        private DemoSkillController _playerSkills;
         private bool _gameStarted;
         private TeamId? _winner;
         private string _roundMessage = "Choose your role";
@@ -185,6 +188,11 @@ namespace Axiom.Demo
                 _winner = winner;
                 _roundMessage = $"MATCH WINNER: {winner}";
             };
+            RegisterPlayerElements(selectedRole);
+            _skillBuilderPanel.SetContext(
+                selectedRole,
+                SkillSlot.Q,
+                _roleElementPool);
         }
 
         private MatchParticipant CreateCharacter(
@@ -220,12 +228,16 @@ namespace Axiom.Demo
             CharacterStatusController status =
                 character.AddComponent<CharacterStatusController>();
             status.Configure(_skillBalance);
+            ElementStatusController elementStatus =
+                character.AddComponent<ElementStatusController>();
+            elementStatus.Configure(_skillBalance);
             WorldHealthBar healthBar = character.AddComponent<WorldHealthBar>();
             healthBar.Configure(health, _mainCamera, team, characterName);
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
 
             var combatBehaviours = new List<Behaviour>();
             combatBehaviours.Add(status);
+            combatBehaviours.Add(elementStatus);
             if (isPlayer)
             {
                 ConfigurePlayer(character, basicAttack, roleId, combatBehaviours);
@@ -311,6 +323,7 @@ namespace Axiom.Demo
             basicAttack.Configure(GetAttackProfile(roleId), attackSource);
             DemoSkillController skills = character.AddComponent<DemoSkillController>();
             skills.Configure(_mainCamera, _skillBalance, _skillBuilderPanel);
+            _playerSkills = skills;
             CombatHud combatHud = character.AddComponent<CombatHud>();
             combatHud.Configure(
                 character.GetComponent<CharacterHealth>(),
@@ -323,6 +336,22 @@ namespace Axiom.Demo
             combatBehaviours.Add(dashController);
             combatBehaviours.Add(basicAttack);
             combatBehaviours.Add(skills);
+        }
+
+        private void RegisterPlayerElements(CharacterRoleId role)
+        {
+            _roleElementPool.TryAssign(
+                role,
+                SkillSlot.Q,
+                _playerSkills.QSkillDefinition.Element);
+            _roleElementPool.TryAssign(
+                role,
+                SkillSlot.E,
+                _playerSkills.ESkillDefinition.Element);
+            _roleElementPool.TryAssign(
+                role,
+                SkillSlot.Ultimate,
+                _playerSkills.UltimateDefinition.Element);
         }
 
         private void CreateEnvironment()

@@ -7,11 +7,12 @@ namespace Axiom.Skill
     {
         public static int Calculate(
             in SkillPointModifiers modifiers,
+            int selectedElementCount,
             int damageCostPerTenPercent,
             int radiusCostPerMeter,
             int rangeCostPerMeter,
             int cooldownCostPerSecond,
-            int burnOrPoisonCost,
+            int elementCost,
             int slowCost,
             int stunCost,
             int knockUpCost,
@@ -24,7 +25,7 @@ namespace Axiom.Skill
             cost += IncrementCost(modifiers.RadiusIncrease, 1f, radiusCostPerMeter);
             cost += IncrementCost(modifiers.RangeIncrease, 1f, rangeCostPerMeter);
             cost += IncrementCost(modifiers.CooldownReduction, 1f, cooldownCostPerSecond);
-            cost += modifiers.AppliesBurnOrPoison ? burnOrPoisonCost : 0;
+            cost += Mathf.Max(0, selectedElementCount) * Mathf.Max(0, elementCost);
             cost += modifiers.AppliesSlow ? slowCost : 0;
             cost += modifiers.AppliesStun ? stunCost : 0;
             cost += modifiers.AppliesKnockUp ? knockUpCost : 0;

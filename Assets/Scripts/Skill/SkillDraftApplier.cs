@@ -12,6 +12,17 @@ namespace Axiom.Skill
             CharacterRoleDefinition role,
             SkillBalanceProfile balance)
         {
+            var draft = new SkillDraft(modifiers, null);
+            return Apply(baseDefinition, draft, role, balance);
+        }
+
+        public static SkillDefinition Apply(
+            in SkillDefinition baseDefinition,
+            in SkillDraft draft,
+            CharacterRoleDefinition role,
+            SkillBalanceProfile balance)
+        {
+            SkillPointModifiers modifiers = draft.Modifiers;
             float range = baseDefinition.Range + modifiers.RangeIncrease;
             if (role != null && balance != null && !role.AllowsRangedAttacks &&
                 baseDefinition.Slot != SkillSlot.Ultimate)
@@ -31,10 +42,12 @@ namespace Axiom.Skill
                 baseDefinition.Radius + modifiers.RadiusIncrease,
                 baseDefinition.ProjectileSpeed,
                 ResolveCrowdControl(baseDefinition.CrowdControl, modifiers),
-                baseDefinition.Element,
+                draft.Element ?? baseDefinition.Element,
                 balance == null
                     ? baseDefinition.PointCost
-                    : balance.CalculatePointCost(modifiers));
+                    : balance.CalculatePointCost(
+                        modifiers,
+                        draft.SelectedElementCount));
         }
 
         private static CrowdControlType ResolveCrowdControl(

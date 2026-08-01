@@ -25,8 +25,9 @@ namespace Axiom.Demo
         private CharacterRole _role;
         private TeamMember _team;
         private SkillBuilderPanel _skillBuilder;
-        private SkillPointModifiers _qDraft;
+        private SkillDraft _qDraft;
         private CharacterStatusController _status;
+        private CharacterHealth _health;
 
         public SkillDefinition QSkillDefinition => CreateQSkill();
         public SkillDefinition ESkillDefinition => CreateESkill();
@@ -66,6 +67,7 @@ namespace Axiom.Demo
             _role = GetComponent<CharacterRole>();
             _team = GetComponent<TeamMember>();
             _status = GetComponent<CharacterStatusController>();
+            _health = GetComponent<CharacterHealth>();
         }
 
         private void OnDisable()
@@ -81,9 +83,9 @@ namespace Axiom.Demo
             }
         }
 
-        private void ApplyQDraft(SkillPointModifiers modifiers)
+        private void ApplyQDraft(SkillDraft draft)
         {
-            _qDraft = modifiers;
+            _qDraft = draft;
         }
 
         private void Update()
@@ -123,6 +125,10 @@ namespace Axiom.Demo
             }
 
             ResolveHits(definition, plan);
+            if (definition.Element == SkillElement.Water && _health != null)
+            {
+                _health.RestoreHealth(_health.MaximumHealth * _balance.WaterHealingRatio);
+            }
             ShowEffect(plan);
         }
 
@@ -164,6 +170,17 @@ namespace Axiom.Demo
                 if (targetStatus != null)
                 {
                     targetStatus.Apply(definition.CrowdControl, Time.time);
+                }
+
+                ElementStatusController elementStatus =
+                    health.GetComponent<ElementStatusController>();
+                if (elementStatus != null)
+                {
+                    elementStatus.ApplyOnHit(
+                        definition.Element,
+                        gameObject,
+                        _stats.AttackPower,
+                        Time.time);
                 }
             }
         }
@@ -214,7 +231,8 @@ namespace Axiom.Demo
                 : SkillType.Projectile;
             float range = type == SkillType.Cone ? 3f : 7f;
             SkillDefinition baseDefinition = CreateDefinition(
-                "Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f);
+                "Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f,
+                GetQElement());
             return SkillDraftApplier.Apply(
                 baseDefinition,
                 _qDraft,
@@ -228,7 +246,11 @@ namespace Axiom.Demo
                 ? SkillType.Cone
                 : SkillType.GroundArea;
             float range = type == SkillType.Cone ? 3f : 6f;
-            return CreateDefinition("E Skill", SkillSlot.E, type, 1.8f, 7f, range, 3f);
+            SkillElement element = _role.Definition.RoleId == CharacterRoleId.Mage
+                ? SkillElement.Ice
+                : SkillElement.Wind;
+            return CreateDefinition(
+                "E Skill", SkillSlot.E, type, 1.8f, 7f, range, 3f, element);
         }
 
         private SkillDefinition CreateUltimate()
@@ -236,7 +258,25 @@ namespace Axiom.Demo
             SkillType type = _role.Definition.RoleId == CharacterRoleId.Mage
                 ? SkillType.GroundArea
                 : SkillType.Projectile;
-            return CreateDefinition("Ultimate", SkillSlot.Ultimate, type, 3f, 15f, 8f, 3f);
+            SkillElement element = _role.Definition.RoleId switch
+            {
+                CharacterRoleId.Mage => SkillElement.Fire,
+                CharacterRoleId.Assassin => SkillElement.Poison,
+                _ => SkillElement.Earth
+            };
+            return CreateDefinition(
+                "Ultimate", SkillSlot.Ultimate, type, 3f, 15f, 8f, 3f,
+                element);
+        }
+
+        private SkillElement GetQElement()
+        {
+            return _role.Definition.RoleId switch
+            {
+                CharacterRoleId.Mage => SkillElement.Fire,
+                CharacterRoleId.Assassin => SkillElement.Poison,
+                _ => SkillElement.Earth
+            };
         }
 
         private static SkillDefinition CreateDefinition(
@@ -246,12 +286,12 @@ namespace Axiom.Demo
             float coefficient,
             float cooldown,
             float range,
-            float radius)
+            float radius,
+            SkillElement element)
         {
             return new SkillDefinition(
                 name, slot, type, coefficient, cooldown, 0.3f,
-                range, radius, 12f, CrowdControlType.None,
-                SkillElement.Lightning, 1);
+                range, radius, 12f, CrowdControlType.None, element, 1);
         }
 
         private static void ShowEffect(in SkillCastPlan plan)

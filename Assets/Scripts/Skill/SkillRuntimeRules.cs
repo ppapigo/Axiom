@@ -34,7 +34,8 @@ namespace Axiom.Skill
             return new DamageRequest(
                 attacker,
                 attackPower,
-                definition.DamageCoefficient,
+                definition.DamageCoefficient *
+                balance.GetElementDamageMultiplier(definition.Element),
                 balance.EvaluateCastDelayBonus(definition.CastDelay),
                 distanceMultiplier,
                 RoleDamageRules.GetDamageLimit(role, applicationType));

@@ -12,6 +12,7 @@ namespace Axiom.UI
         [SerializeField] private TeamId team;
         [SerializeField] private string displayName;
         [SerializeField] private CharacterStatusController status;
+        [SerializeField] private ElementStatusController elementStatus;
         [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.45f, 0f);
         [SerializeField, Min(24f)] private float width = 92f;
         [SerializeField, Min(4f)] private float height = 11f;
@@ -32,6 +33,9 @@ namespace Axiom.UI
             status = targetHealth == null
                 ? null
                 : targetHealth.GetComponent<CharacterStatusController>();
+            elementStatus = targetHealth == null
+                ? null
+                : targetHealth.GetComponent<ElementStatusController>();
         }
 
         private void OnGUI()
@@ -73,6 +77,10 @@ namespace Axiom.UI
             string statusText = status != null && status.ActiveEffect != Skill.CrowdControlType.None
                 ? $"  [{status.ActiveEffect.ToString().ToUpperInvariant()}]"
                 : string.Empty;
+            if (elementStatus != null && elementStatus.ActiveDamageOverTime.HasValue)
+            {
+                statusText += $" [{elementStatus.ActiveDamageOverTime.Value.ToString().ToUpperInvariant()}]";
+            }
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),
                 $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}{statusText}");

@@ -10,18 +10,20 @@ namespace Axiom.Skill
         private int _radiusSteps;
         private int _rangeSteps;
         private int _cooldownSteps;
-        private bool _burnOrPoison;
         private bool _slow;
         private bool _stun;
         private bool _knockUp;
         private bool _mobility;
         private bool _shield;
         private bool _healing;
+        private SkillElement? _element;
 
         public float DamageIncreasePercent => _damageSteps * 10f;
         public float RadiusIncrease => _radiusSteps;
         public float RangeIncrease => _rangeSteps;
         public float CooldownReduction => _cooldownSteps;
+        public SkillElement? Element => _element;
+        public int SelectedElementCount => _element.HasValue ? 1 : 0;
 
         public void AdjustDamage(int steps)
         {
@@ -47,7 +49,6 @@ namespace Axiom.Skill
         {
             return effect switch
             {
-                SkillPointEffect.BurnOrPoison => _burnOrPoison,
                 SkillPointEffect.Slow => _slow,
                 SkillPointEffect.Stun => _stun,
                 SkillPointEffect.KnockUp => _knockUp,
@@ -62,9 +63,6 @@ namespace Axiom.Skill
         {
             switch (effect)
             {
-                case SkillPointEffect.BurnOrPoison:
-                    _burnOrPoison = !_burnOrPoison;
-                    break;
                 case SkillPointEffect.Slow:
                     _slow = !_slow;
                     break;
@@ -88,6 +86,23 @@ namespace Axiom.Skill
             }
         }
 
+        public bool IsElementSelected(SkillElement element)
+        {
+            return _element == element;
+        }
+
+        public bool ToggleElement(SkillElement element)
+        {
+            if (_element == element)
+            {
+                _element = null;
+                return true;
+            }
+
+            _element = element;
+            return true;
+        }
+
         public int GetPointCost(SkillBalanceProfile balance)
         {
             if (balance == null)
@@ -96,7 +111,7 @@ namespace Axiom.Skill
             }
 
             SkillPointModifiers modifiers = CreateModifiers();
-            return balance.CalculatePointCost(modifiers);
+            return balance.CalculatePointCost(modifiers, SelectedElementCount);
         }
 
         public bool IsWithinBudget(SkillBalanceProfile balance)
@@ -107,17 +122,22 @@ namespace Axiom.Skill
         public SkillPointModifiers CreateModifiers()
         {
             return new SkillPointModifiers(
-                DamageIncreasePercent,
-                RadiusIncrease,
-                RangeIncrease,
-                CooldownReduction,
-                _burnOrPoison,
-                _slow,
-                _stun,
-                _knockUp,
-                _mobility,
-                _shield,
-                _healing);
+                damageIncreasePercent: DamageIncreasePercent,
+                radiusIncrease: RadiusIncrease,
+                rangeIncrease: RangeIncrease,
+                cooldownReduction: CooldownReduction,
+                appliesSlow: _slow,
+                appliesStun: _stun,
+                appliesKnockUp: _knockUp,
+                addsMobility: _mobility,
+                createsShield: _shield,
+                heals: _healing);
+        }
+
+        public SkillDraft CreateDraft()
+        {
+            SkillPointModifiers modifiers = CreateModifiers();
+            return new SkillDraft(modifiers, _element);
         }
 
         public void Reset()
@@ -126,13 +146,13 @@ namespace Axiom.Skill
             _radiusSteps = 0;
             _rangeSteps = 0;
             _cooldownSteps = 0;
-            _burnOrPoison = false;
             _slow = false;
             _stun = false;
             _knockUp = false;
             _mobility = false;
             _shield = false;
             _healing = false;
+            _element = null;
         }
     }
 }

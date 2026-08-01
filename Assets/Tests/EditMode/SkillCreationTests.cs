@@ -3,6 +3,7 @@ using Axiom.Combat;
 using Axiom.Data;
 using Axiom.Role;
 using Axiom.Skill;
+using Axiom.UI;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -42,7 +43,6 @@ namespace Axiom.Tests.EditMode
                 radiusIncrease: 2f,
                 rangeIncrease: 1f,
                 cooldownReduction: 1f,
-                appliesBurnOrPoison: true,
                 appliesSlow: true,
                 appliesStun: true,
                 appliesKnockUp: true,
@@ -50,7 +50,7 @@ namespace Axiom.Tests.EditMode
                 createsShield: true,
                 heals: true);
 
-            int cost = balance.CalculatePointCost(modifiers);
+            int cost = balance.CalculatePointCost(modifiers, selectedElementCount: 1);
 
             Assert.That(cost, Is.EqualTo(146));
             Object.DestroyImmediate(balance);
@@ -100,6 +100,64 @@ namespace Axiom.Tests.EditMode
 
             Assert.That(builder.GetPointCost(balance), Is.EqualTo(125));
             Assert.That(builder.IsWithinBudget(balance), Is.False);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillBuilderModel_SelectsOnePointCostedElement()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var builder = new SkillBuilderModel();
+
+            Assert.That(builder.ToggleElement(SkillElement.Fire), Is.True);
+            Assert.That(builder.ToggleElement(SkillElement.Ice), Is.True);
+            Assert.That(builder.SelectedElementCount, Is.EqualTo(1));
+            Assert.That(builder.IsElementSelected(SkillElement.Fire), Is.False);
+            Assert.That(builder.IsElementSelected(SkillElement.Ice), Is.True);
+            Assert.That(builder.GetPointCost(balance), Is.EqualTo(10));
+
+            SkillDraft draft = builder.CreateDraft();
+            Assert.That(draft.Element, Is.EqualTo(SkillElement.Ice));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void RoleElementPool_LimitsDistinctElementsAcrossRoleSlots()
+        {
+            var pool = new RoleElementPool();
+
+            Assert.That(pool.TryAssign(
+                CharacterRoleId.Mage, SkillSlot.Q, SkillElement.Fire), Is.True);
+            Assert.That(pool.TryAssign(
+                CharacterRoleId.Mage, SkillSlot.E, SkillElement.Ice), Is.True);
+            Assert.That(pool.TryAssign(
+                CharacterRoleId.Mage, SkillSlot.Ultimate, SkillElement.Lightning), Is.False);
+            Assert.That(pool.TryAssign(
+                CharacterRoleId.Mage, SkillSlot.Ultimate, SkillElement.Fire), Is.True);
+            Assert.That(pool.TryAssign(
+                CharacterRoleId.Assassin, SkillSlot.Ultimate, SkillElement.Lightning), Is.True);
+            Assert.That(pool.GetDistinctElementCount(CharacterRoleId.Mage), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SkillBuilderPanel_IsUnavailableUntilRoleSelection()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            var gameObject = new GameObject("Skill Builder Test");
+            SkillBuilderPanel panel = gameObject.AddComponent<SkillBuilderPanel>();
+            panel.Configure(balance);
+
+            Assert.That(panel.IsAvailable, Is.False);
+            panel.ToggleVisibility();
+            Assert.That(panel.IsVisible, Is.False);
+
+            panel.SetContext(
+                CharacterRoleId.Mage,
+                SkillSlot.Q,
+                new RoleElementPool());
+            panel.ToggleVisibility();
+            Assert.That(panel.IsVisible, Is.True);
+            Object.DestroyImmediate(gameObject);
             Object.DestroyImmediate(balance);
         }
 
@@ -182,6 +240,39 @@ namespace Axiom.Tests.EditMode
             Assert.That(balance.GetCrowdControlDuration(CrowdControlType.Root), Is.EqualTo(1.5f));
             Assert.That(balance.GetCrowdControlDuration(CrowdControlType.Stun), Is.EqualTo(1f));
             Assert.That(balance.GetCrowdControlDuration(CrowdControlType.KnockUp), Is.EqualTo(0.7f));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void ElementDamageOverTime_AppliesFourBurnTicks()
+        {
+            var state = new ElementDamageOverTimeState();
+            state.ApplyBurn(10f, 4f, 1f, 8f);
+
+            Assert.That(state.ConsumeDamage(14f), Is.EqualTo(32f));
+            Assert.That(state.ConsumeDamage(15f), Is.Zero);
+        }
+
+        [Test]
+        public void ElementDamageOverTime_AppliesFivePoisonTicks()
+        {
+            var state = new ElementDamageOverTimeState();
+            state.ApplyPoison(2f, 5f, 1f, 10f);
+
+            Assert.That(state.ConsumeDamage(7f), Is.EqualTo(50f));
+        }
+
+        [Test]
+        public void SkillBalance_UsesRequestedElementBaselines()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+
+            Assert.That(balance.BurnDuration, Is.EqualTo(4f));
+            Assert.That(balance.BurnAttackCoefficient, Is.EqualTo(0.08f));
+            Assert.That(balance.PoisonDuration, Is.EqualTo(5f));
+            Assert.That(balance.PoisonMaximumHealthCoefficient, Is.EqualTo(0.01f));
+            Assert.That(balance.GetElementDamageMultiplier(SkillElement.Lightning), Is.EqualTo(1.2f));
+            Assert.That(balance.WaterHealingRatio, Is.EqualTo(0.1f));
             Object.DestroyImmediate(balance);
         }
 

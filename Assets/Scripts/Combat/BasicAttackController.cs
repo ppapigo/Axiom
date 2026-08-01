@@ -19,6 +19,7 @@ namespace Axiom.Combat
         private readonly BasicAttackCooldown _cooldown = new BasicAttackCooldown();
         private CharacterStats _characterStats;
         private CharacterRole _characterRole;
+        private CharacterStatusController _status;
 
         public void Configure(
             BasicAttackProfile profile,
@@ -38,6 +39,7 @@ namespace Axiom.Combat
         {
             _characterStats = GetComponent<CharacterStats>();
             _characterRole = GetComponent<CharacterRole>();
+            _status = GetComponent<CharacterStatusController>();
         }
 
         private void OnDisable()
@@ -75,7 +77,8 @@ namespace Axiom.Combat
         public bool TryAttack(Vector3 direction, float currentTime)
         {
             if (attackProfile == null || _characterStats == null ||
-                !_characterStats.IsConfigured)
+                !_characterStats.IsConfigured ||
+                (_status != null && _status.IsActionBlocked))
             {
                 return false;
             }

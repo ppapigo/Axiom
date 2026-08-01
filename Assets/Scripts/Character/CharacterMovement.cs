@@ -1,4 +1,5 @@
 using Axiom.Data;
+using Axiom.Combat;
 using Axiom.Input;
 using Axiom.Role;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace Axiom.Character
         private CharacterController _characterController;
         private IMovementInputSource _inputSource;
         private CharacterRole _characterRole;
+        private CharacterStatusController _status;
 
         public void Configure(
             CharacterMovementProfile profile,
@@ -31,6 +33,7 @@ namespace Axiom.Character
             _characterController = GetComponent<CharacterController>();
             _inputSource = inputSourceBehaviour;
             _characterRole = GetComponent<CharacterRole>();
+            _status = GetComponent<CharacterStatusController>();
         }
 
         private void OnDisable()
@@ -52,8 +55,20 @@ namespace Axiom.Character
                     _characterRole.Definition.MovementSpeedMultiplier);
             }
 
+            if (_status != null)
+            {
+                parameters = parameters.WithSpeedMultiplier(
+                    _status.IsMovementBlocked ? 0f : _status.MovementSpeedMultiplier);
+                if (_status.IsMovementBlocked)
+                {
+                    _motor.Reset();
+                }
+            }
+
             Vector3 velocity = _motor.Tick(
-                _inputSource.ReadMovement(),
+                _status != null && _status.IsMovementBlocked
+                    ? Vector2.zero
+                    : _inputSource.ReadMovement(),
                 _characterController.isGrounded,
                 parameters,
                 Time.deltaTime);

@@ -3,6 +3,7 @@ using Axiom.Combat;
 using Axiom.Demo;
 using Axiom.Manager;
 using Axiom.Role;
+using Axiom.Skill;
 using Axiom.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -27,13 +28,21 @@ namespace Axiom.Tests.PlayMode
 
             CharacterHealth[] combatants = Object.FindObjectsByType<CharacterHealth>(
                 FindObjectsSortMode.None);
+            CharacterStatusController[] statuses =
+                Object.FindObjectsByType<CharacterStatusController>(FindObjectsSortMode.None);
             ThreeVsThreeMatchManager match =
                 Object.FindFirstObjectByType<ThreeVsThreeMatchManager>();
             WorldHealthBar[] healthBars = Object.FindObjectsByType<WorldHealthBar>(
                 FindObjectsSortMode.None);
             SkillBuilderPanel skillBuilder = Object.FindFirstObjectByType<SkillBuilderPanel>();
+            CombatHud combatHud = Object.FindFirstObjectByType<CombatHud>();
 
             Assert.That(combatants, Has.Length.EqualTo(6));
+            Assert.That(statuses, Has.Length.EqualTo(6));
+            Assert.That(statuses[0].Apply(CrowdControlType.Stun, Time.time), Is.True);
+            Assert.That(statuses[0].ActiveEffect, Is.EqualTo(CrowdControlType.Stun));
+            Assert.That(statuses[0].IsActionBlocked, Is.True);
+            statuses[0].Clear();
             Assert.That(healthBars, Has.Length.EqualTo(6));
             Assert.That(healthBars, Has.All.Matches<WorldHealthBar>(bar => bar.Health != null));
             Assert.That(match, Is.Not.Null);
@@ -41,6 +50,9 @@ namespace Axiom.Tests.PlayMode
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);
             Assert.That(skillBuilder, Is.Not.Null);
             Assert.That(skillBuilder.IsConfigured, Is.True);
+            Assert.That(combatHud, Is.Not.Null);
+            Assert.That(combatHud.IsConfigured, Is.True);
+            Assert.That(combatHud.Health, Is.Not.Null);
             DemoSkillController playerSkills =
                 Object.FindFirstObjectByType<DemoSkillController>();
             Assert.That(playerSkills, Is.Not.Null);

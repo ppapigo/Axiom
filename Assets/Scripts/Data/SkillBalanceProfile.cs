@@ -22,6 +22,12 @@ namespace Axiom.Data
 
         [Header("Runtime Rules")]
         [SerializeField, Min(0f)] private float tankMaximumNonUltimateRange = 3f;
+        [Header("Crowd Control")]
+        [SerializeField, Range(0f, 1f)] private float slowMovementReduction = 0.3f;
+        [SerializeField, Min(0f)] private float slowDuration = 2f;
+        [SerializeField, Min(0f)] private float rootDuration = 1.5f;
+        [SerializeField, Min(0f)] private float stunDuration = 1f;
+        [SerializeField, Min(0f)] private float knockUpDuration = 0.7f;
         [SerializeField] private AnimationCurve castDelayBonus =
             AnimationCurve.Linear(0f, 1f, 1.5f, 1.5f);
 
@@ -31,6 +37,19 @@ namespace Axiom.Data
         public int RangeCostPerMeter => rangeCostPerMeter;
         public int CooldownCostPerSecond => cooldownCostPerSecond;
         public float TankMaximumNonUltimateRange => tankMaximumNonUltimateRange;
+        public float SlowMovementMultiplier => 1f - slowMovementReduction;
+
+        public float GetCrowdControlDuration(CrowdControlType type)
+        {
+            return type switch
+            {
+                CrowdControlType.Slow => slowDuration,
+                CrowdControlType.Root => rootDuration,
+                CrowdControlType.Stun => stunDuration,
+                CrowdControlType.KnockUp => knockUpDuration,
+                _ => 0f
+            };
+        }
 
         public int GetEffectCost(SkillPointEffect effect)
         {
@@ -84,6 +103,11 @@ namespace Axiom.Data
             shieldCost = Mathf.Max(0, shieldCost);
             healingCost = Mathf.Max(0, healingCost);
             tankMaximumNonUltimateRange = Mathf.Max(0f, tankMaximumNonUltimateRange);
+            slowMovementReduction = Mathf.Clamp01(slowMovementReduction);
+            slowDuration = Mathf.Max(0f, slowDuration);
+            rootDuration = Mathf.Max(0f, rootDuration);
+            stunDuration = Mathf.Max(0f, stunDuration);
+            knockUpDuration = Mathf.Max(0f, knockUpDuration);
             castDelayBonus ??= AnimationCurve.Linear(0f, 1f, 1.5f, 1.5f);
         }
     }

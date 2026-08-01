@@ -78,8 +78,8 @@ namespace Axiom.Demo
             }
 
             GUI.Box(
-                new Rect(12f, Screen.height - 78f, 520f, 62f),
-                "WASD Move | Mouse Aim | Left Click Attack | Space Dash | Q E R Skills | B Forge");
+                new Rect(12f, Screen.height - 58f, 360f, 42f),
+                "WASD Move | Mouse Aim | LMB Attack | B Skill Forge");
             DrawTeamHealth();
 
             if (_winner.HasValue && GUI.Button(
@@ -217,11 +217,15 @@ namespace Axiom.Demo
             role.SetDefinition(_roles[roleId]);
             character.AddComponent<CharacterStats>();
             CharacterHealth health = character.AddComponent<CharacterHealth>();
+            CharacterStatusController status =
+                character.AddComponent<CharacterStatusController>();
+            status.Configure(_skillBalance);
             WorldHealthBar healthBar = character.AddComponent<WorldHealthBar>();
             healthBar.Configure(health, _mainCamera, team, characterName);
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
 
             var combatBehaviours = new List<Behaviour>();
+            combatBehaviours.Add(status);
             if (isPlayer)
             {
                 ConfigurePlayer(character, basicAttack, roleId, combatBehaviours);
@@ -307,6 +311,12 @@ namespace Axiom.Demo
             basicAttack.Configure(GetAttackProfile(roleId), attackSource);
             DemoSkillController skills = character.AddComponent<DemoSkillController>();
             skills.Configure(_mainCamera, _skillBalance, _skillBuilderPanel);
+            CombatHud combatHud = character.AddComponent<CombatHud>();
+            combatHud.Configure(
+                character.GetComponent<CharacterHealth>(),
+                skills,
+                dashController,
+                character.GetComponent<CharacterRole>());
 
             combatBehaviours.Add(movement);
             combatBehaviours.Add(aimController);

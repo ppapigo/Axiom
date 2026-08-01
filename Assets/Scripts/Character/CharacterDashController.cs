@@ -1,3 +1,4 @@
+using Axiom.Combat;
 using Axiom.Input;
 using Axiom.Role;
 using UnityEngine;
@@ -15,6 +16,16 @@ namespace Axiom.Character
         private readonly DashCooldown _cooldown = new DashCooldown();
         private CharacterController _characterController;
         private CharacterRole _characterRole;
+        private CharacterStatusController _status;
+
+        public float CooldownDuration => _characterRole != null && _characterRole.IsConfigured
+            ? _characterRole.Definition.DashCooldown
+            : 0f;
+
+        public float GetCooldownRemaining(float currentTime)
+        {
+            return _cooldown.GetRemaining(currentTime);
+        }
 
         public void Configure(
             InputActionDashSource inputSource,
@@ -28,6 +39,7 @@ namespace Axiom.Character
         {
             _characterController = GetComponent<CharacterController>();
             _characterRole = GetComponent<CharacterRole>();
+            _status = GetComponent<CharacterStatusController>();
         }
 
         private void OnDisable()
@@ -39,6 +51,7 @@ namespace Axiom.Character
         {
             if (dashInput == null ||
                 movementInput == null ||
+                (_status != null && _status.IsMovementBlocked) ||
                 !_characterRole.IsConfigured ||
                 !dashInput.WasDashPressedThisFrame())
             {

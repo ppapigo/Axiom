@@ -31,6 +31,7 @@ namespace Axiom.AI
         private CharacterRole _role;
         private TeamMember _team;
         private BasicAttackController _basicAttack;
+        private CharacterStatusController _status;
         private Transform _target;
         private float _nextThinkTime;
 
@@ -53,6 +54,7 @@ namespace Axiom.AI
             _role = GetComponent<CharacterRole>();
             _team = GetComponent<TeamMember>();
             _basicAttack = GetComponent<BasicAttackController>();
+            _status = GetComponent<CharacterStatusController>();
         }
 
         private void Update()
@@ -103,6 +105,11 @@ namespace Axiom.AI
 
         private void Act()
         {
+            if (_status != null && _status.IsActionBlocked)
+            {
+                return;
+            }
+
             switch (CurrentState)
             {
                 case AIState.Move:
@@ -228,6 +235,11 @@ namespace Axiom.AI
 
         private void MoveInDirection(Vector3 direction)
         {
+            if (_status != null && _status.IsMovementBlocked)
+            {
+                return;
+            }
+
             direction.y = 0f;
             if (direction.sqrMagnitude <= Mathf.Epsilon)
             {
@@ -238,6 +250,10 @@ namespace Axiom.AI
             transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
             float speed = behaviourProfile.BaseMoveSpeed *
                           _role.Definition.MovementSpeedMultiplier;
+            if (_status != null)
+            {
+                speed *= _status.MovementSpeedMultiplier;
+            }
             var velocity = direction * speed;
             velocity.y = _characterController.isGrounded ? -2f : -9.81f;
             _characterController.Move(velocity * Time.deltaTime);

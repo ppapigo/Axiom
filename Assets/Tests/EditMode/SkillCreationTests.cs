@@ -147,6 +147,45 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void CrowdControlState_AppliesBaselineMovementAndActionRules()
+        {
+            var state = new CrowdControlState();
+            state.Apply(CrowdControlType.Slow, 10f, 2f);
+            state.Apply(CrowdControlType.Root, 10f, 1.5f);
+
+            Assert.That(state.GetMovementSpeedMultiplier(11f, 0.7f), Is.EqualTo(0.7f));
+            Assert.That(state.IsMovementBlocked(11f), Is.True);
+            Assert.That(state.IsActionBlocked(11f), Is.False);
+            Assert.That(state.IsMovementBlocked(11.6f), Is.False);
+            Assert.That(state.GetMovementSpeedMultiplier(12f, 0.7f), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void CrowdControlState_StunAndKnockUpBlockActionsForTheirDurations()
+        {
+            var state = new CrowdControlState();
+            state.Apply(CrowdControlType.Stun, 5f, 1f);
+            state.Apply(CrowdControlType.KnockUp, 5f, 0.7f);
+
+            Assert.That(state.GetActiveEffect(5.5f), Is.EqualTo(CrowdControlType.Stun));
+            Assert.That(state.IsActionBlocked(5.9f), Is.True);
+            Assert.That(state.IsActionBlocked(6f), Is.False);
+        }
+
+        [Test]
+        public void SkillBalance_UsesRequestedCrowdControlBaselines()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+
+            Assert.That(balance.SlowMovementMultiplier, Is.EqualTo(0.7f));
+            Assert.That(balance.GetCrowdControlDuration(CrowdControlType.Slow), Is.EqualTo(2f));
+            Assert.That(balance.GetCrowdControlDuration(CrowdControlType.Root), Is.EqualTo(1.5f));
+            Assert.That(balance.GetCrowdControlDuration(CrowdControlType.Stun), Is.EqualTo(1f));
+            Assert.That(balance.GetCrowdControlDuration(CrowdControlType.KnockUp), Is.EqualTo(0.7f));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void MageProjectile_WithSupportedValues_IsValid()
         {
             SkillBalanceProfile balance = CreateBalance();

@@ -26,8 +26,16 @@ namespace Axiom.Demo
         private TeamMember _team;
         private SkillBuilderPanel _skillBuilder;
         private SkillPointModifiers _qDraft;
+        private CharacterStatusController _status;
 
         public SkillDefinition QSkillDefinition => CreateQSkill();
+        public SkillDefinition ESkillDefinition => CreateESkill();
+        public SkillDefinition UltimateDefinition => CreateUltimate();
+
+        public float GetCooldownRemaining(SkillSlot slot, float currentTime)
+        {
+            return _cooldowns.GetRemaining(slot, currentTime);
+        }
 
         public void Configure(
             UnityEngine.Camera aimCamera,
@@ -57,6 +65,7 @@ namespace Axiom.Demo
             _stats = GetComponent<CharacterStats>();
             _role = GetComponent<CharacterRole>();
             _team = GetComponent<TeamMember>();
+            _status = GetComponent<CharacterStatusController>();
         }
 
         private void OnDisable()
@@ -100,7 +109,8 @@ namespace Axiom.Demo
 
         private void TryCast(in SkillDefinition definition)
         {
-            if (!_cooldowns.TryStart(definition.Slot, Time.time, definition.Cooldown) ||
+            if ((_status != null && _status.IsActionBlocked) ||
+                !_cooldowns.TryStart(definition.Slot, Time.time, definition.Cooldown) ||
                 !TryGetAimPoint(out Vector3 aimPoint) ||
                 !SkillCastPlanner.TryCreate(
                     definition,
@@ -149,6 +159,12 @@ namespace Axiom.Demo
                     _balance,
                     distance);
                 health.ApplyDamage(request);
+                CharacterStatusController targetStatus =
+                    health.GetComponent<CharacterStatusController>();
+                if (targetStatus != null)
+                {
+                    targetStatus.Apply(definition.CrowdControl, Time.time);
+                }
             }
         }
 

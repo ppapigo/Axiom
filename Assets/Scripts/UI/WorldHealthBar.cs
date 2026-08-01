@@ -11,6 +11,7 @@ namespace Axiom.UI
         [SerializeField] private UnityEngine.Camera worldCamera;
         [SerializeField] private TeamId team;
         [SerializeField] private string displayName;
+        [SerializeField] private CharacterStatusController status;
         [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.45f, 0f);
         [SerializeField, Min(24f)] private float width = 92f;
         [SerializeField, Min(4f)] private float height = 11f;
@@ -28,6 +29,9 @@ namespace Axiom.UI
             worldCamera = camera;
             team = targetTeam;
             displayName = characterName;
+            status = targetHealth == null
+                ? null
+                : targetHealth.GetComponent<CharacterStatusController>();
         }
 
         private void OnGUI()
@@ -66,9 +70,12 @@ namespace Axiom.UI
                 DrawRect(new Rect(x, top, 1f, height), new Color(0f, 0f, 0f, 0.7f));
             }
 
+            string statusText = status != null && status.ActiveEffect != Skill.CrowdControlType.None
+                ? $"  [{status.ActiveEffect.ToString().ToUpperInvariant()}]"
+                : string.Empty;
             GUI.Label(
-                new Rect(left, top - 18f, width, 18f),
-                $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}");
+                new Rect(left - 50f, top - 18f, width + 100f, 18f),
+                $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}{statusText}");
         }
 
         private static void DrawRect(Rect rect, Color color)

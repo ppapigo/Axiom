@@ -15,9 +15,9 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 7. Assassin — 완료
 8. 역할 기반 AI — 완료
 9. 3vs3 경기 시스템 — 완료
-10. 스킬 제작 시스템 — 미구현
+10. 스킬 제작 시스템 — 완료
 
-현재 Unity EditMode 테스트 50개가 모두 통과합니다.
+현재 Unity EditMode 테스트 65개가 모두 통과합니다.
 
 ## 구현된 시스템
 
@@ -40,6 +40,14 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - 3판 2선승제: 2:0 또는 2:1에서 경기 종료
 - 라운드 사이 전투 비활성화, 체력 회복, 위치 초기화 및 자동 재시작
 - 라운드 시작·종료와 최종 승리 이벤트 제공
+- ScriptableObject 기반 Skill Data, Balance Profile, Loadout
+- Target, Projectile, Ground Area, Cone, Self Area 스킬 타입
+- Slow, Root, Stun, KnockUp, Taunt CC와 7종 속성 데이터
+- 기본 공격·Q·E·궁극기 슬롯, 포인트 예산과 중복 슬롯 검증
+- 지원 시전 시간 검증과 Inspector AnimationCurve 기반 시전 피해 보너스
+- Self Area와 Ground Area의 거리별 계단식 피해 감소
+- Tank 원거리 제한, Mage 광역 피해 상한, Assassin 광역 반경 제한
+- 자연어 스킬 생성 결과를 런타임 사용 전에 검증할 수 있는 `SkillDefinition` 파이프라인
 
 ## Unity 구성
 
@@ -68,8 +76,19 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 4. 기본값은 2승 필요, 라운드 간 대기 2초이며 Inspector에서 수정할 수 있습니다.
 5. 한 팀의 세 캐릭터가 모두 사망하면 상대 팀이 1승하고, 먼저 2승한 팀이 최종 승리합니다.
 
+### 스킬 제작
+
+1. `Create > Axiom > Skill > Balance Profile`로 포인트 예산과 시전 시간 피해 곡선을 설정합니다.
+2. `Create > Axiom > Skill > Skill Data`로 각 스킬의 타입, 피해 계수, 쿨다운, 사거리, 반경, 투사체 속도, CC, 속성과 비용을 설정합니다.
+3. `Create > Axiom > Skill > Loadout`에 역할, Balance Profile과 슬롯별 Skill Data를 연결합니다.
+4. `ValidateLoadout` 결과가 유효한 데이터만 전투 실행 계층에 전달합니다.
+
+## GitHub 브라우저 실행
+
+Unity WebGL 빌드를 GitHub Pages에 배포하면 별도 설치 없이 링크로 실행할 수 있습니다. 현재 저장소에는 실행 씬이 아직 등록되지 않아 Pages 배포 전 단계입니다.
+
 EditMode 테스트는 `Window > General > Test Runner`에서 실행합니다.
 
 ## 다음 단계
 
-ScriptableObject 기반 스킬 제작 시스템을 구현합니다. 공통 스킬 데이터와 타입별 실행 로직을 분리하고, 이후 자연어 기반 스킬 생성기가 데이터를 안전하게 만들 수 있는 검증 구조를 추가합니다.
+플레이 가능한 데모 씬을 구성하고 Unity WebGL 빌드와 GitHub Pages 자동 배포를 연결합니다. 완료 후 README 상단에 심사용 실행 링크를 제공합니다.

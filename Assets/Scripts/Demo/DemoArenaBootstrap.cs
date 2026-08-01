@@ -36,7 +36,7 @@ namespace Axiom.Demo
         private ThreeVsThreeMatchManager _matchManager;
         private CharacterHealth _playerHealth;
         private SkillBuilderPanel _skillBuilderPanel;
-        private DemoSkillController _playerSkills;
+        private CharacterRoleId? _selectedRole;
         private bool _gameStarted;
         private TeamId? _winner;
         private string _roundMessage = "Choose your role";
@@ -49,6 +49,11 @@ namespace Axiom.Demo
 
         private void OnDestroy()
         {
+            if (_skillBuilderPanel != null)
+            {
+                _skillBuilderPanel.DraftSaved -= StartMatchAfterSkillSaved;
+            }
+
             foreach (InputAction action in _runtimeActions)
             {
                 action.Dispose();
@@ -76,7 +81,15 @@ namespace Axiom.Demo
 
             if (!_gameStarted)
             {
-                DrawRoleSelection();
+                if (_selectedRole.HasValue)
+                {
+                    DrawSkillSetup(_selectedRole.Value);
+                }
+                else
+                {
+                    DrawRoleSelection();
+                }
+
                 return;
             }
 
@@ -117,6 +130,17 @@ namespace Axiom.Demo
             }
         }
 
+        private static void DrawSkillSetup(CharacterRoleId role)
+        {
+            float width = 420f;
+            float left = (Screen.width - width) * 0.5f;
+            float top = Screen.height * 0.22f;
+            GUI.Box(new Rect(left, top, width, 86f), $"{role} SKILL SETUP");
+            GUI.Label(
+                new Rect(left + 34f, top + 38f, width - 68f, 28f),
+                "Create your Q skill and SAVE DRAFT to start the match.");
+        }
+
         private void DrawTeamHealth()
         {
             float right = Screen.width - 230f;
@@ -141,6 +165,34 @@ namespace Axiom.Demo
         }
 
         public void StartDemo(CharacterRoleId selectedRole)
+        {
+            if (_gameStarted)
+            {
+                return;
+            }
+
+            _selectedRole = selectedRole;
+            _roundMessage = $"{selectedRole}: Create your Q skill";
+            RegisterDefaultElements(selectedRole);
+            _skillBuilderPanel.SetContext(
+                selectedRole,
+                SkillSlot.Q,
+                _roleElementPool);
+            if (!_skillBuilderPanel.IsVisible)
+            {
+                _skillBuilderPanel.ToggleVisibility();
+            }
+        }
+
+        private void StartMatchAfterSkillSaved(SkillDraft draft)
+        {
+            if (!_gameStarted && _selectedRole.HasValue)
+            {
+                StartMatch(_selectedRole.Value);
+            }
+        }
+
+        private void StartMatch(CharacterRoleId selectedRole)
         {
             _gameStarted = true;
             _roundMessage = "Preparing round 1";
@@ -188,11 +240,6 @@ namespace Axiom.Demo
                 _winner = winner;
                 _roundMessage = $"MATCH WINNER: {winner}";
             };
-            RegisterPlayerElements(selectedRole);
-            _skillBuilderPanel.SetContext(
-                selectedRole,
-                SkillSlot.Q,
-                _roleElementPool);
         }
 
         private MatchParticipant CreateCharacter(
@@ -323,7 +370,6 @@ namespace Axiom.Demo
             basicAttack.Configure(GetAttackProfile(roleId), attackSource);
             DemoSkillController skills = character.AddComponent<DemoSkillController>();
             skills.Configure(_mainCamera, _skillBalance, _skillBuilderPanel);
-            _playerSkills = skills;
             CombatHud combatHud = character.AddComponent<CombatHud>();
             combatHud.Configure(
                 character.GetComponent<CharacterHealth>(),
@@ -338,20 +384,20 @@ namespace Axiom.Demo
             combatBehaviours.Add(skills);
         }
 
-        private void RegisterPlayerElements(CharacterRoleId role)
+        private void RegisterDefaultElements(CharacterRoleId role)
         {
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.Q,
-                _playerSkills.QSkillDefinition.Element);
+                DemoSkillController.GetDefaultQElement(role));
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.E,
-                _playerSkills.ESkillDefinition.Element);
+                DemoSkillController.GetDefaultEElement(role));
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.Ultimate,
-                _playerSkills.UltimateDefinition.Element);
+                DemoSkillController.GetDefaultUltimateElement(role));
         }
 
         private void CreateEnvironment()
@@ -393,6 +439,7 @@ namespace Axiom.Demo
             _skillBalance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
             _skillBuilderPanel = gameObject.AddComponent<SkillBuilderPanel>();
             _skillBuilderPanel.Configure(_skillBalance);
+            _skillBuilderPanel.DraftSaved += StartMatchAfterSkillSaved;
             _meleeAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
             _meleeAttack.Configure(BasicAttackDeliveryType.Melee, 2.2f, 0.6f, 0.75f);
             _rangedAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();

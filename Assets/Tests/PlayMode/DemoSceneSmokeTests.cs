@@ -27,6 +27,18 @@ namespace Axiom.Tests.PlayMode
             Assert.That(skillBuilder.IsAvailable, Is.False);
             bootstrap.StartDemo(CharacterRoleId.Mage);
             yield return null;
+
+            Assert.That(skillBuilder.IsConfigured, Is.True);
+            Assert.That(skillBuilder.IsAvailable, Is.True);
+            Assert.That(skillBuilder.IsVisible, Is.True);
+            Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
+            Assert.That(Object.FindObjectsByType<CharacterHealth>(
+                FindObjectsSortMode.None), Is.Empty);
+            skillBuilder.Model.AdjustDamage(1);
+            skillBuilder.Model.AdjustCooldownReduction(1);
+            Assert.That(skillBuilder.Model.ToggleElement(SkillElement.Fire), Is.True);
+            Assert.That(skillBuilder.TrySaveDraft(), Is.True);
+            yield return null;
             yield return null;
 
             CharacterHealth[] combatants = Object.FindObjectsByType<CharacterHealth>(
@@ -53,20 +65,12 @@ namespace Axiom.Tests.PlayMode
             Assert.That(match, Is.Not.Null);
             Assert.That(match.Phase, Is.EqualTo(MatchPhase.RoundActive));
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);
-            Assert.That(skillBuilder, Is.Not.Null);
-            Assert.That(skillBuilder.IsConfigured, Is.True);
-            Assert.That(skillBuilder.IsAvailable, Is.True);
             Assert.That(combatHud, Is.Not.Null);
             Assert.That(combatHud.IsConfigured, Is.True);
             Assert.That(combatHud.Health, Is.Not.Null);
             DemoSkillController playerSkills =
                 Object.FindFirstObjectByType<DemoSkillController>();
             Assert.That(playerSkills, Is.Not.Null);
-            skillBuilder.Model.AdjustDamage(1);
-            skillBuilder.Model.AdjustCooldownReduction(1);
-            Assert.That(skillBuilder.Model.ToggleElement(SkillElement.Fire), Is.True);
-            Assert.That(skillBuilder.TrySaveDraft(), Is.True);
-            yield return null;
             Assert.That(playerSkills.QSkillDefinition.DamageCoefficient,
                 Is.EqualTo(1.32f).Within(0.001f));
             Assert.That(playerSkills.QSkillDefinition.Cooldown, Is.EqualTo(3f));

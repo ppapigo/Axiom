@@ -232,7 +232,7 @@ namespace Axiom.Demo
             float range = type == SkillType.Cone ? 3f : 7f;
             SkillDefinition baseDefinition = CreateDefinition(
                 "Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f,
-                GetQElement());
+                GetDefaultQElement(_role.Definition.RoleId));
             return SkillDraftApplier.Apply(
                 baseDefinition,
                 _qDraft,
@@ -246,9 +246,7 @@ namespace Axiom.Demo
                 ? SkillType.Cone
                 : SkillType.GroundArea;
             float range = type == SkillType.Cone ? 3f : 6f;
-            SkillElement element = _role.Definition.RoleId == CharacterRoleId.Mage
-                ? SkillElement.Ice
-                : SkillElement.Wind;
+            SkillElement element = GetDefaultEElement(_role.Definition.RoleId);
             return CreateDefinition(
                 "E Skill", SkillSlot.E, type, 1.8f, 7f, range, 3f, element);
         }
@@ -258,20 +256,32 @@ namespace Axiom.Demo
             SkillType type = _role.Definition.RoleId == CharacterRoleId.Mage
                 ? SkillType.GroundArea
                 : SkillType.Projectile;
-            SkillElement element = _role.Definition.RoleId switch
-            {
-                CharacterRoleId.Mage => SkillElement.Fire,
-                CharacterRoleId.Assassin => SkillElement.Poison,
-                _ => SkillElement.Earth
-            };
+            SkillElement element = GetDefaultUltimateElement(_role.Definition.RoleId);
             return CreateDefinition(
                 "Ultimate", SkillSlot.Ultimate, type, 3f, 15f, 8f, 3f,
                 element);
         }
 
-        private SkillElement GetQElement()
+        public static SkillElement GetDefaultQElement(CharacterRoleId role)
         {
-            return _role.Definition.RoleId switch
+            return role switch
+            {
+                CharacterRoleId.Mage => SkillElement.Fire,
+                CharacterRoleId.Assassin => SkillElement.Poison,
+                _ => SkillElement.Earth
+            };
+        }
+
+        public static SkillElement GetDefaultEElement(CharacterRoleId role)
+        {
+            return role == CharacterRoleId.Mage
+                ? SkillElement.Ice
+                : SkillElement.Wind;
+        }
+
+        public static SkillElement GetDefaultUltimateElement(CharacterRoleId role)
+        {
+            return role switch
             {
                 CharacterRoleId.Mage => SkillElement.Fire,
                 CharacterRoleId.Assassin => SkillElement.Poison,

@@ -1,9 +1,12 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Axiom.Character;
 using Axiom.Combat;
 using Axiom.Data;
+using Axiom.Demo;
 using Axiom.Role;
 using Axiom.Skill;
+using Axiom.Skill.Generation;
 using Axiom.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -228,6 +231,35 @@ namespace Axiom.Tests.EditMode
             Assert.That(e.Modifiers.RadiusIncrease, Is.EqualTo(1f));
             Assert.That(ultimate.Slot, Is.EqualTo(SkillSlot.Ultimate));
             Object.DestroyImmediate(gameObject);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public async Task SkillBuilderPanel_GeneratesPreviewAndConfirmsDraft()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var gameObject = new GameObject("AI Skill Builder Test");
+            SkillBuilderPanel panel = gameObject.AddComponent<SkillBuilderPanel>();
+            panel.Configure(balance);
+            panel.ConfigureGeneration(
+                new MockSkillGenerationProvider(),
+                DemoSkillDefinitionFactory.Create);
+            panel.SetContext(role, SkillSlot.Q, new RoleElementPool());
+
+            bool generated = await panel.TryGenerateDraftAsync(
+                "fire ground area with slow");
+
+            Assert.That(generated, Is.True);
+            Assert.That(panel.GenerationResult, Is.Not.Null);
+            Assert.That(panel.GenerationResult.PointCost.Total,
+                Is.EqualTo(panel.GenerationResult.Validation.PointCost));
+            Assert.That(panel.TryConfirmGeneratedDraft(), Is.True);
+            Assert.That(panel.TryGetSavedDraft(SkillSlot.Q, out SkillDraft saved), Is.True);
+            Assert.That(saved.Type, Is.EqualTo(SkillType.GroundArea));
+            Assert.That(saved.Element, Is.EqualTo(SkillElement.Fire));
+            Object.DestroyImmediate(gameObject);
+            Object.DestroyImmediate(role);
             Object.DestroyImmediate(balance);
         }
 

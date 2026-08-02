@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-기존 Unity EditMode 전체 테스트 103개와 자연어 스킬 생성 계층 대상 테스트 26개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
+기존 Unity EditMode 전체 테스트 103개와 스킬 제작·자연어 생성 계층 대상 테스트 79개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
 
 ## 구현된 시스템
 
@@ -120,6 +120,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 14. `SkillRuleValidator`는 기존 포인트 계산, `SkillValidator`, `RoleElementPool`을 재사용해 100포인트, CC 한 개, 역할군 속성 두 개, Tank 사거리와 Assassin 광역 반경 제한을 검사합니다. 결과에는 오류 목록과 미리보기에 사용할 계산된 포인트 및 `SkillDefinition`이 포함됩니다.
 15. `SkillAutoCorrector`는 생성 수치를 제작 단위로 정규화하고 CC 중복, Tank 근접 범위, Assassin 광역 반경, 세 번째 역할 속성과 초과 포인트를 안전하게 줄입니다. 수정 후에도 유효하지 않으면 Tank Cone, Mage Projectile, Assassin Target 역할 프리셋을 반환하며 적용한 변경 내역을 함께 제공합니다.
 16. `SkillGenerationPipeline`은 Provider → Mapper → Validator → Auto Corrector 흐름을 하나의 비동기 호출로 연결합니다. 결과에는 최종 `SkillDraft`, 미리보기용 `SkillDefinition`, 항목별 포인트 내역, 자동 보정 변경 내역과 오류 목록이 포함됩니다. AI 응답 파싱 또는 공급자 호출이 실패해도 역할별 안전 프리셋을 반환합니다.
+17. 역할 선택 후 열리는 스킬 제작 화면 오른쪽에서 자연어를 입력하고 Mock AI 초안을 생성할 수 있습니다. 결과 카드에서 공격 방식, 속성, CC, 수치, 항목별 포인트와 자동 보정 내역을 확인한 뒤 `CONFIRM & SAVE`로 Q/E/R에 저장합니다. 기존 수동 100포인트 제작 방식도 함께 사용할 수 있습니다.
 
 ### 장비 외형
 
@@ -143,4 +144,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-게임 시작 전 스킬 제작 화면에 자연어 입력, 생성 중 표시, 결과 카드, 포인트 내역, 확정 버튼을 연결합니다.
+플레이어가 확정한 Q/E/R 초안을 아군 AI도 역할별 조건에 따라 사용하도록 연결합니다.

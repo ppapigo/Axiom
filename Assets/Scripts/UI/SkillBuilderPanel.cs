@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Axiom.Data;
 using Axiom.Role;
 using Axiom.Skill;
+using Axiom.Skill.Generation;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,6 +19,14 @@ namespace Axiom.UI
         private readonly Dictionary<SkillSlot, SkillDraft> _savedDrafts =
             new Dictionary<SkillSlot, SkillDraft>();
         private SkillBalanceProfile _balance;
+        private Func<CharacterRoleId, SkillSlot, SkillDefinition> _baseDefinitionFactory;
+        private SkillGenerationPipeline _generationPipeline;
+        private SkillGenerationPipelineResult _generationResult;
+        private CancellationTokenSource _generationCancellation;
+        private CharacterRoleDefinition _roleDefinition;
+        private string _generationPrompt = string.Empty;
+        private string _generationStatus = "Describe a skill, then generate a draft.";
+        private bool _isGenerating;
         private bool _isVisible;
         private bool _isAvailable;
         private bool _hasContext;
@@ -33,6 +45,8 @@ namespace Axiom.UI
         public SkillDraft SavedDraft => _savedDraft;
         public SkillSlot CurrentSlot => _slot;
         public SkillBuilderModel Model => _model;
+        public bool IsGenerating => _isGenerating;
+        public SkillGenerationPipelineResult GenerationResult => _generationResult;
 
         public bool TryGetSavedDraft(SkillSlot slot, out SkillDraft draft)
         {
@@ -42,6 +56,16 @@ namespace Axiom.UI
         public void Configure(SkillBalanceProfile balance)
         {
             _balance = balance;
+        }
+
+        public void ConfigureGeneration(
+            ISkillGenerationProvider provider,
+            Func<CharacterRoleId, SkillSlot, SkillDefinition> baseDefinitionFactory)
+        {
+            _generationPipeline = new SkillGenerationPipeline(
+                provider ?? throw new ArgumentNullException(nameof(provider)));
+            _baseDefinitionFactory = baseDefinitionFactory ??
+                throw new ArgumentNullException(nameof(baseDefinitionFactory));
         }
 
         public void ToggleVisibility()
@@ -57,6 +81,24 @@ namespace Axiom.UI
             SkillSlot slot,
             RoleElementPool roleElementPool)
         {
+            _roleDefinition = null;
+            SetContextCore(role, slot, roleElementPool);
+        }
+
+        public void SetContext(
+            CharacterRoleDefinition role,
+            SkillSlot slot,
+            RoleElementPool roleElementPool)
+        {
+            _roleDefinition = role ?? throw new ArgumentNullException(nameof(role));
+            SetContextCore(role.RoleId, slot, roleElementPool);
+        }
+
+        private void SetContextCore(
+            CharacterRoleId role,
+            SkillSlot slot,
+            RoleElementPool roleElementPool)
+        {
             bool contextChanged = !_hasContext || _role != role || _slot != slot;
             _role = role;
             _slot = slot;
@@ -66,6 +108,10 @@ namespace Axiom.UI
             _isAvailable = true;
             if (contextChanged)
             {
+                CancelGeneration();
+                _generationResult = null;
+                _generationPrompt = string.Empty;
+                _generationStatus = "Describe a skill, then generate a draft.";
                 _model.Reset();
                 _model.SelectType(GetDefaultType());
             }
@@ -79,7 +125,78 @@ namespace Axiom.UI
                 return false;
             }
 
-            _savedDraft = _model.CreateDraft(_slot);
+            return TryStoreDraft(_model.CreateDraft(_slot));
+        }
+
+        public async Task<bool> TryGenerateDraftAsync(
+            string prompt,
+            CancellationToken cancellationToken = default)
+        {
+            if (_balance == null || !_hasContext || _roleDefinition == null ||
+                _generationPipeline == null || _baseDefinitionFactory == null ||
+                _isGenerating)
+            {
+                _generationStatus = "AI generation is not configured for this slot.";
+                return false;
+            }
+
+            _generationPrompt = (prompt ?? string.Empty).Trim();
+            _generationResult = null;
+            _generationStatus = "Generating and validating...";
+            _isGenerating = true;
+            var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken);
+            _generationCancellation = cancellation;
+            try
+            {
+                SkillDefinition baseDefinition = _baseDefinitionFactory(_role, _slot);
+                _generationResult = await _generationPipeline.GenerateAsync(
+                    _generationPrompt,
+                    _roleDefinition,
+                    _slot,
+                    baseDefinition,
+                    _balance,
+                    _roleElementPool,
+                    cancellation.Token);
+                _generationStatus = _generationResult.UsedFallback
+                    ? "Generation failed. A safe preset is ready."
+                    : _generationResult.WasAutoCorrected
+                        ? "Draft generated and automatically corrected."
+                        : "Draft generated. Review and confirm it.";
+                return _generationResult.Validation.IsValid;
+            }
+            catch (OperationCanceledException)
+            {
+                _generationStatus = "Generation cancelled.";
+                return false;
+            }
+            finally
+            {
+                if (_generationCancellation == cancellation)
+                {
+                    _generationCancellation = null;
+                    _isGenerating = false;
+                }
+
+                cancellation.Dispose();
+            }
+        }
+
+        public bool TryConfirmGeneratedDraft()
+        {
+            return _generationResult != null &&
+                   _generationResult.Validation.IsValid &&
+                   TryStoreDraft(_generationResult.Draft);
+        }
+
+        private bool TryStoreDraft(in SkillDraft draft)
+        {
+            if (_roleElementPool == null)
+            {
+                return false;
+            }
+
+            _savedDraft = draft;
             if (_savedDraft.Element.HasValue &&
                 !_roleElementPool.TryAssign(
                     _role,
@@ -94,6 +211,11 @@ namespace Axiom.UI
             _isVisible = false;
             DraftSaved?.Invoke(_savedDraft);
             return true;
+        }
+
+        private void OnDestroy()
+        {
+            CancelGeneration();
         }
 
         private void Update()
@@ -125,9 +247,10 @@ namespace Axiom.UI
                 return;
             }
 
-            float width = 560f;
+            float width = 944f;
+            float manualWidth = 560f;
             float height = 690f;
-            float left = (Screen.width - width) * 0.5f;
+            float left = Mathf.Max(8f, (Screen.width - width) * 0.5f);
             float top = Mathf.Max(8f, (Screen.height - height) * 0.5f);
             GUI.Box(
                 new Rect(left, top, width, height),
@@ -189,7 +312,7 @@ namespace Axiom.UI
             GUI.color = valid ? new Color(0.4f, 1f, 0.65f) : new Color(1f, 0.35f, 0.3f);
             string status = valid ? "READY" : $"OVER BUDGET +{cost - _balance.LoadoutPointBudget}";
             GUI.Box(
-                new Rect(left + 24f, top + 562f, width - 48f, 48f),
+                new Rect(left + 24f, top + 562f, manualWidth - 48f, 48f),
                 $"{cost} / {_balance.LoadoutPointBudget} POINTS   {status}");
             GUI.color = previousColor;
 
@@ -209,6 +332,123 @@ namespace Axiom.UI
             if (GUI.Button(new Rect(left + 399f, top + 626f, 137f, 44f), "CLOSE"))
             {
                 _isVisible = false;
+            }
+
+            DrawGenerationPanel(left + manualWidth + 8f, top + 32f, 352f, 638f);
+        }
+
+        private void DrawGenerationPanel(float left, float top, float width, float height)
+        {
+            GUI.Box(new Rect(left, top, width, height), "AI SKILL GENERATOR (MOCK)");
+            GUI.Label(new Rect(left + 14f, top + 30f, width - 28f, 22f),
+                "Describe the effect, element, area and CC:");
+            _generationPrompt = GUI.TextArea(
+                new Rect(left + 14f, top + 54f, width - 28f, 86f),
+                _generationPrompt,
+                240);
+
+            GUI.enabled = !_isGenerating && _roleDefinition != null &&
+                          _generationPipeline != null;
+            if (GUI.Button(
+                    new Rect(left + 14f, top + 150f, width - 28f, 38f),
+                    _isGenerating ? "GENERATING..." : "GENERATE DRAFT"))
+            {
+                _ = TryGenerateDraftAsync(_generationPrompt);
+            }
+
+            GUI.enabled = true;
+            GUI.Box(new Rect(left + 14f, top + 198f, width - 28f, 46f),
+                _generationStatus);
+            if (_generationResult == null)
+            {
+                GUI.Label(
+                    new Rect(left + 18f, top + 262f, width - 36f, 120f),
+                    "Examples:\n- fire ground area that slows enemies\n" +
+                    "- ice projectile with stun\n- dash and poison strike");
+                return;
+            }
+
+            SkillDraft draft = _generationResult.Draft;
+            string name = string.IsNullOrWhiteSpace(_generationResult.Response?.displayName)
+                ? "Safe preset"
+                : _generationResult.Response.displayName;
+            string description = _generationResult.Response?.description;
+            GUI.Label(
+                new Rect(left + 18f, top + 258f, width - 36f, 24f),
+                string.IsNullOrWhiteSpace(description)
+                    ? name
+                    : $"{name} - {description}");
+            SkillPointModifiers modifiers = draft.Modifiers;
+            string crowdControl = modifiers.AppliesStun
+                ? "Stun"
+                : modifiers.AppliesKnockUp
+                    ? "KnockUp"
+                    : modifiers.AppliesSlow ? "Slow" : "None";
+            GUI.Box(
+                new Rect(left + 14f, top + 286f, width - 28f, 78f),
+                $"{draft.Type} | {draft.Element?.ToString() ?? "No Element"} | CC {crowdControl}\n" +
+                $"DMG +{modifiers.DamageIncreasePercent:0}%  RAD +{modifiers.RadiusIncrease:0}m  " +
+                $"RNG +{modifiers.RangeIncrease:0}m  CD -{modifiers.CooldownReduction:0}s\n" +
+                $"{_generationResult.PointCost.Total} / {_balance.LoadoutPointBudget} POINTS");
+
+            GUI.Label(
+                new Rect(left + 18f, top + 372f, width - 36f, 112f),
+                BuildPointCostText(_generationResult.PointCost));
+            GUI.Label(
+                new Rect(left + 18f, top + 490f, width - 36f, 74f),
+                BuildGenerationNotes(_generationResult));
+
+            GUI.enabled = _generationResult.Validation.IsValid;
+            if (GUI.Button(
+                    new Rect(left + 14f, top + height - 54f, width - 28f, 40f),
+                    "CONFIRM & SAVE"))
+            {
+                TryConfirmGeneratedDraft();
+            }
+
+            GUI.enabled = true;
+        }
+
+        private static string BuildPointCostText(SkillPointCostBreakdown pointCost)
+        {
+            var builder = new StringBuilder("POINT BREAKDOWN\n");
+            for (int i = 0; i < pointCost.Items.Count; i++)
+            {
+                SkillPointCostItem item = pointCost.Items[i];
+                builder.Append(item.Category).Append("  +")
+                    .Append(item.Points).Append('P');
+                builder.Append(i % 2 == 0 ? "     " : "\n");
+            }
+
+            if (pointCost.Items.Count == 0)
+            {
+                builder.Append("Base projectile  0P");
+            }
+
+            return builder.ToString();
+        }
+
+        private static string BuildGenerationNotes(SkillGenerationPipelineResult result)
+        {
+            var builder = new StringBuilder();
+            foreach (string change in result.Changes)
+            {
+                builder.Append("AUTO: ").Append(change).Append('\n');
+            }
+            foreach (string error in result.Errors)
+            {
+                builder.Append("INFO: ").Append(error).Append('\n');
+            }
+
+            return builder.Length == 0 ? "No automatic corrections." : builder.ToString();
+        }
+
+        private void CancelGeneration()
+        {
+            if (_generationCancellation != null &&
+                !_generationCancellation.IsCancellationRequested)
+            {
+                _generationCancellation.Cancel();
             }
         }
 

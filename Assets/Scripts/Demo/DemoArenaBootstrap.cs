@@ -8,6 +8,7 @@ using Axiom.Input;
 using Axiom.Manager;
 using Axiom.Role;
 using Axiom.Skill;
+using Axiom.Skill.Generation;
 using Axiom.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -187,7 +188,7 @@ namespace Axiom.Demo
 
             _roundMessage = $"{_selectedRole.Value}: Create {slot} skill";
             _skillBuilderPanel.SetContext(
-                _selectedRole.Value,
+                _roles[_selectedRole.Value],
                 slot,
                 _roleElementPool);
             if (!_skillBuilderPanel.IsVisible)
@@ -417,15 +418,15 @@ namespace Axiom.Demo
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.Q,
-                DemoSkillController.GetDefaultQElement(role));
+                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.Q));
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.E,
-                DemoSkillController.GetDefaultEElement(role));
+                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.E));
             _roleElementPool.TryAssign(
                 role,
                 SkillSlot.Ultimate,
-                DemoSkillController.GetDefaultUltimateElement(role));
+                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.Ultimate));
         }
 
         private void CreateEnvironment()
@@ -467,6 +468,9 @@ namespace Axiom.Demo
             _skillBalance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
             _skillBuilderPanel = gameObject.AddComponent<SkillBuilderPanel>();
             _skillBuilderPanel.Configure(_skillBalance);
+            _skillBuilderPanel.ConfigureGeneration(
+                new MockSkillGenerationProvider(),
+                DemoSkillDefinitionFactory.Create);
             _skillBuilderPanel.DraftSaved += StartMatchAfterSkillSaved;
             _meleeAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
             _meleeAttack.Configure(BasicAttackDeliveryType.Melee, 2.2f, 0.6f, 0.75f);

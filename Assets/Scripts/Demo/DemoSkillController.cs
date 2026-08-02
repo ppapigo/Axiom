@@ -354,13 +354,9 @@ namespace Axiom.Demo
 
         private SkillDefinition CreateQSkill()
         {
-            SkillType type = _role.Definition.RoleId == CharacterRoleId.Tank
-                ? SkillType.Cone
-                : SkillType.Projectile;
-            float range = type == SkillType.Cone ? 3f : 7f;
-            SkillDefinition baseDefinition = CreateDefinition(
-                "Q Skill", SkillSlot.Q, type, 1.2f, 4f, range, 1.5f,
-                GetDefaultQElement(_role.Definition.RoleId));
+            SkillDefinition baseDefinition = DemoSkillDefinitionFactory.Create(
+                _role.Definition.RoleId,
+                SkillSlot.Q);
             return SkillDraftApplier.Apply(
                 baseDefinition,
                 _qDraft,
@@ -370,13 +366,9 @@ namespace Axiom.Demo
 
         private SkillDefinition CreateESkill()
         {
-            SkillType type = _role.Definition.RoleId == CharacterRoleId.Tank
-                ? SkillType.Cone
-                : SkillType.GroundArea;
-            float range = type == SkillType.Cone ? 3f : 6f;
-            SkillElement element = GetDefaultEElement(_role.Definition.RoleId);
-            SkillDefinition baseDefinition = CreateDefinition(
-                "E Skill", SkillSlot.E, type, 1.8f, 7f, range, 3f, element);
+            SkillDefinition baseDefinition = DemoSkillDefinitionFactory.Create(
+                _role.Definition.RoleId,
+                SkillSlot.E);
             return SkillDraftApplier.Apply(
                 baseDefinition,
                 _eDraft,
@@ -386,60 +378,14 @@ namespace Axiom.Demo
 
         private SkillDefinition CreateUltimate()
         {
-            SkillType type = _role.Definition.RoleId == CharacterRoleId.Mage
-                ? SkillType.GroundArea
-                : SkillType.Projectile;
-            SkillElement element = GetDefaultUltimateElement(_role.Definition.RoleId);
-            SkillDefinition baseDefinition = CreateDefinition(
-                "Ultimate", SkillSlot.Ultimate, type, 3f, 15f, 8f, 3f,
-                element);
+            SkillDefinition baseDefinition = DemoSkillDefinitionFactory.Create(
+                _role.Definition.RoleId,
+                SkillSlot.Ultimate);
             return SkillDraftApplier.Apply(
                 baseDefinition,
                 _ultimateDraft,
                 _role == null ? null : _role.Definition,
                 _balance);
-        }
-
-        public static SkillElement GetDefaultQElement(CharacterRoleId role)
-        {
-            return role switch
-            {
-                CharacterRoleId.Mage => SkillElement.Fire,
-                CharacterRoleId.Assassin => SkillElement.Poison,
-                _ => SkillElement.Earth
-            };
-        }
-
-        public static SkillElement GetDefaultEElement(CharacterRoleId role)
-        {
-            return role == CharacterRoleId.Mage
-                ? SkillElement.Ice
-                : SkillElement.Wind;
-        }
-
-        public static SkillElement GetDefaultUltimateElement(CharacterRoleId role)
-        {
-            return role switch
-            {
-                CharacterRoleId.Mage => SkillElement.Fire,
-                CharacterRoleId.Assassin => SkillElement.Poison,
-                _ => SkillElement.Earth
-            };
-        }
-
-        private static SkillDefinition CreateDefinition(
-            string name,
-            SkillSlot slot,
-            SkillType type,
-            float coefficient,
-            float cooldown,
-            float range,
-            float radius,
-            SkillElement element)
-        {
-            return new SkillDefinition(
-                name, slot, type, coefficient, cooldown, 0.3f,
-                range, radius, 12f, CrowdControlType.None, element, 1);
         }
 
         private static void ShowEffect(in SkillCastPlan plan)

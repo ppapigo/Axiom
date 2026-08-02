@@ -18,6 +18,14 @@ namespace Axiom.Demo
     [DisallowMultipleComponent]
     public sealed class DemoArenaBootstrap : MonoBehaviour
     {
+        private enum BuiltInAppearanceStyle
+        {
+            Classic,
+            Obsidian,
+            Ivory,
+            Custom
+        }
+
         private readonly List<InputAction> _runtimeActions = new List<InputAction>();
         private readonly List<CharacterHealth> _teamAHealth = new List<CharacterHealth>();
         private readonly List<CharacterHealth> _teamBHealth = new List<CharacterHealth>();
@@ -39,9 +47,15 @@ namespace Axiom.Demo
         private CharacterHealth _playerHealth;
         private SkillBuilderPanel _skillBuilderPanel;
         private CharacterRoleId? _selectedRole;
+        private EquipmentAppearanceDefinition _selectedEquipmentAppearance;
+        private BuiltInAppearanceStyle _selectedAppearanceStyle;
+        private bool _isChoosingAppearance;
         private bool _gameStarted;
         private TeamId? _winner;
         private string _roundMessage = "Choose your role";
+
+        public bool IsChoosingAppearance => _isChoosingAppearance;
+        public string SelectedAppearanceName => GetSelectedAppearanceName();
 
         private void Awake()
         {
@@ -85,9 +99,16 @@ namespace Axiom.Demo
             {
                 if (_selectedRole.HasValue)
                 {
-                    DrawSkillSetup(
-                        _selectedRole.Value,
-                        _skillBuilderPanel.CurrentSlot);
+                    if (_isChoosingAppearance)
+                    {
+                        DrawAppearanceSelection(_selectedRole.Value);
+                    }
+                    else
+                    {
+                        DrawSkillSetup(
+                            _selectedRole.Value,
+                            _skillBuilderPanel.CurrentSlot);
+                    }
                 }
                 else
                 {
@@ -101,9 +122,249 @@ namespace Axiom.Demo
                 new Rect(12f, Screen.height - 58f, 650f, 42f),
                 "WASD MOVE | MOUSE AIM | LMB ATTACK | Q / E / R SKILLS | SPACE DASH | B FORGE");
             DrawTeamHealth();
+            DrawRoundBanner();
 
-            if (_winner.HasValue && GUI.Button(
-                    new Rect((Screen.width - 220f) * 0.5f, Screen.height * 0.56f, 220f, 52f),
+            if (_winner.HasValue)
+            {
+                DrawMatchResult(_winner.Value);
+            }
+        }
+
+        private void DrawRoleSelection()
+        {
+            const float width = 760f;
+            const float height = 390f;
+            float left = (Screen.width - width) * 0.5f;
+            float top = Mathf.Max(72f, (Screen.height - height) * 0.44f);
+            GUI.Box(new Rect(left, top, width, height), string.Empty);
+            GUI.Label(
+                new Rect(left + 24f, top + 18f, width - 48f, 48f),
+                "AXIOM",
+                CreateCenteredStyle(34, new Color(0.25f, 0.85f, 1f), FontStyle.Bold));
+            GUI.Label(
+                new Rect(left + 24f, top + 62f, width - 48f, 30f),
+                "CREATE YOUR SKILLS. ENTER THE ARENA. OUTPLAY THE AI.",
+                CreateCenteredStyle(14, Color.white, FontStyle.Bold));
+            GUI.Box(
+                new Rect(left + 76f, top + 98f, width - 152f, 42f),
+                "3 VS 3  |  TEAM WIPE = 1 ROUND  |  FIRST TO 2 WINS");
+            GUI.Label(
+                new Rect(left + 24f, top + 148f, width - 48f, 24f),
+                "SELECT YOUR ROLE",
+                CreateCenteredStyle(16, new Color(1f, 0.82f, 0.25f), FontStyle.Bold));
+
+            const float cardWidth = 220f;
+            const float cardHeight = 160f;
+            if (GUI.Button(
+                    new Rect(left + 30f, top + 184f, cardWidth, cardHeight),
+                    "TANK\n\nHP 1400  |  ATK 80\nMOVE 95%  |  DASH 4m\n\nFRONTLINE / TAUNT"))
+            {
+                StartDemo(CharacterRoleId.Tank);
+            }
+
+            if (GUI.Button(
+                    new Rect(left + 270f, top + 184f, cardWidth, cardHeight),
+                    "MAGE\n\nHP 900  |  ATK 115\nMOVE 100%  |  DASH 4m\n\nRANGED / AREA"))
+            {
+                StartDemo(CharacterRoleId.Mage);
+            }
+
+            if (GUI.Button(
+                    new Rect(left + 510f, top + 184f, cardWidth, cardHeight),
+                    "ASSASSIN\n\nHP 900  |  ATK 115\nMOVE 110%  |  DASH 8m\n\nDIVE / EXECUTE"))
+            {
+                StartDemo(CharacterRoleId.Assassin);
+            }
+
+            GUI.Label(
+                new Rect(left + 24f, top + 354f, width - 48f, 22f),
+                "NEXT: BUILD Q, E AND R WITH THE 100 POINT SKILL FORGE",
+                CreateCenteredStyle(12, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
+        }
+
+        private static void DrawSkillSetup(CharacterRoleId role, SkillSlot slot)
+        {
+            const float width = 620f;
+            float left = (Screen.width - width) * 0.5f;
+            const float top = 12f;
+            int step = slot == SkillSlot.Q ? 1 : slot == SkillSlot.E ? 2 : 3;
+            GUI.Box(
+                new Rect(left, top, width, 86f),
+                $"{role.ToString().ToUpperInvariant()} LOADOUT  |  STEP {step} / 3");
+            GUI.Label(
+                new Rect(left + 24f, top + 34f, width - 48f, 24f),
+                $"{GetSlotMarker(slot, SkillSlot.Q)} Q     " +
+                $"{GetSlotMarker(slot, SkillSlot.E)} E     " +
+                $"{GetSlotMarker(slot, SkillSlot.Ultimate)} R",
+                CreateCenteredStyle(15, Color.white, FontStyle.Bold));
+            GUI.Label(
+                new Rect(left + 24f, top + 59f, width - 48f, 20f),
+                "DESCRIBE OR MANUALLY BUILD THE SKILL, THEN CONFIRM & SAVE",
+                CreateCenteredStyle(11, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
+        }
+
+        private void DrawAppearanceSelection(CharacterRoleId role)
+        {
+            const float width = 820f;
+            const float height = 430f;
+            float left = (Screen.width - width) * 0.5f;
+            float top = Mathf.Max(70f, (Screen.height - height) * 0.46f);
+            GUI.Box(new Rect(left, top, width, height), string.Empty);
+            GUI.Label(
+                new Rect(left + 24f, top + 18f, width - 48f, 38f),
+                "CHOOSE APPEARANCE ITEM",
+                CreateCenteredStyle(26, new Color(0.25f, 0.85f, 1f), FontStyle.Bold));
+            GUI.Label(
+                new Rect(left + 24f, top + 58f, width - 48f, 24f),
+                $"{role.ToString().ToUpperInvariant()}  |  SKILLS SAVED 3 / 3  |  FINAL STEP",
+                CreateCenteredStyle(13, Color.white, FontStyle.Bold));
+            GUI.Label(
+                new Rect(left + 24f, top + 88f, width - 48f, 22f),
+                "BUILT-IN ITEMS USE NO MODEL ASSETS. CUSTOM PREFABS APPEAR BELOW WHEN CONNECTED.",
+                CreateCenteredStyle(11, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
+
+            DrawBuiltInAppearanceButton(
+                new Rect(left + 35f, top + 126f, 235f, 104f),
+                BuiltInAppearanceStyle.Classic,
+                "CLASSIC KIT",
+                "Role default colours");
+            DrawBuiltInAppearanceButton(
+                new Rect(left + 293f, top + 126f, 235f, 104f),
+                BuiltInAppearanceStyle.Obsidian,
+                "OBSIDIAN KIT",
+                "Dark arena armour");
+            DrawBuiltInAppearanceButton(
+                new Rect(left + 551f, top + 126f, 235f, 104f),
+                BuiltInAppearanceStyle.Ivory,
+                "IVORY KIT",
+                "Light ceremonial armour");
+
+            int customCount = 0;
+            if (equipmentAppearances != null)
+            {
+                foreach (EquipmentAppearanceDefinition appearance in equipmentAppearances)
+                {
+                    if (appearance == null || appearance.Role != role || customCount >= 3)
+                    {
+                        continue;
+                    }
+
+                    float customLeft = left + 35f + (customCount * 258f);
+                    bool selected = _selectedAppearanceStyle == BuiltInAppearanceStyle.Custom &&
+                                    _selectedEquipmentAppearance == appearance;
+                    string marker = selected ? "[SELECTED]" : "[CUSTOM MODEL]";
+                    if (GUI.Button(
+                            new Rect(customLeft, top + 250f, 235f, 72f),
+                            $"{marker} {appearance.DisplayName}\n{appearance.Description}"))
+                    {
+                        _selectedAppearanceStyle = BuiltInAppearanceStyle.Custom;
+                        _selectedEquipmentAppearance = appearance;
+                    }
+                    customCount++;
+                }
+            }
+
+            if (customCount == 0)
+            {
+                GUI.Box(
+                    new Rect(left + 160f, top + 252f, width - 320f, 58f),
+                    "CUSTOM MODEL SLOTS READY\nConnect EquipmentAppearanceDefinition assets later");
+            }
+
+            GUI.Label(
+                new Rect(left + 24f, top + 332f, width - 48f, 22f),
+                $"SELECTED: {GetSelectedAppearanceName()}",
+                CreateCenteredStyle(13, new Color(1f, 0.82f, 0.25f), FontStyle.Bold));
+            if (GUI.Button(
+                    new Rect(left + 280f, top + 365f, width - 560f, 48f),
+                    "START 3 VS 3 MATCH"))
+            {
+                ConfirmAppearanceSelection();
+            }
+        }
+
+        private void DrawBuiltInAppearanceButton(
+            Rect rect,
+            BuiltInAppearanceStyle style,
+            string title,
+            string description)
+        {
+            bool selected = _selectedAppearanceStyle == style;
+            string marker = selected ? "[SELECTED]" : "[SELECT]";
+            if (GUI.Button(rect, $"{marker}\n{title}\n{description}"))
+            {
+                _selectedAppearanceStyle = style;
+                _selectedEquipmentAppearance = null;
+            }
+        }
+
+        private string GetSelectedAppearanceName()
+        {
+            return _selectedAppearanceStyle == BuiltInAppearanceStyle.Custom &&
+                   _selectedEquipmentAppearance != null
+                ? _selectedEquipmentAppearance.DisplayName
+                : _selectedAppearanceStyle switch
+                {
+                    BuiltInAppearanceStyle.Obsidian => "OBSIDIAN KIT",
+                    BuiltInAppearanceStyle.Ivory => "IVORY KIT",
+                    _ => "CLASSIC KIT"
+                };
+        }
+
+        private Color? GetSelectedBuiltInTint()
+        {
+            return _selectedAppearanceStyle switch
+            {
+                BuiltInAppearanceStyle.Obsidian => new Color(0.08f, 0.09f, 0.12f),
+                BuiltInAppearanceStyle.Ivory => new Color(0.78f, 0.75f, 0.65f),
+                _ => null
+            };
+        }
+
+        private void DrawRoundBanner()
+        {
+            const float width = 390f;
+            float left = (Screen.width - width) * 0.5f;
+            GUI.Box(new Rect(left, 12f, width, 54f), _roundMessage);
+            GUI.Label(
+                new Rect(left + 12f, 37f, width - 24f, 20f),
+                "FIRST TO 2  |  ELIMINATE ALL 3 ENEMIES",
+                CreateCenteredStyle(11, new Color(0.7f, 0.78f, 0.88f), FontStyle.Normal));
+        }
+
+        private void DrawMatchResult(TeamId winner)
+        {
+            Color previousColor = GUI.color;
+            GUI.color = new Color(0.01f, 0.015f, 0.03f, 0.82f);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = previousColor;
+
+            const float width = 520f;
+            const float height = 290f;
+            float left = (Screen.width - width) * 0.5f;
+            float top = (Screen.height - height) * 0.46f;
+            bool playerWon = winner == TeamId.TeamA;
+            Color resultColor = playerWon
+                ? new Color(0.25f, 0.85f, 1f)
+                : new Color(1f, 0.3f, 0.25f);
+            GUI.Box(new Rect(left, top, width, height), string.Empty);
+            GUI.Label(
+                new Rect(left + 24f, top + 30f, width - 48f, 58f),
+                playerWon ? "VICTORY" : "DEFEAT",
+                CreateCenteredStyle(38, resultColor, FontStyle.Bold));
+            GUI.Label(
+                new Rect(left + 24f, top + 91f, width - 48f, 28f),
+                playerWon ? "BLUE TEAM CLAIMS THE ARENA" : "RED TEAM CLAIMS THE ARENA",
+                CreateCenteredStyle(15, Color.white, FontStyle.Bold));
+            GUI.Box(
+                new Rect(left + 115f, top + 132f, width - 230f, 48f),
+                $"BLUE  {_matchManager.TeamAWins}  :  {_matchManager.TeamBWins}  RED");
+            GUI.Label(
+                new Rect(left + 24f, top + 190f, width - 48f, 22f),
+                "BEST OF 3 COMPLETE",
+                CreateCenteredStyle(12, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
+            if (GUI.Button(
+                    new Rect(left + 145f, top + 224f, width - 290f, 48f),
                     "PLAY AGAIN"))
             {
                 _winner = null;
@@ -112,37 +373,29 @@ namespace Axiom.Demo
             }
         }
 
-        private void DrawRoleSelection()
+        private static string GetSlotMarker(SkillSlot current, SkillSlot slot)
         {
-            float width = 420f;
-            float left = (Screen.width - width) * 0.5f;
-            float top = Screen.height * 0.32f;
-            GUI.Box(new Rect(left, top, width, 210f), "SELECT YOUR ROLE");
-            if (GUI.Button(new Rect(left + 30f, top + 50f, 110f, 110f), "TANK\n1400 HP"))
-            {
-                StartDemo(CharacterRoleId.Tank);
-            }
-
-            if (GUI.Button(new Rect(left + 155f, top + 50f, 110f, 110f), "MAGE\nAREA"))
-            {
-                StartDemo(CharacterRoleId.Mage);
-            }
-
-            if (GUI.Button(new Rect(left + 280f, top + 50f, 110f, 110f), "ASSASSIN\nFAST"))
-            {
-                StartDemo(CharacterRoleId.Assassin);
-            }
+            int currentIndex = current == SkillSlot.Q ? 0 :
+                current == SkillSlot.E ? 1 : 2;
+            int slotIndex = slot == SkillSlot.Q ? 0 : slot == SkillSlot.E ? 1 : 2;
+            return slotIndex < currentIndex ? "[SAVED]" :
+                slotIndex == currentIndex ? "[BUILDING]" : "[LOCKED]";
         }
 
-        private static void DrawSkillSetup(CharacterRoleId role, SkillSlot slot)
+        private static GUIStyle CreateCenteredStyle(
+            int fontSize,
+            Color color,
+            FontStyle fontStyle)
         {
-            float width = 420f;
-            float left = (Screen.width - width) * 0.5f;
-            float top = Screen.height * 0.22f;
-            GUI.Box(new Rect(left, top, width, 86f), $"{role} {slot} SKILL SETUP");
-            GUI.Label(
-                new Rect(left + 34f, top + 38f, width - 68f, 28f),
-                "Save Q, E and R drafts to start the match.");
+            var style = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = fontSize,
+                fontStyle = fontStyle,
+                wordWrap = true
+            };
+            style.normal.textColor = color;
+            return style;
         }
 
         private void DrawTeamHealth()
@@ -176,6 +429,9 @@ namespace Axiom.Demo
             }
 
             _selectedRole = selectedRole;
+            _isChoosingAppearance = false;
+            _selectedEquipmentAppearance = null;
+            _selectedAppearanceStyle = BuiltInAppearanceStyle.Classic;
             RegisterDefaultElements(selectedRole);
             PrepareSkillSlot(SkillSlot.Q);
         }
@@ -214,9 +470,28 @@ namespace Axiom.Demo
                     PrepareSkillSlot(SkillSlot.Ultimate);
                     break;
                 case SkillSlot.Ultimate:
-                    StartMatch(_selectedRole.Value);
+                    BeginAppearanceSelection();
                     break;
             }
+        }
+
+        private void BeginAppearanceSelection()
+        {
+            _isChoosingAppearance = true;
+            _selectedEquipmentAppearance = null;
+            _selectedAppearanceStyle = BuiltInAppearanceStyle.Classic;
+            _roundMessage = $"{_selectedRole}: Choose appearance";
+        }
+
+        public void ConfirmAppearanceSelection()
+        {
+            if (!_isChoosingAppearance || !_selectedRole.HasValue || _gameStarted)
+            {
+                return;
+            }
+
+            _isChoosingAppearance = false;
+            StartMatch(_selectedRole.Value);
         }
 
         private void StartMatch(CharacterRoleId selectedRole)
@@ -288,7 +563,8 @@ namespace Axiom.Demo
                 character.transform,
                 roleId,
                 team == TeamId.TeamA,
-                FindEquipmentAppearance(roleId));
+                isPlayer ? _selectedEquipmentAppearance : null,
+                isPlayer ? GetSelectedBuiltInTint() : null);
 
             CharacterController controller = character.AddComponent<CharacterController>();
             controller.height = 2f;
@@ -357,24 +633,6 @@ namespace Axiom.Demo
             }
 
             return participant;
-        }
-
-        private EquipmentAppearanceDefinition FindEquipmentAppearance(CharacterRoleId roleId)
-        {
-            if (equipmentAppearances == null)
-            {
-                return null;
-            }
-
-            foreach (EquipmentAppearanceDefinition appearance in equipmentAppearances)
-            {
-                if (appearance != null && appearance.Role == roleId)
-                {
-                    return appearance;
-                }
-            }
-
-            return null;
         }
 
         private void ConfigurePlayer(

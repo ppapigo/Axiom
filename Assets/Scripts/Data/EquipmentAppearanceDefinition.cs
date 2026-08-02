@@ -36,10 +36,18 @@ namespace Axiom.Data
     public sealed class EquipmentAppearanceDefinition : ScriptableObject
     {
         [SerializeField] private CharacterRoleId role;
+        [SerializeField] private string displayName = string.Empty;
+        [SerializeField, TextArea] private string description = string.Empty;
         [SerializeField] private EquipmentVisualPart[] parts =
             Array.Empty<EquipmentVisualPart>();
 
         public CharacterRoleId Role => role;
+        public string DisplayName => string.IsNullOrWhiteSpace(displayName)
+            ? $"{role} Equipment"
+            : displayName.Trim();
+        public string Description => string.IsNullOrWhiteSpace(description)
+            ? "Custom model equipment"
+            : description.Trim();
         public EquipmentVisualPart[] Parts => parts ?? Array.Empty<EquipmentVisualPart>();
         public bool HasParts => Parts.Length > 0;
     }

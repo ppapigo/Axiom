@@ -10,7 +10,8 @@ namespace Axiom.Demo
             Transform character,
             CharacterRoleId role,
             bool blueTeam,
-            EquipmentAppearanceDefinition equipmentAppearance = null)
+            EquipmentAppearanceDefinition equipmentAppearance = null,
+            Color? builtInTint = null)
         {
             var visualRoot = new GameObject($"{role} Visual").transform;
             visualRoot.SetParent(character, false);
@@ -38,13 +39,13 @@ namespace Axiom.Demo
             switch (role)
             {
                 case CharacterRoleId.Tank:
-                    BuildTank(visualRoot, teamAccent);
+                    BuildTank(visualRoot, teamAccent, builtInTint);
                     break;
                 case CharacterRoleId.Mage:
-                    BuildMage(visualRoot, teamAccent);
+                    BuildMage(visualRoot, teamAccent, builtInTint);
                     break;
                 case CharacterRoleId.Assassin:
-                    BuildAssassin(visualRoot, teamAccent);
+                    BuildAssassin(visualRoot, teamAccent, builtInTint);
                     break;
             }
         }
@@ -83,9 +84,9 @@ namespace Axiom.Demo
             }
         }
 
-        private static void BuildTank(Transform root, Color accent)
+        private static void BuildTank(Transform root, Color accent, Color? builtInTint)
         {
-            Color armour = new Color(0.32f, 0.36f, 0.43f);
+            Color armour = builtInTint ?? new Color(0.32f, 0.36f, 0.43f);
             CreatePart(
                 root,
                 "Tank Shield",
@@ -112,7 +113,7 @@ namespace Axiom.Demo
                 armour);
         }
 
-        private static void BuildMage(Transform root, Color accent)
+        private static void BuildMage(Transform root, Color accent, Color? builtInTint)
         {
             Color staff = new Color(0.35f, 0.2f, 0.1f);
             CreatePart(
@@ -138,12 +139,12 @@ namespace Axiom.Demo
                 new Vector3(0f, -0.62f, 0f),
                 Quaternion.identity,
                 new Vector3(0.58f, 0.28f, 0.58f),
-                new Color(0.2f, 0.12f, 0.38f));
+                builtInTint ?? new Color(0.2f, 0.12f, 0.38f));
         }
 
-        private static void BuildAssassin(Transform root, Color accent)
+        private static void BuildAssassin(Transform root, Color accent, Color? builtInTint)
         {
-            Color hood = new Color(0.12f, 0.13f, 0.18f);
+            Color hood = builtInTint ?? new Color(0.12f, 0.13f, 0.18f);
             CreatePart(
                 root,
                 "Assassin Hood",

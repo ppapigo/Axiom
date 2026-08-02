@@ -52,6 +52,13 @@ namespace Axiom.Tests.PlayMode
             Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
             Assert.That(skillBuilder.TrySaveDraft(), Is.True);
             yield return null;
+
+            Assert.That(bootstrap.IsChoosingAppearance, Is.True);
+            Assert.That(bootstrap.SelectedAppearanceName, Is.EqualTo("CLASSIC KIT"));
+            Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
+            Assert.That(Object.FindObjectsByType<CharacterHealth>(
+                FindObjectsSortMode.None), Is.Empty);
+            bootstrap.ConfirmAppearanceSelection();
             yield return null;
 
             CharacterHealth[] combatants = Object.FindObjectsByType<CharacterHealth>(

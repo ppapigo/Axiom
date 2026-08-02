@@ -601,6 +601,9 @@ namespace Axiom.Demo
             stickAnimator.Configure(roleVisual);
             DemoCombatAudio audioFeedback = character.AddComponent<DemoCombatAudio>();
             audioFeedback.Configure(health, basicAttack, isPlayer);
+            DemoDamageFeedback damageFeedback =
+                character.AddComponent<DemoDamageFeedback>();
+            damageFeedback.Configure(health, _mainCamera, roleVisual);
             DemoSkillVfxPlayer skillVfx = character.AddComponent<DemoSkillVfxPlayer>();
             skillVfx.Configure(skillVfxLibrary);
 
@@ -608,6 +611,7 @@ namespace Axiom.Demo
             combatBehaviours.Add(status);
             combatBehaviours.Add(elementStatus);
             combatBehaviours.Add(audioFeedback);
+            combatBehaviours.Add(damageFeedback);
             combatBehaviours.Add(skillVfx);
             combatBehaviours.Add(stickAnimator);
             if (isPlayer)

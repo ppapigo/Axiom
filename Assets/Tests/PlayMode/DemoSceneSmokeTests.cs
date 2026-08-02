@@ -100,6 +100,19 @@ namespace Axiom.Tests.PlayMode
             Assert.That(combatAudio,
                 Has.All.Matches<DemoCombatAudio>(audio => audio.IsReady));
             Assert.That(DemoCombatAudio.GeneratedSampleCount, Is.InRange(1, 20000));
+            DemoDamageFeedback[] damageFeedback =
+                Object.FindObjectsByType<DemoDamageFeedback>(FindObjectsSortMode.None);
+            Assert.That(damageFeedback, Has.Length.EqualTo(6));
+            Assert.That(damageFeedback,
+                Has.All.Matches<DemoDamageFeedback>(feedback => feedback.IsConfigured));
+            DemoDamageFeedback feedbackTarget = damageFeedback[0];
+            CharacterHealth feedbackHealth =
+                feedbackTarget.GetComponent<CharacterHealth>();
+            Assert.That(feedbackHealth.ApplyDamage(
+                new DamageRequest(null, 1f, 1f, 1f, 1f)), Is.EqualTo(1f));
+            Assert.That(feedbackTarget.IsShowingDamage, Is.True);
+            Assert.That(feedbackTarget.DisplayedDamage, Is.EqualTo(1f));
+            feedbackHealth.ResetHealth();
             DemoSkillVfxPlayer[] skillVfxPlayers =
                 Object.FindObjectsByType<DemoSkillVfxPlayer>(FindObjectsSortMode.None);
             Assert.That(skillVfxPlayers, Has.Length.EqualTo(6));

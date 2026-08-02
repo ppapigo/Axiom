@@ -14,6 +14,7 @@ namespace Axiom.Combat
         private ElementStatusController _elementStatus;
 
         public event Action<float, float> HealthChanged;
+        public event Action<float> DamageTaken;
         public event Action Died;
 
         public float CurrentHealth => _health?.CurrentHealth ?? 0f;
@@ -56,6 +57,7 @@ namespace Axiom.Combat
 
             if (appliedDamage > 0f)
             {
+                DamageTaken?.Invoke(appliedDamage);
                 HealthChanged?.Invoke(_health.CurrentHealth, _health.MaximumHealth);
             }
 

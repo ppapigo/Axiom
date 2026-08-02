@@ -1,5 +1,6 @@
 using System;
 using Axiom.Combat;
+using Axiom.Demo;
 using NUnit.Framework;
 
 namespace Axiom.Tests.EditMode
@@ -89,6 +90,39 @@ namespace Axiom.Tests.EditMode
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new DamageRequest(null, -1f, 0.8f, 1f, 1f));
+        }
+
+        [Test]
+        public void DamageFeedbackState_RegistersAndExpires()
+        {
+            var state = new DamageFeedbackState();
+
+            Assert.That(state.Register(42f, 10f, 0.7f), Is.True);
+            Assert.That(state.DamageAmount, Is.EqualTo(42f));
+            Assert.That(state.IsVisible(10.35f), Is.True);
+            Assert.That(state.GetNormalizedAge(10.35f), Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(state.IsVisible(10.7f), Is.False);
+        }
+
+        [Test]
+        public void DamageFeedbackState_StacksRapidDamage()
+        {
+            var state = new DamageFeedbackState();
+            state.Register(25f, 2f, 0.7f);
+
+            Assert.That(state.Register(35f, 2.3f, 0.7f), Is.True);
+            Assert.That(state.DamageAmount, Is.EqualTo(60f));
+            Assert.That(state.StartedAt, Is.EqualTo(2.3f));
+        }
+
+        [Test]
+        public void DamageFeedbackState_RejectsNonPositiveDamage()
+        {
+            var state = new DamageFeedbackState();
+
+            Assert.That(state.Register(0f, 1f, 0.7f), Is.False);
+            Assert.That(state.Register(-1f, 1f, 0.7f), Is.False);
+            Assert.That(state.IsVisible(1f), Is.False);
         }
     }
 }

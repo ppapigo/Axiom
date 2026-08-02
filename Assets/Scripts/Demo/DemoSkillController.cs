@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Axiom.Character;
 using Axiom.Combat;
@@ -34,6 +35,7 @@ namespace Axiom.Demo
         private CharacterShieldController _shield;
         private CharacterController _characterController;
         private bool _isCasting;
+        private GameObject _castIndicator;
 
         public SkillDefinition QSkillDefinition => CreateQSkill();
         public SkillDefinition ESkillDefinition => CreateESkill();
@@ -92,6 +94,13 @@ namespace Axiom.Demo
 
         private void OnDisable()
         {
+            StopAllCoroutines();
+            _isCasting = false;
+            if (_castIndicator != null)
+            {
+                Destroy(_castIndicator);
+                _castIndicator = null;
+            }
             _cooldowns.Reset();
         }
 
@@ -167,22 +176,51 @@ namespace Axiom.Demo
             }
 
             _isCasting = true;
-            try
+            _castIndicator = ShowCastIndicator(definition, plan, aimPoint);
+            StartCoroutine(ExecuteCast(definition, plan, aimPoint));
+            return true;
+        }
+
+        private IEnumerator ExecuteCast(
+            SkillDefinition definition,
+            SkillCastPlan plan,
+            Vector3 aimPoint)
+        {
+            if (definition.CastDelay > 0f)
             {
-                ResolveHits(definition, plan);
-                ApplyUtilityEffects(definition, aimPoint);
-                if (definition.Element == SkillElement.Water && _health != null)
-                {
-                    _health.RestoreHealth(
-                        _health.MaximumHealth * _balance.WaterHealingRatio);
-                }
-                ShowEffect(plan);
-                return true;
+                yield return new WaitForSeconds(definition.CastDelay);
             }
-            finally
+
+            if (_castIndicator != null)
+            {
+                Destroy(_castIndicator);
+                _castIndicator = null;
+            }
+
+            if (!isActiveAndEnabled || (_status != null && _status.IsActionBlocked))
             {
                 _isCasting = false;
+                yield break;
             }
+
+            ApplyUtilityEffects(definition, aimPoint);
+            if (definition.Element == SkillElement.Water && _health != null)
+            {
+                _health.RestoreHealth(
+                    _health.MaximumHealth * _balance.WaterHealingRatio);
+            }
+
+            if (definition.Type == SkillType.Projectile)
+            {
+                SpawnProjectile(definition, plan);
+            }
+            else
+            {
+                ResolveHits(definition, plan);
+                ShowEffect(plan, definition.Element);
+            }
+
+            _isCasting = false;
         }
 
         private void TryCastFromPlayerAim(SkillSlot slot)
@@ -202,6 +240,56 @@ namespace Axiom.Demo
                 SkillSlot.Ultimate => CreateUltimate(),
                 _ => throw new System.ArgumentOutOfRangeException(nameof(slot), slot, null)
             };
+        }
+
+        private void SpawnProjectile(
+            in SkillDefinition definition,
+            in SkillCastPlan plan)
+        {
+            GameObject projectileObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            projectileObject.name = $"{definition.Slot} Projectile";
+            Collider projectileCollider = projectileObject.GetComponent<Collider>();
+            projectileCollider.enabled = false;
+            Destroy(projectileCollider);
+            float collisionRadius = Mathf.Clamp(definition.Radius * 0.2f, 0.12f, 0.35f);
+            projectileObject.transform.position = plan.Origin + (Vector3.up * 0.65f);
+            projectileObject.transform.localScale = Vector3.one * collisionRadius * 2f;
+            projectileObject.GetComponent<Renderer>().material =
+                DemoArenaBootstrap.CreateDemoMaterial(GetElementColor(definition.Element));
+            DemoProjectile projectile = projectileObject.AddComponent<DemoProjectile>();
+            SkillDefinition projectileDefinition = definition;
+            Vector3 projectileDirection = plan.Direction;
+            projectile.Initialize(
+                transform,
+                projectileDirection,
+                definition.ProjectileSpeed,
+                collisionRadius,
+                definition.Range,
+                impactPoint => ResolveProjectileImpact(
+                    projectileDefinition,
+                    projectileDirection,
+                    impactPoint));
+        }
+
+        private void ResolveProjectileImpact(
+            in SkillDefinition definition,
+            Vector3 direction,
+            Vector3 impactPoint)
+        {
+            if (this == null || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            float explosionRadius = Mathf.Max(0.6f, definition.Radius);
+            var impactPlan = new SkillCastPlan(
+                SkillType.GroundArea,
+                impactPoint,
+                direction,
+                impactPoint,
+                explosionRadius);
+            ResolveHits(definition, impactPlan);
+            ShowEffect(impactPlan, definition.Element);
         }
 
         private void ApplyUtilityEffects(
@@ -250,7 +338,7 @@ namespace Axiom.Demo
                     continue;
                 }
 
-                if (definition.Type == SkillType.Cone)
+                if (plan.Type == SkillType.Cone)
                 {
                     Vector3 toTarget = health.transform.position - plan.Origin;
                     toTarget.y = 0f;
@@ -282,6 +370,7 @@ namespace Axiom.Demo
                     request = MultiplyDamage(request, reaction.DamageMultiplier);
                 }
                 health.ApplyDamage(request);
+                ShowHitEffect(health.transform.position, definition.Element);
                 if (reaction.Type == ElementReactionType.WindSpread &&
                     reaction.SpreadElement.HasValue)
                 {
@@ -351,25 +440,25 @@ namespace Axiom.Demo
             in SkillDefinition definition,
             in SkillCastPlan plan)
         {
-            if (definition.Type == SkillType.GroundArea ||
-                definition.Type == SkillType.SelfArea)
+            if (plan.Type == SkillType.GroundArea ||
+                plan.Type == SkillType.SelfArea)
             {
                 return Physics.OverlapSphere(plan.Center, plan.Radius);
             }
 
-            if (definition.Type == SkillType.Global)
+            if (plan.Type == SkillType.Global)
             {
                 return Physics.OverlapSphere(plan.Origin, 1000f);
             }
 
-            if (definition.Type == SkillType.Target)
+            if (plan.Type == SkillType.Target)
             {
                 return Physics.OverlapSphere(
                     plan.Center,
                     Mathf.Max(0.5f, definition.Radius));
             }
 
-            if (definition.Type == SkillType.Cone)
+            if (plan.Type == SkillType.Cone)
             {
                 return Physics.OverlapSphere(plan.Origin, definition.Range);
             }
@@ -434,11 +523,40 @@ namespace Axiom.Demo
                 _balance);
         }
 
-        private static void ShowEffect(in SkillCastPlan plan)
+        private static GameObject ShowCastIndicator(
+            in SkillDefinition definition,
+            in SkillCastPlan plan,
+            Vector3 aimPoint)
         {
-            GameObject effect = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            effect.name = "SkillEffect";
-            Object.Destroy(effect.GetComponent<Collider>());
+            GameObject indicator = CreateVisual(
+                PrimitiveType.Cylinder,
+                "Cast Range Indicator",
+                new Color(1f, 0.75f, 0.15f));
+            float radius = plan.Type == SkillType.Global
+                ? 9f
+                : plan.Type == SkillType.Cone
+                    ? Mathf.Max(0.5f, definition.Range * 0.5f)
+                    : Mathf.Max(0.5f, plan.Radius);
+            Vector3 center = plan.Type == SkillType.SelfArea ||
+                             plan.Type == SkillType.Global
+                ? plan.Origin
+                : plan.Type == SkillType.Cone
+                    ? plan.Origin + (plan.Direction * radius)
+                    : aimPoint;
+            center.y = 0.03f;
+            indicator.transform.position = center;
+            indicator.transform.localScale = new Vector3(radius, 0.015f, radius);
+            return indicator;
+        }
+
+        private static void ShowEffect(
+            in SkillCastPlan plan,
+            SkillElement element)
+        {
+            GameObject effect = CreateVisual(
+                PrimitiveType.Sphere,
+                "Skill Impact",
+                GetElementColor(element));
             effect.transform.position = plan.Type == SkillType.GroundArea ||
                                         plan.Type == SkillType.SelfArea ||
                                         plan.Type == SkillType.Global
@@ -450,10 +568,48 @@ namespace Axiom.Demo
                     ? plan.Radius * 2f
                     : 0.8f;
             effect.transform.localScale = new Vector3(size, 0.2f, size);
-            Renderer renderer = effect.GetComponent<Renderer>();
-            renderer.material = DemoArenaBootstrap.CreateDemoMaterial(
-                new Color(0.2f, 0.8f, 1f, 0.7f));
             Object.Destroy(effect, 0.3f);
+        }
+
+        private static void ShowHitEffect(Vector3 position, SkillElement element)
+        {
+            GameObject effect = CreateVisual(
+                PrimitiveType.Sphere,
+                "Skill Hit VFX",
+                GetElementColor(element));
+            effect.transform.position = position + (Vector3.up * 1f);
+            effect.transform.localScale = Vector3.one * 0.45f;
+            Object.Destroy(effect, 0.25f);
+        }
+
+        private static GameObject CreateVisual(
+            PrimitiveType primitive,
+            string visualName,
+            Color color)
+        {
+            GameObject visual = GameObject.CreatePrimitive(primitive);
+            visual.name = visualName;
+            Collider collider = visual.GetComponent<Collider>();
+            collider.enabled = false;
+            Object.Destroy(collider);
+            visual.GetComponent<Renderer>().material =
+                DemoArenaBootstrap.CreateDemoMaterial(color);
+            return visual;
+        }
+
+        private static Color GetElementColor(SkillElement element)
+        {
+            return element switch
+            {
+                SkillElement.Fire => new Color(1f, 0.25f, 0.08f),
+                SkillElement.Ice => new Color(0.35f, 0.85f, 1f),
+                SkillElement.Lightning => new Color(0.8f, 0.55f, 1f),
+                SkillElement.Poison => new Color(0.45f, 1f, 0.2f),
+                SkillElement.Water => new Color(0.15f, 0.55f, 1f),
+                SkillElement.Wind => new Color(0.55f, 1f, 0.75f),
+                SkillElement.Earth => new Color(0.65f, 0.4f, 0.18f),
+                _ => Color.white
+            };
         }
     }
 }

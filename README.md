@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-기존 Unity EditMode 전체 테스트 103개, 스킬 제작·자연어 생성 대상 테스트 79개, AI·스킬 대상 테스트 70개와 최신 데모 PlayMode 스모크 테스트 1개가 통과합니다.
+기존 Unity EditMode 전체 테스트 103개, 스킬 제작·자연어 생성 대상 테스트 79개, AI·스킬 대상 테스트 70개와 최신 데모 PlayMode 테스트 2개가 통과합니다.
 
 ## 구현된 시스템
 
@@ -67,6 +67,9 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - Self Area와 Ground Area의 거리별 계단식 피해 감소
 - Tank 원거리 제한, Mage 광역 피해 상한, Assassin 광역 반경 제한
 - 자연어 스킬 생성 결과를 런타임 사용 전에 검증할 수 있는 `SkillDefinition` 파이프라인
+- CastDelay 동안 시전 잠금과 원형 범위 표시를 유지한 뒤 판정 실행
+- Projectile은 프레임 이동 구간 SphereCast로 벽·캐릭터 충돌을 검사하고 첫 충돌 또는 최대 사거리에서 폭발
+- 스킬 속성색 폭발 원판과 피격 구체 VFX를 Unity 기본 도형으로 생성해 추가 에셋 용량 없이 연출
 - 런타임에서 생성되는 대칭형 Arena, 좌우 엄폐물과 투사체 차단 벽
 - 역할 선택부터 AI 5명과의 3vs3 전투, 라운드 HUD, 재경기까지 이어지는 데모 씬
 - GitHub Pages에서 직접 실행할 수 있는 Unity WebGL 빌드
@@ -125,6 +128,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 16. `SkillGenerationPipeline`은 Provider → Mapper → Validator → Auto Corrector 흐름을 하나의 비동기 호출로 연결합니다. 결과에는 최종 `SkillDraft`, 미리보기용 `SkillDefinition`, 항목별 포인트 내역, 자동 보정 변경 내역과 오류 목록이 포함됩니다. AI 응답 파싱 또는 공급자 호출이 실패해도 역할별 안전 프리셋을 반환합니다.
 17. 역할 선택 후 열리는 스킬 제작 화면 오른쪽에서 자연어를 입력하고 Mock AI 초안을 생성할 수 있습니다. 결과 카드에서 공격 방식, 속성, CC, 수치, 항목별 포인트와 자동 보정 내역을 확인한 뒤 `CONFIRM & SAVE`로 Q/E/R에 저장합니다. 기존 수동 100포인트 제작 방식도 함께 사용할 수 있습니다.
 18. 플레이어가 저장한 Q/E/R은 `DemoSkillController`에서 실제 피해, CC, 속성, 이동, 보호막과 회복 효과로 시전됩니다. AI는 같은 실행 계층을 재사용하지만 각 역할에 맞는 별도 Q/E/R 프리셋을 사용하며, 최소 역할 조건이 성립할 때 우선 슬롯 하나를 시전합니다.
+19. 모든 스킬은 데이터의 CastDelay 후 실행됩니다. Projectile 타입은 실제 투사체가 속도와 사거리만큼 이동하고 벽 또는 캐릭터에 충돌하면 원형 범위로 폭발합니다. 시전 범위, 폭발과 피격 VFX는 기존 단색 셰이더와 기본 도형만 사용합니다.
 
 ### 장비 외형
 
@@ -148,4 +152,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-CastDelay, 이동 투사체, 충돌·폭발과 피격 VFX를 최소 범위로 추가합니다.
+Mock provider를 유지하면서 선택적으로 연결할 수 있는 서버리스 AI API provider를 추가합니다.

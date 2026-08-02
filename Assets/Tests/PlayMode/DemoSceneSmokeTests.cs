@@ -99,9 +99,61 @@ namespace Axiom.Tests.PlayMode
                 Is.EqualTo(1.32f).Within(0.001f));
             Assert.That(playerSkills.QSkillDefinition.Cooldown, Is.EqualTo(3f));
             Assert.That(playerSkills.QSkillDefinition.Element, Is.EqualTo(SkillElement.Fire));
+            SkillDefinition playerQ = playerSkills.QSkillDefinition;
+            Vector3 aimPoint = playerSkills.transform.position +
+                               (playerSkills.transform.forward * 5f);
+            Assert.That(playerSkills.TryCastAt(SkillSlot.Q, aimPoint, Time.time), Is.True);
+            Assert.That(playerSkills.IsCasting, Is.True);
+            yield return new WaitForSeconds(playerQ.CastDelay + 0.05f);
+            yield return null;
+            Assert.That(playerSkills.IsCasting, Is.False);
+            DemoProjectile playerProjectile =
+                Object.FindObjectsByType<DemoProjectile>(FindObjectsSortMode.None)
+                    .FirstOrDefault(projectile =>
+                        projectile.Owner == playerSkills.transform);
+            Assert.That(playerProjectile, Is.Not.Null);
+            Assert.That(playerProjectile.RemainingDistance, Is.LessThan(playerQ.Range));
             Assert.That(GameObject.Find("Tank Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Mage Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Assassin Visual"), Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator DemoProjectile_MovesAndImpactsBlockingWall()
+        {
+            var owner = new GameObject("Projectile Owner");
+            owner.transform.position = new Vector3(30f, 1f, 30f);
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "Projectile Test Wall";
+            wall.transform.position = new Vector3(32f, 1f, 30f);
+            wall.transform.localScale = new Vector3(1f, 2f, 2f);
+            var projectileObject = new GameObject("Projectile Collision Test");
+            projectileObject.transform.position = owner.transform.position;
+            DemoProjectile projectile = projectileObject.AddComponent<DemoProjectile>();
+            bool impacted = false;
+            Vector3 impactPoint = Vector3.zero;
+            projectile.Initialize(
+                owner.transform,
+                Vector3.right,
+                speed: 10f,
+                radius: 0.1f,
+                maximumDistance: 5f,
+                onImpact: position =>
+                {
+                    impacted = true;
+                    impactPoint = position;
+                });
+
+            float timeout = Time.time + 1f;
+            while (!impacted && Time.time < timeout)
+            {
+                yield return null;
+            }
+
+            Assert.That(impacted, Is.True);
+            Assert.That(impactPoint.x, Is.LessThan(32f));
+            Object.Destroy(owner);
+            Object.Destroy(wall);
         }
     }
 }

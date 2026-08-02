@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dac12f84ce3933942a3900e4388ecb4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  skillGenerationApiSettings: {fileID: 11400000, guid: a63d419760fb4e6ca0a403c952d18627, type: 2}
   equipmentAppearances: []
 --- !u!4 &1041574086
 Transform:

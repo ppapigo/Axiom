@@ -15,6 +15,10 @@ WebGL build and returns the exact JSON shape expected by
 5. Deploy and copy the resulting `/api/generate-skill` HTTPS URL into Unity's
    `SkillGenerationApiSettings` asset.
 
+The current production endpoint is
+`https://axiom-skill-api.vercel.app/api/generate-skill`. It is connected to the
+`main` branch with `serverless` as the Vercel project root.
+
 Never commit a real `.env` file or put an API key in Unity, JavaScript, GitHub Pages,
 screenshots, issues, or chat messages. If a key is exposed, revoke it and create a
 new one before deployment.

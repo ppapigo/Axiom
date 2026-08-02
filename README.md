@@ -69,6 +69,7 @@ Unity EditMode 테스트 151개와 최신 데모 PlayMode 테스트 2개를 구�
 - 자연어 스킬 생성 결과를 런타임 사용 전에 검증할 수 있는 `SkillDefinition` 파이프라인
 - 선택형 서버리스 생성 provider: 엔드포인트 미설정 시 Mock을 유지하고 서버 응답도 동일한 검증·자동 보정을 적용
 - API 키를 WebGL에서 분리하는 `serverless/` OpenAI Responses API 함수 템플릿과 Node 계약 테스트 6개
+- Vercel Production 함수 `https://axiom-skill-api.vercel.app/api/generate-skill` 배포 및 데모 씬 설정 연결
 - 생성 패널에 `MOCK`/`SERVERLESS` 출처, 요청 진행, 자동 보정, 안전 프리셋 전환 사유를 표시
 - CastDelay 동안 시전 잠금과 원형 범위 표시를 유지한 뒤 판정 실행
 - Projectile은 프레임 이동 구간 SphereCast로 벽·캐릭터 충돌을 검사하고 첫 충돌 또는 최대 사거리에서 폭발
@@ -157,6 +158,8 @@ Unity EditMode 테스트 151개와 최신 데모 PlayMode 테스트 2개를 구�
 
 배포 가능한 Node 함수와 설정 예시는 [`serverless/README.md`](serverless/README.md)에 있습니다. 실제 API 키는 폐기 가능한 새 키를 발급해 배포 서비스의 `OPENAI_API_KEY` 환경변수에만 저장하고, Unity 프로젝트나 GitHub에는 절대 커밋하지 않습니다.
 
+현재 Production 함수는 `https://axiom-skill-api.vercel.app/api/generate-skill`이며 `Assets/SkillGenerationApiSettings.asset`에 연결되어 있습니다. GitHub Pages의 다음 WebGL 빌드부터 스킬 제작 화면이 `SERVERLESS` provider를 사용합니다. 엔드포인트가 실패하면 기존 파이프라인이 역할별 안전 프리셋으로 복구합니다.
+
 ### 장비 외형
 
 1. `Create > Axiom > Appearance > Equipment Appearance`로 외형 데이터를 생성합니다.
@@ -180,7 +183,7 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-장비 프리팹의 실루엣을 보강하고 서버리스 함수를 실제 배포 주소에 연결합니다.
+장비 프리팹의 실루엣을 보강하고 최신 WebGL 빌드를 GitHub Pages에 배포합니다.
 
 장비 프리팹 제작 규격은 [`ART_ASSET_GUIDE.md`](ART_ASSET_GUIDE.md), 장비 콘셉트 프롬프트와 이미지 경로는 [`ART_GENERATION_PROMPTS.md`](ART_GENERATION_PROMPTS.md)를 참고합니다.
 

@@ -513,6 +513,154 @@ namespace Axiom.Tests.EditMode
             Object.DestroyImmediate(balance);
         }
 
+        [Test]
+        public async Task SkillGenerationPipeline_ConnectsGenerationAndPointBreakdown()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var pipeline = new SkillGenerationPipeline(new MockSkillGenerationProvider());
+
+            SkillGenerationPipelineResult result = await pipeline.GenerateAsync(
+                string.Empty,
+                role,
+                SkillSlot.Q,
+                CreateBaseDefinition(SkillSlot.Q, SkillType.Projectile),
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsSuccess, Is.True,
+                string.Join("\n", result.Errors));
+            Assert.That(result.UsedFallback, Is.False);
+            Assert.That(result.PointCost.Total, Is.EqualTo(result.Validation.PointCost));
+            Assert.That(result.PointCost.Items.Count, Is.GreaterThan(0));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public async Task SkillGenerationPipeline_AutoCorrectsOverBudgetResponse()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = nameof(SkillType.Global),
+                crowdControl = nameof(CrowdControlType.Stun),
+                element = nameof(SkillElement.Lightning),
+                damageIncreasePercent = 500f,
+                radiusIncrease = 10f,
+                rangeIncrease = 10f,
+                cooldownReduction = 10f,
+                addsMobility = true,
+                createsShield = true,
+                heals = true
+            };
+            var pipeline = new SkillGenerationPipeline(new StaticProvider(response));
+
+            SkillGenerationPipelineResult result = await pipeline.GenerateAsync(
+                "oversized skill",
+                role,
+                SkillSlot.Ultimate,
+                CreateBaseDefinition(SkillSlot.Ultimate, SkillType.Projectile),
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsSuccess, Is.True,
+                string.Join("\n", result.Errors));
+            Assert.That(result.WasAutoCorrected, Is.True);
+            Assert.That(result.PointCost.Total,
+                Is.LessThanOrEqualTo(balance.LoadoutPointBudget));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public async Task SkillGenerationPipeline_ReturnsFallbackForInvalidResponse()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            AssassinRoleDefinition role = ScriptableObject.CreateInstance<AssassinRoleDefinition>();
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "unknown type",
+                crowdControl = "none",
+                element = "none"
+            };
+            var pipeline = new SkillGenerationPipeline(new StaticProvider(response));
+
+            SkillGenerationPipelineResult result = await pipeline.GenerateAsync(
+                "invalid response",
+                role,
+                SkillSlot.E,
+                CreateBaseDefinition(SkillSlot.E, SkillType.Projectile),
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.UsedFallback, Is.True);
+            Assert.That(result.Validation.IsValid, Is.True);
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.Target));
+            Assert.That(result.Errors.Count, Is.GreaterThan(0));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public async Task SkillGenerationPipeline_ReturnsFallbackWhenProviderFails()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            TankRoleDefinition role = ScriptableObject.CreateInstance<TankRoleDefinition>();
+            var pipeline = new SkillGenerationPipeline(new FailingProvider());
+
+            SkillGenerationPipelineResult result = await pipeline.GenerateAsync(
+                "provider failure",
+                role,
+                SkillSlot.Q,
+                CreateBaseDefinition(SkillSlot.Q, SkillType.Cone, range: 3f),
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.UsedFallback, Is.True);
+            Assert.That(result.Validation.IsValid, Is.True);
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.Cone));
+            Assert.That(result.Errors[0], Does.Contain("provider unavailable"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        private sealed class StaticProvider : ISkillGenerationProvider
+        {
+            private readonly SkillGenerationResponseDto _response;
+
+            public StaticProvider(SkillGenerationResponseDto response)
+            {
+                _response = response;
+            }
+
+            public Task<SkillGenerationResponseDto> GenerateAsync(
+                string prompt,
+                CharacterRoleId role,
+                SkillSlot slot,
+                CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return Task.FromResult(_response);
+            }
+        }
+
+        private sealed class FailingProvider : ISkillGenerationProvider
+        {
+            public Task<SkillGenerationResponseDto> GenerateAsync(
+                string prompt,
+                CharacterRoleId role,
+                SkillSlot slot,
+                CancellationToken cancellationToken = default)
+            {
+                return Task.FromException<SkillGenerationResponseDto>(
+                    new System.InvalidOperationException("provider unavailable"));
+            }
+        }
+
         private static SkillDefinition CreateBaseDefinition(
             SkillSlot slot,
             SkillType type,

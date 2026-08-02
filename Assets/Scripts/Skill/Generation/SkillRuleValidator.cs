@@ -123,11 +123,11 @@ namespace Axiom.Skill.Generation
 
             SkillType type = draft.Type.Value;
             bool isArea = type == SkillType.GroundArea ||
-                          type == SkillType.Cone ||
                           type == SkillType.SelfArea ||
                           type == SkillType.Global;
             float requestedRadius = baseDefinition.Radius + draft.Modifiers.RadiusIncrease;
-            if (isArea && !float.IsPositiveInfinity(role.MaximumAreaRadius) &&
+            if (isArea && role.MaximumAreaRadius > 0f &&
+                !float.IsPositiveInfinity(role.MaximumAreaRadius) &&
                 requestedRadius > role.MaximumAreaRadius)
             {
                 errors.Add("Requested radius exceeds this role's area limit.");

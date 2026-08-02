@@ -27,7 +27,7 @@ namespace Axiom.Tests.EditMode
             Assert.That(result.description, Does.Contain("얼음"));
         }
 
-        [TestCase(CharacterRoleId.Tank, SkillType.SelfArea, SkillElement.Earth)]
+        [TestCase(CharacterRoleId.Tank, SkillType.Cone, SkillElement.Earth)]
         [TestCase(CharacterRoleId.Mage, SkillType.GroundArea, SkillElement.Fire)]
         [TestCase(CharacterRoleId.Assassin, SkillType.Target, SkillElement.Poison)]
         public async Task MockProvider_ReturnsSafeRolePreset(
@@ -317,6 +317,198 @@ namespace Axiom.Tests.EditMode
 
             Assert.That(result.IsValid, Is.False);
             Assert.That(string.Join(" ", result.Errors), Does.Contain("radius"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_LeavesValidDraftUnchanged()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(damageIncreasePercent: 20f),
+                SkillElement.Fire,
+                SkillType.Projectile,
+                SkillSlot.Q);
+            SkillDefinition baseDefinition = CreateBaseDefinition(
+                SkillSlot.Q,
+                SkillType.Projectile);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                baseDefinition,
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.WasCorrected, Is.False);
+            Assert.That(result.UsedFallback, Is.False);
+            Assert.That(result.Validation.IsValid, Is.True);
+            Assert.That(result.Draft.Modifiers.DamageIncreasePercent, Is.EqualTo(20f));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_TrimsOverBudgetDraft()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(
+                    damageIncreasePercent: 500f,
+                    radiusIncrease: 10f,
+                    rangeIncrease: 10f,
+                    cooldownReduction: 10f,
+                    appliesStun: true,
+                    addsMobility: true,
+                    createsShield: true,
+                    heals: true),
+                SkillElement.Lightning,
+                SkillType.Global,
+                SkillSlot.Ultimate);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                CreateBaseDefinition(SkillSlot.Ultimate, SkillType.Projectile),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.WasCorrected, Is.True);
+            Assert.That(result.Validation.IsValid, Is.True,
+                string.Join("\n", result.Validation.Errors));
+            Assert.That(result.Validation.PointCost,
+                Is.LessThanOrEqualTo(balance.LoadoutPointBudget));
+            Assert.That(result.Changes.Count, Is.GreaterThan(0));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_KeepsOnlyHighestPriorityCrowdControl()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(
+                    appliesSlow: true,
+                    appliesStun: true,
+                    appliesKnockUp: true),
+                SkillElement.Ice,
+                SkillType.Projectile,
+                SkillSlot.E);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                CreateBaseDefinition(SkillSlot.E, SkillType.Projectile),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.Validation.IsValid, Is.True,
+                string.Join("\n", result.Validation.Errors));
+            Assert.That(result.Draft.Modifiers.AppliesStun, Is.True);
+            Assert.That(result.Draft.Modifiers.AppliesSlow, Is.False);
+            Assert.That(result.Draft.Modifiers.AppliesKnockUp, Is.False);
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_RemovesThirdRoleElement()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var pool = new RoleElementPool();
+            pool.TryAssign(CharacterRoleId.Mage, SkillSlot.Q, SkillElement.Fire);
+            pool.TryAssign(CharacterRoleId.Mage, SkillSlot.E, SkillElement.Ice);
+            var draft = new SkillDraft(
+                new SkillPointModifiers(),
+                SkillElement.Lightning,
+                SkillType.Projectile,
+                SkillSlot.Ultimate);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                CreateBaseDefinition(SkillSlot.Ultimate, SkillType.Projectile),
+                role,
+                balance,
+                pool);
+
+            Assert.That(result.Validation.IsValid, Is.True,
+                string.Join("\n", result.Validation.Errors));
+            Assert.That(result.Draft.Element, Is.Null);
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_ConvertsTankSkillToMeleeCone()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            TankRoleDefinition role = ScriptableObject.CreateInstance<TankRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(rangeIncrease: 8f),
+                SkillElement.Earth,
+                SkillType.Global,
+                SkillSlot.Q);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                CreateBaseDefinition(
+                    SkillSlot.Q,
+                    SkillType.Cone,
+                    range: 3f,
+                    radius: 1f),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.Validation.IsValid, Is.True,
+                string.Join("\n", result.Validation.Errors));
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.Cone));
+            Assert.That(result.Draft.Modifiers.RangeIncrease, Is.Zero);
+            Assert.That(result.UsedFallback, Is.False);
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillAutoCorrector_ReturnsRoleFallbackWhenBaseIsInvalid()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            AssassinRoleDefinition role = ScriptableObject.CreateInstance<AssassinRoleDefinition>();
+            var invalidBase = new SkillDefinition(
+                string.Empty,
+                SkillSlot.Q,
+                SkillType.Projectile,
+                1f,
+                5f,
+                0.3f,
+                6f,
+                1f,
+                12f,
+                CrowdControlType.None,
+                SkillElement.Poison,
+                0);
+            var draft = new SkillDraft(
+                new SkillPointModifiers(),
+                SkillElement.Poison,
+                SkillType.Projectile,
+                SkillSlot.Q);
+
+            SkillAutoCorrectionResult result = SkillAutoCorrector.Correct(
+                draft,
+                invalidBase,
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.UsedFallback, Is.True);
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.Target));
+            Assert.That(result.Changes[result.Changes.Count - 1], Does.Contain("fallback"));
             Object.DestroyImmediate(role);
             Object.DestroyImmediate(balance);
         }

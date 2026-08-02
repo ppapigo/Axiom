@@ -33,7 +33,7 @@ namespace Axiom.Skill.Generation
                 CharacterRoleId.Tank => new SkillGenerationResponseDto
                 {
                     displayName = $"Aegis {slotName}",
-                    skillType = nameof(SkillType.SelfArea),
+                    skillType = nameof(SkillType.Cone),
                     crowdControl = nameof(CrowdControlType.Stun),
                     element = nameof(SkillElement.Earth),
                     damageIncreasePercent = 10f,

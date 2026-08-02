@@ -88,7 +88,6 @@ namespace Axiom.Skill
             }
 
             bool isArea = definition.Type == SkillType.GroundArea ||
-                          definition.Type == SkillType.Cone ||
                           definition.Type == SkillType.SelfArea ||
                           definition.Type == SkillType.Global;
             if (isArea && definition.DamageCoefficient > 0f && !role.AllowsAreaDamage)

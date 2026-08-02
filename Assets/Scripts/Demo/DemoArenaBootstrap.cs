@@ -558,7 +558,7 @@ namespace Axiom.Demo
             Destroy(character.GetComponent<CapsuleCollider>());
             Renderer renderer = character.GetComponent<Renderer>();
             renderer.enabled = false;
-            DemoRoleVisualBuilder.Build(
+            Transform roleVisual = DemoRoleVisualBuilder.Build(
                 character.transform,
                 roleId,
                 team == TeamId.TeamA,
@@ -586,6 +586,9 @@ namespace Axiom.Demo
             WorldHealthBar healthBar = character.AddComponent<WorldHealthBar>();
             healthBar.Configure(health, _mainCamera, team, characterName);
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
+            DemoStickFigureAnimator stickAnimator =
+                character.AddComponent<DemoStickFigureAnimator>();
+            stickAnimator.Configure(roleVisual);
             DemoCombatAudio audioFeedback = character.AddComponent<DemoCombatAudio>();
             audioFeedback.Configure(health, basicAttack, isPlayer);
             DemoSkillVfxPlayer skillVfx = character.AddComponent<DemoSkillVfxPlayer>();
@@ -596,6 +599,7 @@ namespace Axiom.Demo
             combatBehaviours.Add(elementStatus);
             combatBehaviours.Add(audioFeedback);
             combatBehaviours.Add(skillVfx);
+            combatBehaviours.Add(stickAnimator);
             if (isPlayer)
             {
                 ConfigurePlayer(character, basicAttack, roleId, combatBehaviours);

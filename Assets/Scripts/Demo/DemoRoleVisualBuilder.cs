@@ -6,7 +6,7 @@ namespace Axiom.Demo
 {
     internal static class DemoRoleVisualBuilder
     {
-        public static void Build(
+        public static Transform Build(
             Transform character,
             CharacterRoleId role,
             bool blueTeam,
@@ -29,7 +29,7 @@ namespace Axiom.Demo
                 equipmentAppearance.HasParts)
             {
                 BuildCustomEquipment(visualRoot, equipmentAppearance, teamAccent);
-                return;
+                return visualRoot;
             }
 
             switch (role)
@@ -44,6 +44,8 @@ namespace Axiom.Demo
                     BuildAssassin(visualRoot, teamAccent, builtInTint);
                     break;
             }
+
+            return visualRoot;
         }
 
         private static void BuildStickFigure(

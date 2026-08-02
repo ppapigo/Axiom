@@ -145,6 +145,11 @@ namespace Axiom.Tests.PlayMode
             Assert.That(GameObject.Find("Tank Shoulder"), Is.Null);
             Assert.That(GameObject.Find("Mage Robe"), Is.Null);
             Assert.That(GameObject.Find("Assassin Hood"), Is.Null);
+            DemoStickFigureAnimator[] stickAnimators =
+                Object.FindObjectsByType<DemoStickFigureAnimator>(FindObjectsSortMode.None);
+            Assert.That(stickAnimators, Has.Length.EqualTo(6));
+            Assert.That(stickAnimators,
+                Has.All.Matches<DemoStickFigureAnimator>(animator => animator.IsConfigured));
         }
 
         [UnityTest]

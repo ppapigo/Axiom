@@ -325,8 +325,15 @@ namespace Axiom.Demo
             else
             {
                 basicAttack.Configure(GetAttackProfile(roleId));
+                DemoSkillController aiSkills =
+                    character.AddComponent<DemoSkillController>();
+                DemoAISkillUser aiSkillUser =
+                    character.AddComponent<DemoAISkillUser>();
+                aiSkillUser.Configure(_skillBalance);
                 AIController ai = character.AddComponent<AIController>();
-                ai.Configure(_aiProfile);
+                ai.Configure(_aiProfile, aiSkillUser);
+                combatBehaviours.Add(aiSkills);
+                combatBehaviours.Add(aiSkillUser);
                 combatBehaviours.Add(ai);
             }
 

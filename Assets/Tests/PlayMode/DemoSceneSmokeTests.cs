@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using Axiom.Combat;
 using Axiom.Demo;
 using Axiom.Manager;
@@ -84,8 +85,15 @@ namespace Axiom.Tests.PlayMode
             Assert.That(combatHud, Is.Not.Null);
             Assert.That(combatHud.IsConfigured, Is.True);
             Assert.That(combatHud.Health, Is.Not.Null);
+            DemoAISkillUser[] aiSkillUsers = Object.FindObjectsByType<DemoAISkillUser>(
+                FindObjectsSortMode.None);
+            Assert.That(aiSkillUsers, Has.Length.EqualTo(5));
+            Assert.That(aiSkillUsers,
+                Has.All.Matches<DemoAISkillUser>(user =>
+                    user.GetComponent<DemoSkillController>() != null));
             DemoSkillController playerSkills =
-                Object.FindFirstObjectByType<DemoSkillController>();
+                Object.FindObjectsByType<DemoSkillController>(FindObjectsSortMode.None)
+                    .Single(skills => skills.GetComponent<DemoAISkillUser>() == null);
             Assert.That(playerSkills, Is.Not.Null);
             Assert.That(playerSkills.QSkillDefinition.DamageCoefficient,
                 Is.EqualTo(1.32f).Within(0.001f));

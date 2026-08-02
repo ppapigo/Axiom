@@ -34,5 +34,29 @@ namespace Axiom.AI
                 _ => false
             };
         }
+
+        public static bool ShouldUseGeneratedSkill(
+            CharacterRoleId role,
+            float targetDistance,
+            int enemiesNearTarget,
+            float targetHealthRatio,
+            float skillRange,
+            int tankClusterCount,
+            int mageClusterCount,
+            float assassinHealthThreshold)
+        {
+            if (targetDistance > skillRange)
+            {
+                return false;
+            }
+
+            return role switch
+            {
+                CharacterRoleId.Tank => enemiesNearTarget >= tankClusterCount,
+                CharacterRoleId.Mage => enemiesNearTarget >= mageClusterCount,
+                CharacterRoleId.Assassin => targetHealthRatio <= assassinHealthThreshold,
+                _ => false
+            };
+        }
     }
 }

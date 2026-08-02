@@ -87,13 +87,11 @@ namespace Axiom.AI
             float healthRatio = _health.MaximumHealth <= 0f
                 ? 0f
                 : _health.CurrentHealth / _health.MaximumHealth;
+            int enemiesNearTarget = CountEnemiesNearTarget();
             bool shouldUseSkill = skillUser != null && skillUser.CanUseSkill &&
-                AIRoleTactics.ShouldUseSkill(
-                    _role.Definition.RoleId,
-                    distance,
-                    CountEnemiesNearTarget(),
-                    behaviourProfile.TankTauntRange,
-                    behaviourProfile.MageClusterCount);
+                                  skillUser.CanUseSkillOn(
+                                      _target,
+                                      enemiesNearTarget);
 
             _stateMachine.Evaluate(new AIDecisionContext(
                 _health.IsDead,

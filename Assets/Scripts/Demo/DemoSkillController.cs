@@ -33,14 +33,28 @@ namespace Axiom.Demo
         private CharacterHealth _health;
         private CharacterShieldController _shield;
         private CharacterController _characterController;
+        private bool _isCasting;
 
         public SkillDefinition QSkillDefinition => CreateQSkill();
         public SkillDefinition ESkillDefinition => CreateESkill();
         public SkillDefinition UltimateDefinition => CreateUltimate();
+        public bool IsCasting => _isCasting;
 
         public float GetCooldownRemaining(SkillSlot slot, float currentTime)
         {
             return _cooldowns.GetRemaining(slot, currentTime);
+        }
+
+        public bool CanCast(SkillSlot slot, float currentTime)
+        {
+            return _balance != null && _role != null && _role.IsConfigured &&
+                   !_isCasting && (_status == null || !_status.IsActionBlocked) &&
+                   _cooldowns.GetRemaining(slot, currentTime) <= 0f;
+        }
+
+        public void SetDraft(in SkillDraft draft)
+        {
+            ApplyDraft(draft);
         }
 
         public void Configure(
@@ -122,40 +136,72 @@ namespace Axiom.Demo
 
             if (Keyboard.current.qKey.wasPressedThisFrame)
             {
-                TryCast(CreateQSkill());
+                TryCastFromPlayerAim(SkillSlot.Q);
             }
             else if (Keyboard.current.eKey.wasPressedThisFrame)
             {
-                TryCast(CreateESkill());
+                TryCastFromPlayerAim(SkillSlot.E);
             }
             else if (Keyboard.current.rKey.wasPressedThisFrame)
             {
-                TryCast(CreateUltimate());
+                TryCastFromPlayerAim(SkillSlot.Ultimate);
             }
         }
 
-        private void TryCast(in SkillDefinition definition)
+        public bool TryCastAt(
+            SkillSlot slot,
+            Vector3 aimPoint,
+            float currentTime)
         {
-            if ((_status != null && _status.IsActionBlocked) ||
-                !_cooldowns.TryStart(definition.Slot, Time.time, definition.Cooldown) ||
-                !TryGetAimPoint(out Vector3 aimPoint) ||
+            SkillDefinition definition = GetSkillDefinition(slot);
+            if (!CanCast(slot, currentTime) ||
                 !SkillCastPlanner.TryCreate(
                     definition,
                     _role.Definition,
                     transform.position,
                     aimPoint,
-                    out SkillCastPlan plan))
+                    out SkillCastPlan plan) ||
+                !_cooldowns.TryStart(slot, currentTime, definition.Cooldown))
             {
-                return;
+                return false;
             }
 
-            ResolveHits(definition, plan);
-            ApplyUtilityEffects(definition, aimPoint);
-            if (definition.Element == SkillElement.Water && _health != null)
+            _isCasting = true;
+            try
             {
-                _health.RestoreHealth(_health.MaximumHealth * _balance.WaterHealingRatio);
+                ResolveHits(definition, plan);
+                ApplyUtilityEffects(definition, aimPoint);
+                if (definition.Element == SkillElement.Water && _health != null)
+                {
+                    _health.RestoreHealth(
+                        _health.MaximumHealth * _balance.WaterHealingRatio);
+                }
+                ShowEffect(plan);
+                return true;
             }
-            ShowEffect(plan);
+            finally
+            {
+                _isCasting = false;
+            }
+        }
+
+        private void TryCastFromPlayerAim(SkillSlot slot)
+        {
+            if (TryGetAimPoint(out Vector3 aimPoint))
+            {
+                TryCastAt(slot, aimPoint, Time.time);
+            }
+        }
+
+        public SkillDefinition GetSkillDefinition(SkillSlot slot)
+        {
+            return slot switch
+            {
+                SkillSlot.Q => CreateQSkill(),
+                SkillSlot.E => CreateESkill(),
+                SkillSlot.Ultimate => CreateUltimate(),
+                _ => throw new System.ArgumentOutOfRangeException(nameof(slot), slot, null)
+            };
         }
 
         private void ApplyUtilityEffects(

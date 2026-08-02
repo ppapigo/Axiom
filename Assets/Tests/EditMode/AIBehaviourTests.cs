@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using Axiom.AI;
+using Axiom.Data;
+using Axiom.Demo;
 using Axiom.Role;
+using Axiom.Skill;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -103,6 +106,92 @@ namespace Axiom.Tests.EditMode
                 2);
 
             Assert.That(shouldUse, Is.True);
+        }
+
+        [TestCase(CharacterRoleId.Tank, 3f, 2, 1f, 4f, true)]
+        [TestCase(CharacterRoleId.Tank, 3f, 1, 1f, 4f, false)]
+        [TestCase(CharacterRoleId.Mage, 5f, 2, 1f, 6f, true)]
+        [TestCase(CharacterRoleId.Mage, 7f, 2, 1f, 6f, false)]
+        [TestCase(CharacterRoleId.Assassin, 8f, 1, 0.4f, 8f, true)]
+        [TestCase(CharacterRoleId.Assassin, 8f, 1, 0.41f, 8f, false)]
+        public void GeneratedSkillTactics_UsesMinimalRoleConditions(
+            CharacterRoleId role,
+            float distance,
+            int nearbyEnemies,
+            float targetHealthRatio,
+            float skillRange,
+            bool expected)
+        {
+            bool result = AIRoleTactics.ShouldUseGeneratedSkill(
+                role,
+                distance,
+                nearbyEnemies,
+                targetHealthRatio,
+                skillRange,
+                tankClusterCount: 2,
+                mageClusterCount: 2,
+                assassinHealthThreshold: 0.4f);
+
+            Assert.That(result, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void GeneratedAiPresets_AreRoleValidAndWithinBudget()
+        {
+            SkillBalanceProfile balance =
+                ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            foreach (CharacterRoleId roleId in new[]
+                     {
+                         CharacterRoleId.Tank,
+                         CharacterRoleId.Mage,
+                         CharacterRoleId.Assassin
+                     })
+            {
+                CharacterRoleDefinition role = CreateRole(roleId);
+                foreach (SkillSlot slot in new[]
+                         {
+                             SkillSlot.Q,
+                             SkillSlot.E,
+                             SkillSlot.Ultimate
+                         })
+                {
+                    SkillDefinition baseDefinition =
+                        DemoSkillDefinitionFactory.Create(roleId, slot);
+                    SkillDraft draft = DemoAISkillUser.CreatePreset(roleId, slot);
+                    SkillDefinition definition = SkillDraftApplier.Apply(
+                        baseDefinition,
+                        draft,
+                        role,
+                        balance);
+                    SkillValidationResult validation = SkillValidator.Validate(
+                        definition,
+                        role,
+                        balance);
+
+                    Assert.That(validation.IsValid, Is.True,
+                        $"{roleId} {slot}: {string.Join("\n", validation.Errors)}");
+                    Assert.That(definition.PointCost,
+                        Is.LessThanOrEqualTo(balance.LoadoutPointBudget));
+                }
+
+                Object.DestroyImmediate(role);
+            }
+
+            Object.DestroyImmediate(balance);
+        }
+
+        private static CharacterRoleDefinition CreateRole(CharacterRoleId role)
+        {
+            return role switch
+            {
+                CharacterRoleId.Tank =>
+                    ScriptableObject.CreateInstance<TankRoleDefinition>(),
+                CharacterRoleId.Mage =>
+                    ScriptableObject.CreateInstance<MageRoleDefinition>(),
+                CharacterRoleId.Assassin =>
+                    ScriptableObject.CreateInstance<AssassinRoleDefinition>(),
+                _ => throw new System.ArgumentOutOfRangeException(nameof(role), role, null)
+            };
         }
     }
 }

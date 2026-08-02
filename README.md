@@ -145,6 +145,7 @@ Unity EditMode 테스트 151개와 최신 데모 PlayMode 테스트 2개를 구�
 25. 졸라맨은 외부 Animation Clip 없이 이동 속도에 따라 팔과 다리를 교차로 흔들고 정지 중에는 미세하게 호흡합니다. 기본 공격 시 Tank는 방패, Mage는 지팡이, Assassin은 양손 단검을 짧게 휘두르며 모든 수치는 Inspector에서 조정할 수 있습니다.
 26. 역할 데이터의 공격속도 배율은 기본 공격 쿨타임을 실제로 줄이거나 늘리고, 기본 공격 사거리는 플레이어 충돌 판정과 AI 접근 거리에 함께 사용됩니다. 전체 스킬 제작창이 열려 있는 동안에는 AXIOM 상태창과 Q/E/R 단계 배너를 숨겨 제작 UI를 가리지 않습니다.
 27. 실제 체력 피해가 발생하면 `CharacterHealth.DamageTaken` 이벤트가 발행됩니다. 데모 연출은 이 이벤트를 구독해 캐릭터 재질을 0.12초 동안 점멸시키고, 0.72초 동안 누적 피해 숫자를 상승·페이드 표시합니다. 외부 텍스처나 폰트 에셋은 추가하지 않습니다.
+28. Vercel Production 함수와 WebGL 데모를 연결했습니다. GitHub Pages 빌드는 실제 AI 응답을 사용하며, 서버 오류나 제한 시간 초과 시에는 역할별 안전 프리셋으로 자동 복구합니다. API 키는 Vercel 환경변수에만 저장하고 저장소와 WebGL 파일에는 포함하지 않습니다.
 
 ### 서버리스 생성 API 계약
 
@@ -158,7 +159,7 @@ Unity EditMode 테스트 151개와 최신 데모 PlayMode 테스트 2개를 구�
 
 배포 가능한 Node 함수와 설정 예시는 [`serverless/README.md`](serverless/README.md)에 있습니다. 실제 API 키는 폐기 가능한 새 키를 발급해 배포 서비스의 `OPENAI_API_KEY` 환경변수에만 저장하고, Unity 프로젝트나 GitHub에는 절대 커밋하지 않습니다.
 
-현재 Production 함수는 `https://axiom-skill-api.vercel.app/api/generate-skill`이며 `Assets/SkillGenerationApiSettings.asset`에 연결되어 있습니다. GitHub Pages의 다음 WebGL 빌드부터 스킬 제작 화면이 `SERVERLESS` provider를 사용합니다. 엔드포인트가 실패하면 기존 파이프라인이 역할별 안전 프리셋으로 복구합니다.
+현재 Production 함수는 `https://axiom-skill-api.vercel.app/api/generate-skill`이며 `Assets/SkillGenerationApiSettings.asset`에 연결되어 있습니다. GitHub Pages WebGL 빌드의 스킬 제작 화면은 `SERVERLESS` provider를 사용합니다. 엔드포인트가 실패하면 기존 파이프라인이 역할별 안전 프리셋으로 복구합니다.
 
 ### 장비 외형
 
@@ -183,7 +184,7 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-장비 프리팹의 실루엣을 보강하고 최신 WebGL 빌드를 GitHub Pages에 배포합니다.
+GitHub Pages에서 역할 선택부터 자연어 스킬 생성, 장비 선택, 3vs3 전투까지 전체 제출 흐름을 최종 점검하고 장비 프리팹의 실루엣을 보강합니다.
 
 장비 프리팹 제작 규격은 [`ART_ASSET_GUIDE.md`](ART_ASSET_GUIDE.md), 장비 콘셉트 프롬프트와 이미지 경로는 [`ART_GENERATION_PROMPTS.md`](ART_GENERATION_PROMPTS.md)를 참고합니다.
 

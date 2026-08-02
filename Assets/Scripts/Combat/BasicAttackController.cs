@@ -36,7 +36,18 @@ namespace Axiom.Combat
 
         public float AttackRange => attackProfile == null
             ? 0f
-            : attackProfile.Parameters.Range;
+            : _characterRole != null && _characterRole.IsConfigured
+                ? _characterRole.Definition.BasicAttackRange
+                : attackProfile.Parameters.Range;
+        public float AttackSpeedMultiplier => _characterRole != null &&
+                                              _characterRole.IsConfigured
+            ? _characterRole.Definition.AttackSpeedMultiplier
+            : 1f;
+        public float EffectiveCooldown => attackProfile == null
+            ? 0f
+            : BasicAttackSpeedRules.GetCooldown(
+                attackProfile.Parameters.Cooldown,
+                AttackSpeedMultiplier);
 
         private void Awake()
         {
@@ -97,14 +108,22 @@ namespace Axiom.Combat
             if (!RoleAttackRules.CanUseBasicAttack(
                     _characterRole == null ? null : _characterRole.Definition,
                     attackProfile.DeliveryType) ||
-                !_cooldown.TryStart(currentTime, parameters.Cooldown))
+                !_cooldown.TryStart(
+                    currentTime,
+                    BasicAttackSpeedRules.GetCooldown(
+                        parameters.Cooldown,
+                        AttackSpeedMultiplier)))
             {
                 return false;
             }
 
             transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
             Transform originTransform = attackOrigin == null ? transform : attackOrigin;
-            ExecuteAttack(originTransform.position, direction, parameters);
+            ExecuteAttack(
+                originTransform.position,
+                direction,
+                AttackRange,
+                parameters);
             AttackPerformed?.Invoke();
             return true;
         }
@@ -112,9 +131,10 @@ namespace Axiom.Combat
         private void ExecuteAttack(
             Vector3 origin,
             Vector3 direction,
+            float range,
             in BasicAttackParameters parameters)
         {
-            Vector3 end = origin + (direction * parameters.Range);
+            Vector3 end = origin + (direction * Mathf.Max(0f, range));
             Collider[] colliders = Physics.OverlapCapsule(
                 origin,
                 end,

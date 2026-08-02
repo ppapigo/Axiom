@@ -15,6 +15,8 @@ namespace Axiom.Tests.EditMode
             Assert.That(definition.RoleId, Is.EqualTo(CharacterRoleId.Mage));
             Assert.That(definition.MaximumHealth, Is.EqualTo(900f));
             Assert.That(definition.AttackPower, Is.EqualTo(115f));
+            Assert.That(definition.AttackSpeedMultiplier, Is.EqualTo(1f));
+            Assert.That(definition.BasicAttackRange, Is.EqualTo(7f));
             Assert.That(definition.MovementSpeedMultiplier, Is.EqualTo(1f));
             Assert.That(definition.DashDistance, Is.EqualTo(4f));
             Assert.That(definition.DashCooldown, Is.EqualTo(12f));

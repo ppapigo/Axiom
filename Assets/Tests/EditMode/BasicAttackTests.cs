@@ -34,6 +34,16 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void AttackSpeed_HigherMultiplierReducesCooldown()
+        {
+            float cooldown = BasicAttackSpeedRules.GetCooldown(
+                baseCooldown: 0.8f,
+                attackSpeedMultiplier: 1.2f);
+
+            Assert.That(cooldown, Is.EqualTo(2f / 3f).Within(0.001f));
+        }
+
+        [Test]
         public void Aim_IgnoresVerticalDifference()
         {
             bool succeeded = BasicAttackAim.TryGetPlanarDirection(

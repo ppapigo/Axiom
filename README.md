@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-Unity EditMode 테스트 147개와 최신 데모 PlayMode 테스트 2개를 구성했습니다. 최근 추가한 VFX·졸라맨 애니메이션 테스트는 Codex 격리 환경의 Unity Hub 라이선스 초기화 제약 때문에 어셈블리 컴파일까지 검증했습니다.
+Unity EditMode 테스트 148개와 최신 데모 PlayMode 테스트 2개를 구성했습니다. 최근 추가분은 Codex 격리 환경의 Unity Hub 라이선스 초기화 제약 때문에 어셈블리 컴파일까지 검증했습니다.
 
 ## 구현된 시스템
 
@@ -43,9 +43,9 @@ Unity EditMode 테스트 147개와 최신 데모 PlayMode 테스트 2개를 구�
 - `Attack × DamageCoefficient × CastDelayBonus × DistanceMultiplier` 피해 공식
 - 체력, 회복, 사망 및 상태 변경 이벤트
 - ScriptableObject 기반 이동·공격·카메라·역할·AI 데이터
-- Tank: HP 1400, Attack 80, 이동 배율 0.95, 4m 회피, 12초 쿨다운, 원거리 기본 공격 차단
-- Mage: HP 900, Attack 115, 이동 배율 1.0, 4m 회피, 12초 쿨다운, 광역 피해 상한
-- Assassin: HP 900, Attack 115, 이동 배율 1.10, 8m 회피, 5초 쿨다운, 광역 반경 제한
+- Tank: HP 1400, Attack 80, 공격속도 90%, 기본 공격 2.2m, 이동 배율 0.95, 4m 회피, 12초 쿨다운, 원거리 기본 공격 차단
+- Mage: HP 900, Attack 115, 공격속도 100%, 기본 공격 7m, 이동 배율 1.0, 4m 회피, 12초 쿨다운, 광역 피해 상한
+- Assassin: HP 900, Attack 115, 공격속도 120%, 기본 공격 2.5m, 이동 배율 1.10, 8m 회피, 5초 쿨다운, 광역 반경 제한
 - AI 상태: Idle, FindTarget, Move, Attack, UseSkill, Retreat, Dead
 - Tank AI: 가장 가까운 적 접근, 도발 범위에서 스킬 우선
 - Mage AI: 설정된 거리 유지, 적 밀집 시 광역 스킬 우선
@@ -140,6 +140,7 @@ Unity EditMode 테스트 147개와 최신 데모 PlayMode 테스트 2개를 구�
 23. 시작 화면은 역할별 HP, 공격력, 이동속도와 대시 거리, 3vs3 전멸전·2선승 규칙을 보여줍니다. 스킬 제작 중에는 Q/E/R 저장 진행도를 표시하고, 전투 중에는 라운드 목표 배너를 유지하며 경기 종료 시 승리·패배와 최종 스코어를 전체 화면 오버레이로 표시합니다.
 24. R 스킬을 저장해도 즉시 전투를 시작하지 않고 장비 선택 단계로 이동합니다. 모든 역할은 Unity 기본 도형으로 만든 공통 졸라맨 몸체를 사용하고, Tank는 방패, Mage는 지팡이, Assassin은 쌍단검만 착용합니다. Classic, Obsidian, Ivory 장비 키트 또는 역할별 `EquipmentAppearanceDefinition`을 선택한 뒤 3vs3을 시작합니다.
 25. 졸라맨은 외부 Animation Clip 없이 이동 속도에 따라 팔과 다리를 교차로 흔들고 정지 중에는 미세하게 호흡합니다. 기본 공격 시 Tank는 방패, Mage는 지팡이, Assassin은 양손 단검을 짧게 휘두르며 모든 수치는 Inspector에서 조정할 수 있습니다.
+26. 역할 데이터의 공격속도 배율은 기본 공격 쿨타임을 실제로 줄이거나 늘리고, 기본 공격 사거리는 플레이어 충돌 판정과 AI 접근 거리에 함께 사용됩니다. 전체 스킬 제작창이 열려 있는 동안에는 AXIOM 상태창과 Q/E/R 단계 배너를 숨겨 제작 UI를 가리지 않습니다.
 
 ### 서버리스 생성 API 계약
 

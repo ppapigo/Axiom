@@ -32,6 +32,7 @@ namespace Axiom.Tests.PlayMode
             Assert.That(skillBuilder.IsConfigured, Is.True);
             Assert.That(skillBuilder.IsAvailable, Is.True);
             Assert.That(skillBuilder.IsVisible, Is.True);
+            Assert.That(bootstrap.IsBootstrapOverlaySuppressed, Is.True);
             Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
             Assert.That(Object.FindObjectsByType<CharacterHealth>(
                 FindObjectsSortMode.None), Is.Empty);

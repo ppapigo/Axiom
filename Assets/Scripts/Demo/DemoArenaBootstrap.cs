@@ -44,6 +44,7 @@ namespace Axiom.Demo
         private SkillBalanceProfile _skillBalance;
         private BasicAttackProfile _meleeAttack;
         private BasicAttackProfile _rangedAttack;
+        private BasicAttackProfile _assassinAttack;
         private ThreeVsThreeMatchManager _matchManager;
         private CharacterHealth _playerHealth;
         private SkillBuilderPanel _skillBuilderPanel;
@@ -57,6 +58,10 @@ namespace Axiom.Demo
 
         public bool IsChoosingAppearance => _isChoosingAppearance;
         public string SelectedAppearanceName => GetSelectedAppearanceName();
+        public bool IsBootstrapOverlaySuppressed => !_gameStarted &&
+                                                    !_isChoosingAppearance &&
+                                                    _skillBuilderPanel != null &&
+                                                    _skillBuilderPanel.IsVisible;
 
         private void Awake()
         {
@@ -79,6 +84,11 @@ namespace Axiom.Demo
 
         private void OnGUI()
         {
+            if (IsBootstrapOverlaySuppressed)
+            {
+                return;
+            }
+
             GUI.Box(new Rect(12f, 12f, 300f, 118f), "AXIOM");
             GUI.Label(new Rect(28f, 42f, 270f, 24f), _roundMessage);
             if (_matchManager != null)
@@ -158,21 +168,21 @@ namespace Axiom.Demo
             const float cardHeight = 160f;
             if (GUI.Button(
                     new Rect(left + 30f, top + 184f, cardWidth, cardHeight),
-                    "TANK\n\nHP 1400  |  ATK 80\nMOVE 95%  |  DASH 4m\n\nFRONTLINE / TAUNT"))
+                    "TANK\nHP 1400  |  ATK 80\nASPD 90%  |  RANGE 2.2m\nMOVE 95%  |  DASH 4m\n\nFRONTLINE / TAUNT"))
             {
                 StartDemo(CharacterRoleId.Tank);
             }
 
             if (GUI.Button(
                     new Rect(left + 270f, top + 184f, cardWidth, cardHeight),
-                    "MAGE\n\nHP 900  |  ATK 115\nMOVE 100%  |  DASH 4m\n\nRANGED / AREA"))
+                    "MAGE\nHP 900  |  ATK 115\nASPD 100%  |  RANGE 7m\nMOVE 100%  |  DASH 4m\n\nRANGED / AREA"))
             {
                 StartDemo(CharacterRoleId.Mage);
             }
 
             if (GUI.Button(
                     new Rect(left + 510f, top + 184f, cardWidth, cardHeight),
-                    "ASSASSIN\n\nHP 900  |  ATK 115\nMOVE 110%  |  DASH 8m\n\nDIVE / EXECUTE"))
+                    "ASSASSIN\nHP 900  |  ATK 115\nASPD 120%  |  RANGE 2.5m\nMOVE 110%  |  DASH 8m\n\nDIVE / EXECUTE"))
             {
                 StartDemo(CharacterRoleId.Assassin);
             }
@@ -752,6 +762,8 @@ namespace Axiom.Demo
             _meleeAttack.Configure(BasicAttackDeliveryType.Melee, 2.2f, 0.6f, 0.75f);
             _rangedAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
             _rangedAttack.Configure(BasicAttackDeliveryType.Ranged, 7f, 0.45f, 0.8f);
+            _assassinAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();
+            _assassinAttack.Configure(BasicAttackDeliveryType.Melee, 2.5f, 0.45f, 0.8f);
             _roles.Add(CharacterRoleId.Tank, ScriptableObject.CreateInstance<TankRoleDefinition>());
             _roles.Add(CharacterRoleId.Mage, ScriptableObject.CreateInstance<MageRoleDefinition>());
             _roles.Add(CharacterRoleId.Assassin, ScriptableObject.CreateInstance<AssassinRoleDefinition>());
@@ -759,7 +771,12 @@ namespace Axiom.Demo
 
         private BasicAttackProfile GetAttackProfile(CharacterRoleId roleId)
         {
-            return roleId == CharacterRoleId.Tank ? _meleeAttack : _rangedAttack;
+            return roleId switch
+            {
+                CharacterRoleId.Tank => _meleeAttack,
+                CharacterRoleId.Assassin => _assassinAttack,
+                _ => _rangedAttack
+            };
         }
 
         private InputAction CreateMoveAction()

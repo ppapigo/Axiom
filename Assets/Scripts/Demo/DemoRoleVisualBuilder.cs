@@ -19,14 +19,10 @@ namespace Axiom.Demo
             Color teamAccent = blueTeam
                 ? new Color(0.35f, 0.85f, 1f)
                 : new Color(1f, 0.55f, 0.15f);
-            CreatePart(
-                visualRoot,
-                "Facing Visor",
-                PrimitiveType.Cube,
-                new Vector3(0f, 0.3f, 0.52f),
-                Quaternion.identity,
-                new Vector3(0.42f, 0.2f, 0.1f),
-                teamAccent);
+            Color bodyColor = blueTeam
+                ? new Color(0.12f, 0.32f, 0.72f)
+                : new Color(0.72f, 0.16f, 0.12f);
+            BuildStickFigure(visualRoot, bodyColor, teamAccent);
 
             if (equipmentAppearance != null &&
                 equipmentAppearance.Role == role &&
@@ -48,6 +44,69 @@ namespace Axiom.Demo
                     BuildAssassin(visualRoot, teamAccent, builtInTint);
                     break;
             }
+        }
+
+        private static void BuildStickFigure(
+            Transform root,
+            Color bodyColor,
+            Color teamAccent)
+        {
+            CreatePart(
+                root,
+                "Stick Head",
+                PrimitiveType.Sphere,
+                new Vector3(0f, 0.72f, 0f),
+                Quaternion.identity,
+                Vector3.one * 0.42f,
+                bodyColor);
+            CreatePart(
+                root,
+                "Facing Marker",
+                PrimitiveType.Cube,
+                new Vector3(0f, 0.72f, 0.22f),
+                Quaternion.identity,
+                new Vector3(0.22f, 0.08f, 0.05f),
+                teamAccent);
+            CreatePart(
+                root,
+                "Stick Torso",
+                PrimitiveType.Cylinder,
+                new Vector3(0f, 0.18f, 0f),
+                Quaternion.identity,
+                new Vector3(0.13f, 0.28f, 0.13f),
+                bodyColor);
+            CreatePart(
+                root,
+                "Stick Left Arm",
+                PrimitiveType.Cylinder,
+                new Vector3(-0.31f, 0.24f, 0f),
+                Quaternion.Euler(0f, 0f, 38f),
+                new Vector3(0.065f, 0.27f, 0.065f),
+                bodyColor);
+            CreatePart(
+                root,
+                "Stick Right Arm",
+                PrimitiveType.Cylinder,
+                new Vector3(0.31f, 0.24f, 0f),
+                Quaternion.Euler(0f, 0f, -38f),
+                new Vector3(0.065f, 0.27f, 0.065f),
+                bodyColor);
+            CreatePart(
+                root,
+                "Stick Left Leg",
+                PrimitiveType.Cylinder,
+                new Vector3(-0.13f, -0.46f, 0f),
+                Quaternion.Euler(0f, 0f, -8f),
+                new Vector3(0.075f, 0.32f, 0.075f),
+                bodyColor);
+            CreatePart(
+                root,
+                "Stick Right Leg",
+                PrimitiveType.Cylinder,
+                new Vector3(0.13f, -0.46f, 0f),
+                Quaternion.Euler(0f, 0f, 8f),
+                new Vector3(0.075f, 0.32f, 0.075f),
+                bodyColor);
         }
 
         private static void BuildCustomEquipment(
@@ -103,19 +162,11 @@ namespace Axiom.Demo
                 Quaternion.Euler(0f, -12f, 0f),
                 new Vector3(0.28f, 0.28f, 0.05f),
                 accent);
-            CreatePart(
-                root,
-                "Tank Shoulder",
-                PrimitiveType.Cube,
-                new Vector3(0.48f, 0.38f, 0f),
-                Quaternion.Euler(0f, 0f, 12f),
-                new Vector3(0.32f, 0.28f, 0.55f),
-                armour);
         }
 
         private static void BuildMage(Transform root, Color accent, Color? builtInTint)
         {
-            Color staff = new Color(0.35f, 0.2f, 0.1f);
+            Color staff = builtInTint ?? new Color(0.35f, 0.2f, 0.1f);
             CreatePart(
                 root,
                 "Mage Staff",
@@ -132,27 +183,11 @@ namespace Axiom.Demo
                 Quaternion.identity,
                 Vector3.one * 0.26f,
                 accent);
-            CreatePart(
-                root,
-                "Mage Robe",
-                PrimitiveType.Cylinder,
-                new Vector3(0f, -0.62f, 0f),
-                Quaternion.identity,
-                new Vector3(0.58f, 0.28f, 0.58f),
-                builtInTint ?? new Color(0.2f, 0.12f, 0.38f));
         }
 
         private static void BuildAssassin(Transform root, Color accent, Color? builtInTint)
         {
-            Color hood = builtInTint ?? new Color(0.12f, 0.13f, 0.18f);
-            CreatePart(
-                root,
-                "Assassin Hood",
-                PrimitiveType.Sphere,
-                new Vector3(0f, 0.62f, 0f),
-                Quaternion.identity,
-                new Vector3(0.63f, 0.42f, 0.63f),
-                hood);
+            Color blade = builtInTint ?? accent;
             CreatePart(
                 root,
                 "Assassin Left Dagger",
@@ -160,7 +195,7 @@ namespace Axiom.Demo
                 new Vector3(-0.4f, -0.18f, 0.55f),
                 Quaternion.Euler(28f, 0f, 28f),
                 new Vector3(0.09f, 0.42f, 0.08f),
-                accent);
+                blade);
             CreatePart(
                 root,
                 "Assassin Right Dagger",
@@ -168,7 +203,7 @@ namespace Axiom.Demo
                 new Vector3(0.4f, -0.18f, 0.55f),
                 Quaternion.Euler(28f, 0f, -28f),
                 new Vector3(0.09f, 0.42f, 0.08f),
-                accent);
+                blade);
         }
 
         private static void CreatePart(

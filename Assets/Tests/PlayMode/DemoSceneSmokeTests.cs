@@ -136,6 +136,15 @@ namespace Axiom.Tests.PlayMode
             Assert.That(GameObject.Find("Tank Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Mage Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Assassin Visual"), Is.Not.Null);
+            Assert.That(GameObject.Find("Stick Head"), Is.Not.Null);
+            Assert.That(GameObject.Find("Stick Torso"), Is.Not.Null);
+            Assert.That(GameObject.Find("Tank Shield"), Is.Not.Null);
+            Assert.That(GameObject.Find("Mage Staff"), Is.Not.Null);
+            Assert.That(GameObject.Find("Assassin Left Dagger"), Is.Not.Null);
+            Assert.That(GameObject.Find("Assassin Right Dagger"), Is.Not.Null);
+            Assert.That(GameObject.Find("Tank Shoulder"), Is.Null);
+            Assert.That(GameObject.Find("Mage Robe"), Is.Null);
+            Assert.That(GameObject.Find("Assassin Hood"), Is.Null);
         }
 
         [UnityTest]

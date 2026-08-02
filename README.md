@@ -138,7 +138,7 @@ Unity EditMode 전체 테스트 141개, 스킬 제작·자연어 생성 대상 �
 21. 스킬 생성 패널 상단에 현재 provider와 로컬·원격 출처를 표시합니다. 생성 중, 정상 완료, 자동 보정, 취소, 서버 오류 후 안전 프리셋 사용 상태를 서로 다른 문구로 보여주며 상세 오류는 결과 카드에 유지합니다.
 22. 전투 화면 하단에 WASD, 마우스, 좌클릭, Q/E/R, Space와 B 조작을 한 줄로 표시합니다. 기본 공격, 피격, 스킬 시전과 폭발 효과음은 22.05kHz 짧은 파형을 실행 시 한 번 생성해 공유하므로 음원 파일 다운로드 용량이 추가되지 않습니다.
 23. 시작 화면은 역할별 HP, 공격력, 이동속도와 대시 거리, 3vs3 전멸전·2선승 규칙을 보여줍니다. 스킬 제작 중에는 Q/E/R 저장 진행도를 표시하고, 전투 중에는 라운드 목표 배너를 유지하며 경기 종료 시 승리·패배와 최종 스코어를 전체 화면 오버레이로 표시합니다.
-24. R 스킬을 저장해도 즉시 전투를 시작하지 않고 외형 아이템 선택 단계로 이동합니다. 무에셋 Classic, Obsidian, Ivory 키트와 역할에 맞는 `EquipmentAppearanceDefinition` 커스텀 모델을 선택한 뒤 확인해야 3vs3이 시작됩니다. 외부 모델이 없거나 로드되지 않아도 기본 도형 외형으로 안전하게 실행됩니다.
+24. R 스킬을 저장해도 즉시 전투를 시작하지 않고 장비 선택 단계로 이동합니다. 모든 역할은 Unity 기본 도형으로 만든 공통 졸라맨 몸체를 사용하고, Tank는 방패, Mage는 지팡이, Assassin은 쌍단검만 착용합니다. Classic, Obsidian, Ivory 장비 키트 또는 역할별 `EquipmentAppearanceDefinition`을 선택한 뒤 3vs3을 시작합니다.
 
 ### 서버리스 생성 API 계약
 
@@ -158,6 +158,7 @@ Unity EditMode 전체 테스트 141개, 스킬 제작·자연어 생성 대상 �
 4. 위치, 회전, 크기, 고유 색상 또는 팀 강조색 사용 여부를 Inspector에서 조정합니다.
 5. `Axiom Demo Bootstrap`의 Equipment Appearances 배열에 역할별 데이터를 연결합니다.
 6. 장비 파츠의 Collider는 전투 판정에 영향을 주지 않도록 런타임에서 제거됩니다.
+7. 캐릭터 본체 모델과 Humanoid 리깅은 사용하지 않으므로 장비가 Bone Weight에 의해 깨질 위험이 없습니다.
 
 ## GitHub 브라우저 실행
 
@@ -172,9 +173,9 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-외부 캐릭터 모델·애니메이션 연결 슬롯과 제출용 서버리스 함수 템플릿을 추가합니다.
+장비 프리팹의 실루엣과 타격 연출을 보강하고 제출용 서버리스 함수 템플릿을 추가합니다.
 
-외부 아트 제작 규격은 [`ART_ASSET_GUIDE.md`](ART_ASSET_GUIDE.md), AI 생성용 상세 프롬프트와 콘셉트 이미지 경로는 [`ART_GENERATION_PROMPTS.md`](ART_GENERATION_PROMPTS.md)를 참고합니다.
+장비 프리팹 제작 규격은 [`ART_ASSET_GUIDE.md`](ART_ASSET_GUIDE.md), 장비 콘셉트 프롬프트와 이미지 경로는 [`ART_GENERATION_PROMPTS.md`](ART_GENERATION_PROMPTS.md)를 참고합니다.
 
 ### Unity 스킬 VFX
 

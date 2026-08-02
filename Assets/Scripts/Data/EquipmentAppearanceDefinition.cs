@@ -46,7 +46,7 @@ namespace Axiom.Data
             ? $"{role} Equipment"
             : displayName.Trim();
         public string Description => string.IsNullOrWhiteSpace(description)
-            ? "Custom model equipment"
+            ? "Custom role equipment"
             : description.Trim();
         public EquipmentVisualPart[] Parts => parts ?? Array.Empty<EquipmentVisualPart>();
         public bool HasParts => Parts.Length > 0;

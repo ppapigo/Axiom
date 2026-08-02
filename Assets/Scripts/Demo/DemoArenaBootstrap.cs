@@ -213,7 +213,7 @@ namespace Axiom.Demo
             GUI.Box(new Rect(left, top, width, height), string.Empty);
             GUI.Label(
                 new Rect(left + 24f, top + 18f, width - 48f, 38f),
-                "CHOOSE APPEARANCE ITEM",
+                "CHOOSE EQUIPMENT KIT",
                 CreateCenteredStyle(26, new Color(0.25f, 0.85f, 1f), FontStyle.Bold));
             GUI.Label(
                 new Rect(left + 24f, top + 58f, width - 48f, 24f),
@@ -221,24 +221,24 @@ namespace Axiom.Demo
                 CreateCenteredStyle(13, Color.white, FontStyle.Bold));
             GUI.Label(
                 new Rect(left + 24f, top + 88f, width - 48f, 22f),
-                "BUILT-IN ITEMS USE NO MODEL ASSETS. CUSTOM PREFABS APPEAR BELOW WHEN CONNECTED.",
+                "ALL ROLES USE STICK FIGURES. ONLY ROLE EQUIPMENT CHANGES.",
                 CreateCenteredStyle(11, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
 
             DrawBuiltInAppearanceButton(
                 new Rect(left + 35f, top + 126f, 235f, 104f),
                 BuiltInAppearanceStyle.Classic,
                 "CLASSIC KIT",
-                "Role default colours");
+                "Default role equipment");
             DrawBuiltInAppearanceButton(
                 new Rect(left + 293f, top + 126f, 235f, 104f),
                 BuiltInAppearanceStyle.Obsidian,
                 "OBSIDIAN KIT",
-                "Dark arena armour");
+                "Dark equipment finish");
             DrawBuiltInAppearanceButton(
                 new Rect(left + 551f, top + 126f, 235f, 104f),
                 BuiltInAppearanceStyle.Ivory,
                 "IVORY KIT",
-                "Light ceremonial armour");
+                "Ivory equipment finish");
 
             int customCount = 0;
             if (equipmentAppearances != null)
@@ -253,7 +253,7 @@ namespace Axiom.Demo
                     float customLeft = left + 35f + (customCount * 258f);
                     bool selected = _selectedAppearanceStyle == BuiltInAppearanceStyle.Custom &&
                                     _selectedEquipmentAppearance == appearance;
-                    string marker = selected ? "[SELECTED]" : "[CUSTOM MODEL]";
+                    string marker = selected ? "[SELECTED]" : "[CUSTOM EQUIPMENT]";
                     if (GUI.Button(
                             new Rect(customLeft, top + 250f, 235f, 72f),
                             $"{marker} {appearance.DisplayName}\n{appearance.Description}"))
@@ -269,7 +269,7 @@ namespace Axiom.Demo
             {
                 GUI.Box(
                     new Rect(left + 160f, top + 252f, width - 320f, 58f),
-                    "CUSTOM MODEL SLOTS READY\nConnect EquipmentAppearanceDefinition assets later");
+                    "CUSTOM EQUIPMENT SLOTS READY\nConnect equipment prefabs later");
             }
 
             GUI.Label(
@@ -557,9 +557,7 @@ namespace Axiom.Demo
             character.transform.position = spawnPosition;
             Destroy(character.GetComponent<CapsuleCollider>());
             Renderer renderer = character.GetComponent<Renderer>();
-            SetColor(renderer, team == TeamId.TeamA
-                ? RoleColor(roleId, true)
-                : RoleColor(roleId, false));
+            renderer.enabled = false;
             DemoRoleVisualBuilder.Build(
                 character.transform,
                 roleId,
@@ -795,15 +793,6 @@ namespace Axiom.Demo
             }
 
             return result.ToArray();
-        }
-
-        private static Color RoleColor(CharacterRoleId role, bool blueTeam)
-        {
-            float accent = role == CharacterRoleId.Tank ? 0.15f :
-                role == CharacterRoleId.Mage ? 0.35f : 0.55f;
-            return blueTeam
-                ? new Color(accent, 0.45f, 1f)
-                : new Color(1f, 0.15f + accent, 0.18f);
         }
 
         private static void CreateBlock(

@@ -82,9 +82,16 @@ namespace Axiom.Tests.PlayMode
             Assert.That(match, Is.Not.Null);
             Assert.That(match.Phase, Is.EqualTo(MatchPhase.RoundActive));
             Assert.That(UnityEngine.Camera.main, Is.Not.Null);
+            Assert.That(UnityEngine.Camera.main.GetComponent<AudioListener>(), Is.Not.Null);
             Assert.That(combatHud, Is.Not.Null);
             Assert.That(combatHud.IsConfigured, Is.True);
             Assert.That(combatHud.Health, Is.Not.Null);
+            DemoCombatAudio[] combatAudio = Object.FindObjectsByType<DemoCombatAudio>(
+                FindObjectsSortMode.None);
+            Assert.That(combatAudio, Has.Length.EqualTo(6));
+            Assert.That(combatAudio,
+                Has.All.Matches<DemoCombatAudio>(audio => audio.IsReady));
+            Assert.That(DemoCombatAudio.GeneratedSampleCount, Is.InRange(1, 20000));
             DemoAISkillUser[] aiSkillUsers = Object.FindObjectsByType<DemoAISkillUser>(
                 FindObjectsSortMode.None);
             Assert.That(aiSkillUsers, Has.Length.EqualTo(5));

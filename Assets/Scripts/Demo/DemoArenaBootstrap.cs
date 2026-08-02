@@ -98,8 +98,8 @@ namespace Axiom.Demo
             }
 
             GUI.Box(
-                new Rect(12f, Screen.height - 58f, 360f, 42f),
-                "WASD Move | Mouse Aim | LMB Attack | B Skill Forge");
+                new Rect(12f, Screen.height - 58f, 650f, 42f),
+                "WASD MOVE | MOUSE AIM | LMB ATTACK | Q / E / R SKILLS | SPACE DASH | B FORGE");
             DrawTeamHealth();
 
             if (_winner.HasValue && GUI.Button(
@@ -311,10 +311,13 @@ namespace Axiom.Demo
             WorldHealthBar healthBar = character.AddComponent<WorldHealthBar>();
             healthBar.Configure(health, _mainCamera, team, characterName);
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
+            DemoCombatAudio audioFeedback = character.AddComponent<DemoCombatAudio>();
+            audioFeedback.Configure(health, basicAttack, isPlayer);
 
             var combatBehaviours = new List<Behaviour>();
             combatBehaviours.Add(status);
             combatBehaviours.Add(elementStatus);
+            combatBehaviours.Add(audioFeedback);
             if (isPlayer)
             {
                 ConfigurePlayer(character, basicAttack, roleId, combatBehaviours);
@@ -442,6 +445,7 @@ namespace Axiom.Demo
             GameObject cameraObject = new GameObject("Main Camera");
             cameraObject.tag = "MainCamera";
             _mainCamera = cameraObject.AddComponent<UnityEngine.Camera>();
+            cameraObject.AddComponent<AudioListener>();
             _mainCamera.clearFlags = CameraClearFlags.SolidColor;
             _mainCamera.backgroundColor = new Color(0.025f, 0.035f, 0.06f);
 

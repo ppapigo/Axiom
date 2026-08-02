@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Axiom.Character;
 using Axiom.Data;
@@ -12,6 +13,8 @@ namespace Axiom.Combat
     [RequireComponent(typeof(CharacterStats))]
     public sealed class BasicAttackController : MonoBehaviour
     {
+        public event Action AttackPerformed;
+
         [SerializeField] private BasicAttackProfile attackProfile;
         [SerializeField] private InputActionBasicAttackSource inputSource;
         [SerializeField] private Transform attackOrigin;
@@ -102,6 +105,7 @@ namespace Axiom.Combat
             transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
             Transform originTransform = attackOrigin == null ? transform : attackOrigin;
             ExecuteAttack(originTransform.position, direction, parameters);
+            AttackPerformed?.Invoke();
             return true;
         }
 

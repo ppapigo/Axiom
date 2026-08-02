@@ -34,6 +34,7 @@ namespace Axiom.Demo
         private CharacterHealth _health;
         private CharacterShieldController _shield;
         private CharacterController _characterController;
+        private DemoCombatAudio _audioFeedback;
         private bool _isCasting;
         private GameObject _castIndicator;
 
@@ -90,6 +91,7 @@ namespace Axiom.Demo
             _health = GetComponent<CharacterHealth>();
             _shield = GetComponent<CharacterShieldController>();
             _characterController = GetComponent<CharacterController>();
+            _audioFeedback = GetComponent<DemoCombatAudio>();
         }
 
         private void OnDisable()
@@ -177,6 +179,7 @@ namespace Axiom.Demo
 
             _isCasting = true;
             _castIndicator = ShowCastIndicator(definition, plan, aimPoint);
+            _audioFeedback?.PlaySkillCast();
             StartCoroutine(ExecuteCast(definition, plan, aimPoint));
             return true;
         }
@@ -218,6 +221,7 @@ namespace Axiom.Demo
             {
                 ResolveHits(definition, plan);
                 ShowEffect(plan, definition.Element);
+                _audioFeedback?.PlaySkillImpact();
             }
 
             _isCasting = false;
@@ -290,6 +294,7 @@ namespace Axiom.Demo
                 explosionRadius);
             ResolveHits(definition, impactPlan);
             ShowEffect(impactPlan, definition.Element);
+            _audioFeedback?.PlaySkillImpact();
         }
 
         private void ApplyUtilityEffects(

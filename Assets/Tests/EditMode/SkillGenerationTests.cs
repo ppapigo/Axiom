@@ -628,6 +628,76 @@ namespace Axiom.Tests.EditMode
             Object.DestroyImmediate(balance);
         }
 
+        [Test]
+        public void SkillGenerationProviderFactory_UsesMockWithoutEnabledSettings()
+        {
+            ISkillGenerationProvider withoutSettings =
+                SkillGenerationProviderFactory.Create(null);
+            SkillGenerationApiSettings settings =
+                ScriptableObject.CreateInstance<SkillGenerationApiSettings>();
+            settings.Configure(false, "https://example.com/generate");
+            ISkillGenerationProvider disabled =
+                SkillGenerationProviderFactory.Create(settings);
+
+            Assert.That(withoutSettings, Is.TypeOf<MockSkillGenerationProvider>());
+            Assert.That(disabled, Is.TypeOf<MockSkillGenerationProvider>());
+            Object.DestroyImmediate(settings);
+        }
+
+        [Test]
+        public void SkillGenerationProviderFactory_UsesMockForInvalidEndpoint()
+        {
+            SkillGenerationApiSettings settings =
+                ScriptableObject.CreateInstance<SkillGenerationApiSettings>();
+            settings.Configure(true, "not-an-endpoint");
+
+            ISkillGenerationProvider provider =
+                SkillGenerationProviderFactory.Create(settings);
+
+            Assert.That(provider, Is.TypeOf<MockSkillGenerationProvider>());
+            Object.DestroyImmediate(settings);
+        }
+
+        [Test]
+        public async Task ServerlessProvider_SendsContractAndParsesResponse()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                displayName = "Storm Line",
+                skillType = nameof(SkillType.Projectile),
+                crowdControl = nameof(CrowdControlType.Stun),
+                element = nameof(SkillElement.Lightning),
+                damageIncreasePercent = 20f
+            };
+            var transport = new RecordingTransport(JsonUtility.ToJson(response));
+            var provider = new ServerlessSkillGenerationProvider(
+                "https://example.com/api/skill",
+                9,
+                transport);
+
+            SkillGenerationResponseDto result = await provider.GenerateAsync(
+                " fast lightning shot ",
+                CharacterRoleId.Mage,
+                SkillSlot.E);
+
+            Assert.That(result.displayName, Is.EqualTo("Storm Line"));
+            Assert.That(result.element, Is.EqualTo(nameof(SkillElement.Lightning)));
+            Assert.That(transport.EndpointUrl,
+                Is.EqualTo("https://example.com/api/skill"));
+            Assert.That(transport.TimeoutSeconds, Is.EqualTo(9));
+            Assert.That(transport.Json, Does.Contain("\"prompt\":\"fast lightning shot\""));
+            Assert.That(transport.Json, Does.Contain("\"role\":\"Mage\""));
+            Assert.That(transport.Json, Does.Contain("\"slot\":\"E\""));
+        }
+
+        [Test]
+        public void ServerlessProvider_RejectsInvalidEndpoint()
+        {
+            Assert.That(
+                () => new ServerlessSkillGenerationProvider("file:///skill.json"),
+                Throws.ArgumentException);
+        }
+
         private sealed class StaticProvider : ISkillGenerationProvider
         {
             private readonly SkillGenerationResponseDto _response;
@@ -658,6 +728,33 @@ namespace Axiom.Tests.EditMode
             {
                 return Task.FromException<SkillGenerationResponseDto>(
                     new System.InvalidOperationException("provider unavailable"));
+            }
+        }
+
+        private sealed class RecordingTransport : ISkillGenerationHttpTransport
+        {
+            private readonly string _responseJson;
+
+            public RecordingTransport(string responseJson)
+            {
+                _responseJson = responseJson;
+            }
+
+            public string EndpointUrl { get; private set; }
+            public string Json { get; private set; }
+            public int TimeoutSeconds { get; private set; }
+
+            public Task<string> PostJsonAsync(
+                string endpointUrl,
+                string json,
+                int timeoutSeconds,
+                CancellationToken cancellationToken = default)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                EndpointUrl = endpointUrl;
+                Json = json;
+                TimeoutSeconds = timeoutSeconds;
+                return Task.FromResult(_responseJson);
             }
         }
 

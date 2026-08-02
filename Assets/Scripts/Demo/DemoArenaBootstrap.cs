@@ -26,6 +26,7 @@ namespace Axiom.Demo
         private readonly RoleElementPool _roleElementPool = new RoleElementPool();
 
         [SerializeField] private EquipmentAppearanceDefinition[] equipmentAppearances;
+        [SerializeField] private SkillGenerationApiSettings skillGenerationApiSettings;
 
         private UnityEngine.Camera _mainCamera;
         private CharacterMovementProfile _movementProfile;
@@ -476,7 +477,7 @@ namespace Axiom.Demo
             _skillBuilderPanel = gameObject.AddComponent<SkillBuilderPanel>();
             _skillBuilderPanel.Configure(_skillBalance);
             _skillBuilderPanel.ConfigureGeneration(
-                new MockSkillGenerationProvider(),
+                SkillGenerationProviderFactory.Create(skillGenerationApiSettings),
                 DemoSkillDefinitionFactory.Create);
             _skillBuilderPanel.DraftSaved += StartMatchAfterSkillSaved;
             _meleeAttack = ScriptableObject.CreateInstance<BasicAttackProfile>();

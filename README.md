@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-기존 Unity EditMode 전체 테스트 103개, 스킬 제작·자연어 생성 대상 테스트 79개, AI·스킬 대상 테스트 70개와 최신 데모 PlayMode 테스트 2개가 통과합니다.
+Unity EditMode 전체 테스트 141개, 스킬 제작·자연어 생성 대상 테스트 83개, AI·스킬 대상 테스트 70개와 최신 데모 PlayMode 테스트 2개가 통과합니다.
 
 ## 구현된 시스템
 
@@ -67,6 +67,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 - Self Area와 Ground Area의 거리별 계단식 피해 감소
 - Tank 원거리 제한, Mage 광역 피해 상한, Assassin 광역 반경 제한
 - 자연어 스킬 생성 결과를 런타임 사용 전에 검증할 수 있는 `SkillDefinition` 파이프라인
+- 선택형 서버리스 생성 provider: 엔드포인트 미설정 시 Mock을 유지하고 서버 응답도 동일한 검증·자동 보정을 적용
 - CastDelay 동안 시전 잠금과 원형 범위 표시를 유지한 뒤 판정 실행
 - Projectile은 프레임 이동 구간 SphereCast로 벽·캐릭터 충돌을 검사하고 첫 충돌 또는 최대 사거리에서 폭발
 - 스킬 속성색 폭발 원판과 피격 구체 VFX를 Unity 기본 도형으로 생성해 추가 에셋 용량 없이 연출
@@ -129,6 +130,17 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 17. 역할 선택 후 열리는 스킬 제작 화면 오른쪽에서 자연어를 입력하고 Mock AI 초안을 생성할 수 있습니다. 결과 카드에서 공격 방식, 속성, CC, 수치, 항목별 포인트와 자동 보정 내역을 확인한 뒤 `CONFIRM & SAVE`로 Q/E/R에 저장합니다. 기존 수동 100포인트 제작 방식도 함께 사용할 수 있습니다.
 18. 플레이어가 저장한 Q/E/R은 `DemoSkillController`에서 실제 피해, CC, 속성, 이동, 보호막과 회복 효과로 시전됩니다. AI는 같은 실행 계층을 재사용하지만 각 역할에 맞는 별도 Q/E/R 프리셋을 사용하며, 최소 역할 조건이 성립할 때 우선 슬롯 하나를 시전합니다.
 19. 모든 스킬은 데이터의 CastDelay 후 실행됩니다. Projectile 타입은 실제 투사체가 속도와 사거리만큼 이동하고 벽 또는 캐릭터에 충돌하면 원형 범위로 폭발합니다. 시전 범위, 폭발과 피격 VFX는 기존 단색 셰이더와 기본 도형만 사용합니다.
+20. `SkillGenerationApiSettings`에서 서버리스 엔드포인트 사용 여부, URL과 제한 시간을 설정할 수 있습니다. 활성화하지 않았거나 URL이 유효하지 않으면 Mock provider를 사용합니다. 활성화 시 클라이언트는 `prompt`, `role`, `slot` JSON을 POST하고 기존 `SkillGenerationResponseDto` JSON을 응답으로 받습니다. 실제 AI API 키는 WebGL 빌드에 포함하지 않고 서버리스 함수에서만 보관해야 합니다.
+
+### 서버리스 생성 API 계약
+
+요청 예시:
+
+```json
+{"prompt":"적을 느리게 하는 얼음 투사체","role":"Mage","slot":"Q"}
+```
+
+응답은 `SkillGenerationResponseDto`와 같은 필드를 가진 JSON이어야 합니다. WebGL에서 호출하려면 서버가 배포 주소 `https://ppapigo.github.io`를 허용하는 CORS 헤더를 반환해야 합니다. Unity에서 `Assets > Create > Axiom > Skill Generation API Settings`로 설정 에셋을 만든 뒤 데모 씬의 `DemoArenaBootstrap`에 연결하면 활성화됩니다.
 
 ### 장비 외형
 
@@ -152,4 +164,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-Mock provider를 유지하면서 선택적으로 연결할 수 있는 서버리스 AI API provider를 추가합니다.
+제출용 서버리스 함수를 배포해 실제 자연어 모델과 연결하고, 생성 상태·실패 원인을 UI에서 더 명확히 표시합니다.

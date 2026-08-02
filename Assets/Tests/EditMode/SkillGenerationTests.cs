@@ -58,5 +58,104 @@ namespace Axiom.Tests.EditMode
                     SkillSlot.Q,
                     cancellation));
         }
+
+        [Test]
+        public void SkillDraftMapper_MapsSupportedResponse()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "Ground Area",
+                crowdControl = "Stun",
+                element = "Fire",
+                damageIncreasePercent = 20f,
+                radiusIncrease = 2f,
+                rangeIncrease = 1f,
+                cooldownReduction = 1f,
+                addsMobility = true,
+                createsShield = true,
+                heals = true
+            };
+
+            SkillDraftMappingResult result = SkillDraftMapper.Map(response, SkillSlot.Q);
+
+            Assert.That(result.IsSuccess, Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.GroundArea));
+            Assert.That(result.Draft.Element, Is.EqualTo(SkillElement.Fire));
+            Assert.That(result.Draft.Slot, Is.EqualTo(SkillSlot.Q));
+            Assert.That(result.Draft.Modifiers.AppliesStun, Is.True);
+            Assert.That(result.Draft.Modifiers.AddsMobility, Is.True);
+            Assert.That(result.Draft.Modifiers.CreatesShield, Is.True);
+            Assert.That(result.Draft.Modifiers.Heals, Is.True);
+        }
+
+        [Test]
+        public void SkillDraftMapper_NormalizesEnumNamesAndAllowsNoElement()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "self-area",
+                crowdControl = "none",
+                element = "None"
+            };
+
+            SkillDraftMappingResult result = SkillDraftMapper.Map(
+                response,
+                SkillSlot.Ultimate);
+
+            Assert.That(result.IsSuccess, Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.Draft.Type, Is.EqualTo(SkillType.SelfArea));
+            Assert.That(result.Draft.Element, Is.Null);
+        }
+
+        [Test]
+        public void SkillDraftMapper_RejectsUnsupportedEnums()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "ChainLaser",
+                crowdControl = "Fear",
+                element = "Light"
+            };
+
+            SkillDraftMappingResult result = SkillDraftMapper.Map(response, SkillSlot.E);
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Errors.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void SkillDraftMapper_RejectsNonFiniteAndNegativeNumbers()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "Projectile",
+                crowdControl = "None",
+                element = "Ice",
+                damageIncreasePercent = -10f,
+                radiusIncrease = float.NaN,
+                rangeIncrease = float.PositiveInfinity
+            };
+
+            SkillDraftMappingResult result = SkillDraftMapper.Map(response, SkillSlot.Q);
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Errors.Count, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void SkillDraftMapper_RejectsUnavailableForgeCrowdControl()
+        {
+            var response = new SkillGenerationResponseDto
+            {
+                skillType = "Target",
+                crowdControl = "Taunt",
+                element = "Earth"
+            };
+
+            SkillDraftMappingResult result = SkillDraftMapper.Map(response, SkillSlot.Q);
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Errors[0], Does.Contain("not available"));
+        }
     }
 }

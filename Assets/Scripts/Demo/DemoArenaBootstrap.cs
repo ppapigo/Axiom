@@ -35,6 +35,7 @@ namespace Axiom.Demo
 
         [SerializeField] private EquipmentAppearanceDefinition[] equipmentAppearances;
         [SerializeField] private SkillGenerationApiSettings skillGenerationApiSettings;
+        [SerializeField] private SkillVfxLibrary skillVfxLibrary;
 
         private UnityEngine.Camera _mainCamera;
         private CharacterMovementProfile _movementProfile;
@@ -589,11 +590,14 @@ namespace Axiom.Demo
             BasicAttackController basicAttack = character.AddComponent<BasicAttackController>();
             DemoCombatAudio audioFeedback = character.AddComponent<DemoCombatAudio>();
             audioFeedback.Configure(health, basicAttack, isPlayer);
+            DemoSkillVfxPlayer skillVfx = character.AddComponent<DemoSkillVfxPlayer>();
+            skillVfx.Configure(skillVfxLibrary);
 
             var combatBehaviours = new List<Behaviour>();
             combatBehaviours.Add(status);
             combatBehaviours.Add(elementStatus);
             combatBehaviours.Add(audioFeedback);
+            combatBehaviours.Add(skillVfx);
             if (isPlayer)
             {
                 ConfigurePlayer(character, basicAttack, roleId, combatBehaviours);

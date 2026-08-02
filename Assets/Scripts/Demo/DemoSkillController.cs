@@ -35,6 +35,7 @@ namespace Axiom.Demo
         private CharacterShieldController _shield;
         private CharacterController _characterController;
         private DemoCombatAudio _audioFeedback;
+        private DemoSkillVfxPlayer _vfxFeedback;
         private bool _isCasting;
         private GameObject _castIndicator;
 
@@ -92,6 +93,7 @@ namespace Axiom.Demo
             _shield = GetComponent<CharacterShieldController>();
             _characterController = GetComponent<CharacterController>();
             _audioFeedback = GetComponent<DemoCombatAudio>();
+            _vfxFeedback = GetComponent<DemoSkillVfxPlayer>();
         }
 
         private void OnDisable()
@@ -179,6 +181,10 @@ namespace Axiom.Demo
 
             _isCasting = true;
             _castIndicator = ShowCastIndicator(definition, plan, aimPoint);
+            _vfxFeedback?.PlayCast(
+                definition.Element,
+                GetCastVisualPosition(definition, plan, aimPoint),
+                GetVisualRadius(definition, plan));
             _audioFeedback?.PlaySkillCast();
             StartCoroutine(ExecuteCast(definition, plan, aimPoint));
             return true;
@@ -220,7 +226,7 @@ namespace Axiom.Demo
             else
             {
                 ResolveHits(definition, plan);
-                ShowEffect(plan, definition.Element);
+                PlayImpactEffect(definition.Element, plan);
                 _audioFeedback?.PlaySkillImpact();
             }
 
@@ -260,6 +266,10 @@ namespace Axiom.Demo
             projectileObject.transform.localScale = Vector3.one * collisionRadius * 2f;
             projectileObject.GetComponent<Renderer>().material =
                 DemoArenaBootstrap.CreateDemoMaterial(GetElementColor(definition.Element));
+            _vfxFeedback?.AttachProjectile(
+                projectileObject,
+                definition.Element,
+                collisionRadius);
             DemoProjectile projectile = projectileObject.AddComponent<DemoProjectile>();
             SkillDefinition projectileDefinition = definition;
             Vector3 projectileDirection = plan.Direction;
@@ -293,7 +303,7 @@ namespace Axiom.Demo
                 impactPoint,
                 explosionRadius);
             ResolveHits(definition, impactPlan);
-            ShowEffect(impactPlan, definition.Element);
+            PlayImpactEffect(definition.Element, impactPlan);
             _audioFeedback?.PlaySkillImpact();
         }
 
@@ -375,7 +385,14 @@ namespace Axiom.Demo
                     request = MultiplyDamage(request, reaction.DamageMultiplier);
                 }
                 health.ApplyDamage(request);
-                ShowHitEffect(health.transform.position, definition.Element);
+                if (_vfxFeedback != null)
+                {
+                    _vfxFeedback.PlayHit(definition.Element, health.transform.position);
+                }
+                else
+                {
+                    ShowHitEffect(health.transform.position, definition.Element);
+                }
                 if (reaction.Type == ElementReactionType.WindSpread &&
                     reaction.SpreadElement.HasValue)
                 {
@@ -537,21 +554,77 @@ namespace Axiom.Demo
                 PrimitiveType.Cylinder,
                 "Cast Range Indicator",
                 new Color(1f, 0.75f, 0.15f));
-            float radius = plan.Type == SkillType.Global
-                ? 9f
-                : plan.Type == SkillType.Cone
-                    ? Mathf.Max(0.5f, definition.Range * 0.5f)
-                    : Mathf.Max(0.5f, plan.Radius);
-            Vector3 center = plan.Type == SkillType.SelfArea ||
-                             plan.Type == SkillType.Global
-                ? plan.Origin
-                : plan.Type == SkillType.Cone
-                    ? plan.Origin + (plan.Direction * radius)
-                    : aimPoint;
+            float radius = GetVisualRadius(definition, plan);
+            Vector3 center = GetCastVisualPosition(definition, plan, aimPoint);
             center.y = 0.03f;
             indicator.transform.position = center;
             indicator.transform.localScale = new Vector3(radius, 0.015f, radius);
             return indicator;
+        }
+
+        private void PlayImpactEffect(
+            SkillElement element,
+            in SkillCastPlan plan)
+        {
+            if (_vfxFeedback == null)
+            {
+                ShowEffect(plan, element);
+                return;
+            }
+
+            _vfxFeedback.PlayImpact(
+                element,
+                GetImpactPosition(plan),
+                GetImpactRadius(plan));
+        }
+
+        private static float GetVisualRadius(
+            in SkillDefinition definition,
+            in SkillCastPlan plan)
+        {
+            return plan.Type == SkillType.Global
+                ? 9f
+                : plan.Type == SkillType.Cone
+                    ? Mathf.Max(0.5f, definition.Range * 0.5f)
+                    : Mathf.Max(0.5f, plan.Radius);
+        }
+
+        private static Vector3 GetCastVisualPosition(
+            in SkillDefinition definition,
+            in SkillCastPlan plan,
+            Vector3 aimPoint)
+        {
+            if (plan.Type == SkillType.SelfArea || plan.Type == SkillType.Global)
+            {
+                return plan.Origin;
+            }
+
+            if (plan.Type == SkillType.Cone)
+            {
+                return plan.Origin +
+                       (plan.Direction * GetVisualRadius(definition, plan));
+            }
+
+            return aimPoint;
+        }
+
+        private static Vector3 GetImpactPosition(in SkillCastPlan plan)
+        {
+            return plan.Type == SkillType.GroundArea ||
+                   plan.Type == SkillType.SelfArea ||
+                   plan.Type == SkillType.Global
+                ? plan.Center
+                : plan.Origin + (plan.Direction * 2f) + (Vector3.up * 0.4f);
+        }
+
+        private static float GetImpactRadius(in SkillCastPlan plan)
+        {
+            return plan.Type == SkillType.Global
+                ? 9f
+                : plan.Type == SkillType.GroundArea ||
+                  plan.Type == SkillType.SelfArea
+                    ? Mathf.Max(0.5f, plan.Radius)
+                    : 0.6f;
         }
 
         private static void ShowEffect(
@@ -604,17 +677,7 @@ namespace Axiom.Demo
 
         private static Color GetElementColor(SkillElement element)
         {
-            return element switch
-            {
-                SkillElement.Fire => new Color(1f, 0.25f, 0.08f),
-                SkillElement.Ice => new Color(0.35f, 0.85f, 1f),
-                SkillElement.Lightning => new Color(0.8f, 0.55f, 1f),
-                SkillElement.Poison => new Color(0.45f, 1f, 0.2f),
-                SkillElement.Water => new Color(0.15f, 0.55f, 1f),
-                SkillElement.Wind => new Color(0.55f, 1f, 0.75f),
-                SkillElement.Earth => new Color(0.65f, 0.4f, 0.18f),
-                _ => Color.white
-            };
+            return DemoSkillVfxPlayer.GetElementColor(element);
         }
     }
 }

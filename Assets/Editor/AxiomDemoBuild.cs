@@ -14,6 +14,7 @@ namespace Axiom.Editor
         private const string SceneFolder = "Assets/Scenes";
         private const string ScenePath = SceneFolder + "/AxiomDemo.unity";
         private const string DemoShaderPath = "Assets/Shaders/AxiomDemoUnlit.shader";
+        private const string ParticleShaderPath = "Assets/Shaders/AxiomParticleUnlit.shader";
         private const string WebOutputPath = "docs";
 
         [MenuItem("Axiom/Demo/Create Demo Scene")]
@@ -55,7 +56,7 @@ namespace Axiom.Editor
         [MenuItem("Axiom/Demo/Build WebGL")]
         public static void BuildWebGL()
         {
-            EnsureDemoShaderIncluded();
+            EnsureDemoShadersIncluded();
             CreateDemoScene();
             PlayerSettings.companyName = "Axiom Team";
             PlayerSettings.productName = "Axiom";
@@ -84,13 +85,19 @@ namespace Axiom.Editor
                 $"{report.summary.totalSize} bytes");
         }
 
-        private static void EnsureDemoShaderIncluded()
+        private static void EnsureDemoShadersIncluded()
         {
-            Shader demoShader = AssetDatabase.LoadAssetAtPath<Shader>(DemoShaderPath);
-            if (demoShader == null)
+            EnsureShaderIncluded(DemoShaderPath);
+            EnsureShaderIncluded(ParticleShaderPath);
+        }
+
+        private static void EnsureShaderIncluded(string shaderPath)
+        {
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+            if (shader == null)
             {
                 throw new InvalidOperationException(
-                    $"Demo shader is missing: {DemoShaderPath}");
+                    $"Demo shader is missing: {shaderPath}");
             }
 
             UnityEngine.Object graphicsSettings =
@@ -101,7 +108,7 @@ namespace Axiom.Editor
 
             for (int i = 0; i < includedShaders.arraySize; i++)
             {
-                if (includedShaders.GetArrayElementAtIndex(i).objectReferenceValue == demoShader)
+                if (includedShaders.GetArrayElementAtIndex(i).objectReferenceValue == shader)
                 {
                     return;
                 }
@@ -109,7 +116,7 @@ namespace Axiom.Editor
 
             includedShaders.InsertArrayElementAtIndex(includedShaders.arraySize);
             includedShaders.GetArrayElementAtIndex(includedShaders.arraySize - 1)
-                .objectReferenceValue = demoShader;
+                .objectReferenceValue = shader;
             serializedSettings.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.SaveAssets();
         }

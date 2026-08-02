@@ -172,6 +172,14 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-외부 캐릭터 모델·애니메이션·스킬 VFX 연결 슬롯과 제출용 서버리스 함수 템플릿을 추가합니다.
+외부 캐릭터 모델·애니메이션 연결 슬롯과 제출용 서버리스 함수 템플릿을 추가합니다.
 
 외부 아트 제작 규격은 [`ART_ASSET_GUIDE.md`](ART_ASSET_GUIDE.md), AI 생성용 상세 프롬프트와 콘셉트 이미지 경로는 [`ART_GENERATION_PROMPTS.md`](ART_GENERATION_PROMPTS.md)를 참고합니다.
+
+### Unity 스킬 VFX
+
+- 외부 이미지 없이 Unity Shuriken Particle System으로 7속성의 시전·투사체·폭발·피격 이펙트를 자동 생성합니다.
+- `Create > Axiom > Skill > VFX Library`에서 교체용 라이브러리를 만들 수 있습니다.
+- 각 속성의 Cast, Projectile, Impact, Hit 슬롯에 제작한 프리팹을 연결하면 기본 파티클 대신 해당 프리팹을 사용합니다.
+- VFX는 시각 표현만 담당하며 충돌, 피해, CC 판정은 기존 전투 코드가 계속 담당합니다.
+- 전용 Additive 셰이더는 텍스처를 사용하지 않아 WebGL 용량 증가를 최소화합니다.

@@ -99,6 +99,9 @@ namespace Axiom.Tests.PlayMode
             Assert.That(combatAudio,
                 Has.All.Matches<DemoCombatAudio>(audio => audio.IsReady));
             Assert.That(DemoCombatAudio.GeneratedSampleCount, Is.InRange(1, 20000));
+            DemoSkillVfxPlayer[] skillVfxPlayers =
+                Object.FindObjectsByType<DemoSkillVfxPlayer>(FindObjectsSortMode.None);
+            Assert.That(skillVfxPlayers, Has.Length.EqualTo(6));
             DemoAISkillUser[] aiSkillUsers = Object.FindObjectsByType<DemoAISkillUser>(
                 FindObjectsSortMode.None);
             Assert.That(aiSkillUsers, Has.Length.EqualTo(5));
@@ -127,6 +130,9 @@ namespace Axiom.Tests.PlayMode
                         projectile.Owner == playerSkills.transform);
             Assert.That(playerProjectile, Is.Not.Null);
             Assert.That(playerProjectile.RemainingDistance, Is.LessThan(playerQ.Range));
+            Assert.That(
+                playerProjectile.GetComponentInChildren<ParticleSystem>(),
+                Is.Not.Null);
             Assert.That(GameObject.Find("Tank Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Mage Visual"), Is.Not.Null);
             Assert.That(GameObject.Find("Assassin Visual"), Is.Not.Null);

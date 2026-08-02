@@ -5,8 +5,13 @@ using Axiom.Role;
 
 namespace Axiom.Skill.Generation
 {
-    public sealed class MockSkillGenerationProvider : ISkillGenerationProvider
+    public sealed class MockSkillGenerationProvider :
+        ISkillGenerationProvider,
+        ISkillGenerationProviderInfo
     {
+        public string DisplayName => "MOCK";
+        public bool UsesRemoteEndpoint => false;
+
         public Task<SkillGenerationResponseDto> GenerateAsync(
             string prompt,
             CharacterRoleId role,

@@ -6,11 +6,16 @@ using UnityEngine;
 
 namespace Axiom.Skill.Generation
 {
-    public sealed class ServerlessSkillGenerationProvider : ISkillGenerationProvider
+    public sealed class ServerlessSkillGenerationProvider :
+        ISkillGenerationProvider,
+        ISkillGenerationProviderInfo
     {
         private readonly string _endpointUrl;
         private readonly int _timeoutSeconds;
         private readonly ISkillGenerationHttpTransport _transport;
+
+        public string DisplayName => "SERVERLESS";
+        public bool UsesRemoteEndpoint => true;
 
         public ServerlessSkillGenerationProvider(
             string endpointUrl,

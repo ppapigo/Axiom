@@ -26,6 +26,8 @@ namespace Axiom.UI
         private CharacterRoleDefinition _roleDefinition;
         private string _generationPrompt = string.Empty;
         private string _generationStatus = "Describe a skill, then generate a draft.";
+        private string _generationProviderName = "NOT CONFIGURED";
+        private bool _generationUsesRemoteEndpoint;
         private bool _isGenerating;
         private bool _isVisible;
         private bool _isAvailable;
@@ -47,6 +49,9 @@ namespace Axiom.UI
         public SkillBuilderModel Model => _model;
         public bool IsGenerating => _isGenerating;
         public SkillGenerationPipelineResult GenerationResult => _generationResult;
+        public string GenerationStatus => _generationStatus;
+        public string GenerationProviderName => _generationProviderName;
+        public bool GenerationUsesRemoteEndpoint => _generationUsesRemoteEndpoint;
 
         public bool TryGetSavedDraft(SkillSlot slot, out SkillDraft draft)
         {
@@ -62,10 +67,27 @@ namespace Axiom.UI
             ISkillGenerationProvider provider,
             Func<CharacterRoleId, SkillSlot, SkillDefinition> baseDefinitionFactory)
         {
+            if (provider == null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
             _generationPipeline = new SkillGenerationPipeline(
-                provider ?? throw new ArgumentNullException(nameof(provider)));
+                provider);
             _baseDefinitionFactory = baseDefinitionFactory ??
                 throw new ArgumentNullException(nameof(baseDefinitionFactory));
+            if (provider is ISkillGenerationProviderInfo info)
+            {
+                _generationProviderName = string.IsNullOrWhiteSpace(info.DisplayName)
+                    ? provider.GetType().Name
+                    : info.DisplayName.Trim().ToUpperInvariant();
+                _generationUsesRemoteEndpoint = info.UsesRemoteEndpoint;
+            }
+            else
+            {
+                _generationProviderName = provider.GetType().Name.ToUpperInvariant();
+                _generationUsesRemoteEndpoint = false;
+            }
         }
 
         public void ToggleVisibility()
@@ -142,7 +164,7 @@ namespace Axiom.UI
 
             _generationPrompt = (prompt ?? string.Empty).Trim();
             _generationResult = null;
-            _generationStatus = "Generating and validating...";
+            _generationStatus = $"{_generationProviderName}: Generating and validating...";
             _isGenerating = true;
             var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
                 cancellationToken);
@@ -159,15 +181,15 @@ namespace Axiom.UI
                     _roleElementPool,
                     cancellation.Token);
                 _generationStatus = _generationResult.UsedFallback
-                    ? "Generation failed. A safe preset is ready."
+                    ? BuildFallbackStatus(_generationResult)
                     : _generationResult.WasAutoCorrected
-                        ? "Draft generated and automatically corrected."
-                        : "Draft generated. Review and confirm it.";
+                        ? $"{_generationProviderName}: Draft ready (auto-corrected)."
+                        : $"{_generationProviderName}: Draft ready to confirm.";
                 return _generationResult.Validation.IsValid;
             }
             catch (OperationCanceledException)
             {
-                _generationStatus = "Generation cancelled.";
+                _generationStatus = $"{_generationProviderName}: Generation cancelled.";
                 return false;
             }
             finally
@@ -339,11 +361,17 @@ namespace Axiom.UI
 
         private void DrawGenerationPanel(float left, float top, float width, float height)
         {
-            GUI.Box(new Rect(left, top, width, height), "AI SKILL GENERATOR (MOCK)");
-            GUI.Label(new Rect(left + 14f, top + 30f, width - 28f, 22f),
+            GUI.Box(
+                new Rect(left, top, width, height),
+                $"AI SKILL GENERATOR ({_generationProviderName})");
+            string source = _generationUsesRemoteEndpoint
+                ? "SOURCE: REMOTE SERVERLESS ENDPOINT"
+                : "SOURCE: LOCAL MOCK - NO NETWORK";
+            GUI.Label(new Rect(left + 14f, top + 28f, width - 28f, 20f), source);
+            GUI.Label(new Rect(left + 14f, top + 48f, width - 28f, 22f),
                 "Describe the effect, element, area and CC:");
             _generationPrompt = GUI.TextArea(
-                new Rect(left + 14f, top + 54f, width - 28f, 86f),
+                new Rect(left + 14f, top + 72f, width - 28f, 68f),
                 _generationPrompt,
                 240);
 
@@ -441,6 +469,21 @@ namespace Axiom.UI
             }
 
             return builder.Length == 0 ? "No automatic corrections." : builder.ToString();
+        }
+
+        private string BuildFallbackStatus(SkillGenerationPipelineResult result)
+        {
+            string reason = "Invalid response";
+            if (result.Errors.Count > 0 && !string.IsNullOrWhiteSpace(result.Errors[0]))
+            {
+                reason = result.Errors[0].Trim();
+                if (reason.Length > 72)
+                {
+                    reason = reason.Substring(0, 69) + "...";
+                }
+            }
+
+            return $"{_generationProviderName}: SAFE PRESET\n{reason}";
         }
 
         private void CancelGeneration()

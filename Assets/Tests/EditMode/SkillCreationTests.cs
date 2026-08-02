@@ -245,6 +245,8 @@ namespace Axiom.Tests.EditMode
             panel.ConfigureGeneration(
                 new MockSkillGenerationProvider(),
                 DemoSkillDefinitionFactory.Create);
+            Assert.That(panel.GenerationProviderName, Is.EqualTo("MOCK"));
+            Assert.That(panel.GenerationUsesRemoteEndpoint, Is.False);
             panel.SetContext(role, SkillSlot.Q, new RoleElementPool());
 
             bool generated = await panel.TryGenerateDraftAsync(
@@ -252,6 +254,7 @@ namespace Axiom.Tests.EditMode
 
             Assert.That(generated, Is.True);
             Assert.That(panel.GenerationResult, Is.Not.Null);
+            Assert.That(panel.GenerationStatus, Does.StartWith("MOCK:"));
             Assert.That(panel.GenerationResult.PointCost.Total,
                 Is.EqualTo(panel.GenerationResult.Validation.PointCost));
             Assert.That(panel.TryConfirmGeneratedDraft(), Is.True);

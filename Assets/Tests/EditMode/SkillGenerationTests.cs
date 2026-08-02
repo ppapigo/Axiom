@@ -675,6 +675,9 @@ namespace Axiom.Tests.EditMode
                 9,
                 transport);
 
+            Assert.That(provider.DisplayName, Is.EqualTo("SERVERLESS"));
+            Assert.That(provider.UsesRemoteEndpoint, Is.True);
+
             SkillGenerationResponseDto result = await provider.GenerateAsync(
                 " fast lightning shot ",
                 CharacterRoleId.Mage,

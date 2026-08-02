@@ -1,4 +1,5 @@
 using System.Linq;
+using Axiom.Character;
 using Axiom.Combat;
 using Axiom.Data;
 using Axiom.Role;
@@ -398,6 +399,11 @@ namespace Axiom.Tests.EditMode
             Assert.That(balance.IceLightningDamageTakenMultiplier, Is.EqualTo(1.2f));
             Assert.That(balance.IceLightningDuration, Is.EqualTo(4f));
             Assert.That(balance.FirePoisonBurnMultiplier, Is.EqualTo(1.5f));
+            Assert.That(balance.WindSpreadRadius, Is.EqualTo(5f));
+            Assert.That(balance.EarthShieldMaximumHealthRatio, Is.EqualTo(0.15f));
+            Assert.That(balance.EarthShieldDuration, Is.EqualTo(5f));
+            Assert.That(balance.EarthAttackPowerMultiplier, Is.EqualTo(0.85f));
+            Assert.That(balance.EarthAttackReductionDuration, Is.EqualTo(4f));
             Object.DestroyImmediate(balance);
         }
 
@@ -474,6 +480,48 @@ namespace Axiom.Tests.EditMode
             state.MultiplyActiveBurnDamage(10.5f, 1.5f);
 
             Assert.That(state.ConsumeDamage(14f), Is.EqualTo(48f));
+        }
+
+        [Test]
+        public void ElementReactionResolver_WindSpreadsPairedElement()
+        {
+            ElementReactionResult result = ElementReactionResolver.Resolve(
+                SkillElement.Wind,
+                SkillElement.Fire,
+                1.25f,
+                1.15f,
+                1.35f);
+
+            Assert.That(result.Type, Is.EqualTo(ElementReactionType.WindSpread));
+            Assert.That(result.SpreadElement, Is.EqualTo(SkillElement.Fire));
+        }
+
+        [Test]
+        public void ElementReactionResolver_EarthCreatesWard()
+        {
+            ElementReactionResult result = ElementReactionResolver.Resolve(
+                SkillElement.Ice,
+                SkillElement.Earth,
+                1.25f,
+                1.15f,
+                1.35f);
+
+            Assert.That(result.Type, Is.EqualTo(ElementReactionType.EarthWard));
+            Assert.That(result.SpreadElement, Is.Null);
+        }
+
+        [Test]
+        public void AttackPowerModifier_ExpiresAndCanBeCleared()
+        {
+            var state = new AttackPowerModifierState();
+            state.Apply(0.85f, 10f, 4f);
+
+            Assert.That(state.GetMultiplier(13f), Is.EqualTo(0.85f));
+            Assert.That(state.GetMultiplier(14f), Is.EqualTo(1f));
+
+            state.Apply(0.85f, 20f, 4f);
+            state.Clear();
+            Assert.That(state.GetMultiplier(21f), Is.EqualTo(1f));
         }
 
         [Test]

@@ -57,6 +57,31 @@ namespace Axiom.Skill
                     CrowdControlType.None);
             }
 
+            if (TryGetPairedElement(
+                    first,
+                    second,
+                    SkillElement.Wind,
+                    out SkillElement windElement))
+            {
+                return new ElementReactionResult(
+                    ElementReactionType.WindSpread,
+                    1f,
+                    CrowdControlType.None,
+                    windElement);
+            }
+
+            if (TryGetPairedElement(
+                    first,
+                    second,
+                    SkillElement.Earth,
+                    out _))
+            {
+                return new ElementReactionResult(
+                    ElementReactionType.EarthWard,
+                    1f,
+                    CrowdControlType.None);
+            }
+
             return ElementReactionResult.None;
         }
 
@@ -68,6 +93,26 @@ namespace Axiom.Skill
         {
             return first == left && second == right ||
                    first == right && second == left;
+        }
+
+        private static bool TryGetPairedElement(
+            SkillElement first,
+            SkillElement second,
+            SkillElement catalyst,
+            out SkillElement pairedElement)
+        {
+            pairedElement = first == catalyst ? second : first;
+            bool containsCatalyst = first == catalyst || second == catalyst;
+            return containsCatalyst && IsCoreElement(pairedElement);
+        }
+
+        private static bool IsCoreElement(SkillElement element)
+        {
+            return element == SkillElement.Fire ||
+                   element == SkillElement.Ice ||
+                   element == SkillElement.Lightning ||
+                   element == SkillElement.Poison ||
+                   element == SkillElement.Water;
         }
     }
 }

@@ -8,6 +8,8 @@ namespace Axiom.Skill
         FireIce,
         WaterLightning,
         IceLightning,
-        FirePoison
+        FirePoison,
+        WindSpread,
+        EarthWard
     }
 }

@@ -29,6 +29,19 @@ namespace Axiom.Combat
                 balance.SkillShieldDuration);
         }
 
+        public void ApplyElementShield(float maximumHealth, float currentTime)
+        {
+            if (balance == null)
+            {
+                return;
+            }
+
+            _state.Apply(
+                maximumHealth * balance.EarthShieldMaximumHealthRatio,
+                currentTime,
+                balance.EarthShieldDuration);
+        }
+
         public float AbsorbDamage(float damage)
         {
             return _state.Absorb(damage, Time.time);

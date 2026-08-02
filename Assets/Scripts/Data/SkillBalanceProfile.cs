@@ -53,6 +53,11 @@ namespace Axiom.Data
         [SerializeField, Min(0f)] private float iceLightningDamageTakenMultiplier = 1.2f;
         [SerializeField, Min(0f)] private float iceLightningDuration = 4f;
         [SerializeField, Min(0f)] private float firePoisonBurnMultiplier = 1.5f;
+        [SerializeField, Min(0f)] private float windSpreadRadius = 5f;
+        [SerializeField, Range(0f, 1f)] private float earthShieldMaximumHealthRatio = 0.15f;
+        [SerializeField, Min(0f)] private float earthShieldDuration = 5f;
+        [SerializeField, Range(0f, 1f)] private float earthAttackPowerMultiplier = 0.85f;
+        [SerializeField, Min(0f)] private float earthAttackReductionDuration = 4f;
         [SerializeField, Min(0f)] private float elementTickInterval = 1f;
         [SerializeField, Min(0f)] private float burnDuration = 4f;
         [SerializeField, Min(0f)] private float burnAttackCoefficient = 0.08f;
@@ -82,6 +87,11 @@ namespace Axiom.Data
         public float IceLightningDamageTakenMultiplier => iceLightningDamageTakenMultiplier;
         public float IceLightningDuration => iceLightningDuration;
         public float FirePoisonBurnMultiplier => firePoisonBurnMultiplier;
+        public float WindSpreadRadius => windSpreadRadius;
+        public float EarthShieldMaximumHealthRatio => earthShieldMaximumHealthRatio;
+        public float EarthShieldDuration => earthShieldDuration;
+        public float EarthAttackPowerMultiplier => earthAttackPowerMultiplier;
+        public float EarthAttackReductionDuration => earthAttackReductionDuration;
         public float BurnDuration => burnDuration;
         public float BurnAttackCoefficient => burnAttackCoefficient;
         public float PoisonDuration => poisonDuration;
@@ -207,6 +217,11 @@ namespace Axiom.Data
             iceLightningDamageTakenMultiplier = Mathf.Max(0f, iceLightningDamageTakenMultiplier);
             iceLightningDuration = Mathf.Max(0f, iceLightningDuration);
             firePoisonBurnMultiplier = Mathf.Max(0f, firePoisonBurnMultiplier);
+            windSpreadRadius = Mathf.Max(0f, windSpreadRadius);
+            earthShieldMaximumHealthRatio = Mathf.Clamp01(earthShieldMaximumHealthRatio);
+            earthShieldDuration = Mathf.Max(0f, earthShieldDuration);
+            earthAttackPowerMultiplier = Mathf.Clamp01(earthAttackPowerMultiplier);
+            earthAttackReductionDuration = Mathf.Max(0f, earthAttackReductionDuration);
             burnDuration = Mathf.Max(0f, burnDuration);
             burnAttackCoefficient = Mathf.Max(0f, burnAttackCoefficient);
             poisonDuration = Mathf.Max(0f, poisonDuration);

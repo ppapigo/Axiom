@@ -1,5 +1,6 @@
 using Axiom.Combat;
 using Axiom.Manager;
+using Axiom.Character;
 using UnityEngine;
 
 namespace Axiom.UI
@@ -14,6 +15,7 @@ namespace Axiom.UI
         [SerializeField] private CharacterStatusController status;
         [SerializeField] private ElementStatusController elementStatus;
         [SerializeField] private CharacterShieldController shield;
+        [SerializeField] private CharacterStats stats;
         [SerializeField] private Vector3 worldOffset = new Vector3(0f, 1.45f, 0f);
         [SerializeField, Min(24f)] private float width = 92f;
         [SerializeField, Min(4f)] private float height = 11f;
@@ -41,6 +43,9 @@ namespace Axiom.UI
             shield = targetHealth == null
                 ? null
                 : targetHealth.GetComponent<CharacterShieldController>();
+            stats = targetHealth == null
+                ? null
+                : targetHealth.GetComponent<CharacterStats>();
         }
 
         private void OnGUI()
@@ -97,6 +102,10 @@ namespace Axiom.UI
                 elementStatus.GetIncomingDamageMultiplier(Time.time) > 1f)
             {
                 statusText += " [VULNERABLE]";
+            }
+            if (stats != null && stats.AttackPowerMultiplier < 1f)
+            {
+                statusText += " [WEAKENED]";
             }
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),

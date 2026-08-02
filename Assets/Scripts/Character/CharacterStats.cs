@@ -9,12 +9,30 @@ namespace Axiom.Character
     {
         [SerializeField] private CharacterStatsProfile statsProfile;
         [SerializeField] private CharacterRole characterRole;
+        private readonly AttackPowerModifierState _attackPowerModifier =
+            new AttackPowerModifierState();
 
         public bool IsConfigured => ResolveRoleDefinition() != null || statsProfile != null;
         public float MaximumHealth => ResolveRoleDefinition()?.MaximumHealth
             ?? (statsProfile == null ? 0f : statsProfile.MaximumHealth);
-        public float AttackPower => ResolveRoleDefinition()?.AttackPower
+        public float AttackPower => BaseAttackPower * AttackPowerMultiplier;
+        public float AttackPowerMultiplier => _attackPowerModifier.GetMultiplier(Time.time);
+
+        private float BaseAttackPower => ResolveRoleDefinition()?.AttackPower
             ?? (statsProfile == null ? 0f : statsProfile.AttackPower);
+
+        public void ApplyAttackPowerMultiplier(
+            float multiplier,
+            float currentTime,
+            float duration)
+        {
+            _attackPowerModifier.Apply(multiplier, currentTime, duration);
+        }
+
+        public void ClearModifiers()
+        {
+            _attackPowerModifier.Clear();
+        }
 
         private CharacterRoleDefinition ResolveRoleDefinition()
         {

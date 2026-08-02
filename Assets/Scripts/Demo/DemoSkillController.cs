@@ -19,6 +19,7 @@ namespace Axiom.Demo
     {
         private readonly SkillCooldownTracker _cooldowns = new SkillCooldownTracker();
         private readonly HashSet<CharacterHealth> _hitTargets = new HashSet<CharacterHealth>();
+        private readonly HashSet<CharacterHealth> _spreadTargets = new HashSet<CharacterHealth>();
         private UnityEngine.Camera _aimCamera;
         private SkillBalanceProfile _balance;
         private CharacterStats _stats;
@@ -235,6 +236,14 @@ namespace Axiom.Demo
                     request = MultiplyDamage(request, reaction.DamageMultiplier);
                 }
                 health.ApplyDamage(request);
+                if (reaction.Type == ElementReactionType.WindSpread &&
+                    reaction.SpreadElement.HasValue)
+                {
+                    SpreadElement(
+                        health,
+                        reaction.SpreadElement.Value,
+                        Time.time);
+                }
                 CharacterStatusController targetStatus =
                     health.GetComponent<CharacterStatusController>();
                 if (targetStatus != null)
@@ -246,6 +255,36 @@ namespace Axiom.Demo
                 {
                     break;
                 }
+            }
+        }
+
+        private void SpreadElement(
+            CharacterHealth origin,
+            SkillElement element,
+            float currentTime)
+        {
+            _spreadTargets.Clear();
+            Collider[] colliders = Physics.OverlapSphere(
+                origin.transform.position,
+                _balance.WindSpreadRadius);
+            foreach (Collider collider in colliders)
+            {
+                CharacterHealth target = collider.GetComponentInParent<CharacterHealth>();
+                TeamMember targetTeam = target == null ? null : target.GetComponent<TeamMember>();
+                if (target == null || target == origin || target.IsDead ||
+                    targetTeam == null || targetTeam.Team == _team.Team ||
+                    !_spreadTargets.Add(target))
+                {
+                    continue;
+                }
+
+                ElementStatusController elementStatus =
+                    target.GetComponent<ElementStatusController>();
+                elementStatus?.ApplyOnHit(
+                    element,
+                    gameObject,
+                    _stats.AttackPower,
+                    currentTime);
             }
         }
 

@@ -1,5 +1,6 @@
 using Axiom.Data;
 using Axiom.Skill;
+using Axiom.Character;
 using UnityEngine;
 
 namespace Axiom.Combat
@@ -13,6 +14,7 @@ namespace Axiom.Combat
             new ElementDamageOverTimeState();
         private CharacterHealth _health;
         private CharacterStatusController _crowdControl;
+        private CharacterStats _stats;
         private GameObject _lastSource;
         private SkillElement? _markedElement;
         private float _markExpiresAt;
@@ -46,6 +48,7 @@ namespace Axiom.Combat
         {
             _health = GetComponent<CharacterHealth>();
             _crowdControl = GetComponent<CharacterStatusController>();
+            _stats = GetComponent<CharacterStats>();
         }
 
         public ElementReactionResult ApplyOnHit(
@@ -141,7 +144,31 @@ namespace Axiom.Combat
                         currentTime,
                         balance.FirePoisonBurnMultiplier);
                     break;
+                case ElementReactionType.EarthWard:
+                    ApplyEarthWard(currentTime);
+                    break;
             }
+        }
+
+        private void ApplyEarthWard(float currentTime)
+        {
+            if (_lastSource != null)
+            {
+                CharacterHealth sourceHealth = _lastSource.GetComponent<CharacterHealth>();
+                CharacterShieldController sourceShield =
+                    _lastSource.GetComponent<CharacterShieldController>();
+                if (sourceHealth != null && sourceShield != null)
+                {
+                    sourceShield.ApplyElementShield(
+                        sourceHealth.MaximumHealth,
+                        currentTime);
+                }
+            }
+
+            _stats?.ApplyAttackPowerMultiplier(
+                balance.EarthAttackPowerMultiplier,
+                currentTime,
+                balance.EarthAttackReductionDuration);
         }
 
         private ElementReactionResult ResolveReaction(
@@ -171,6 +198,7 @@ namespace Axiom.Combat
             _reactionDisplayUntil = 0f;
             _incomingDamageMultiplier = 1f;
             _incomingDamageMultiplierExpiresAt = 0f;
+            _stats?.ClearModifiers();
         }
 
         private void Update()

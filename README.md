@@ -33,7 +33,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 9. 3vs3 경기 시스템 — 완료
 10. 스킬 제작 시스템 — 완료
 
-기존 Unity EditMode 전체 테스트 103개와 자연어 스킬 생성 계층 대상 테스트 10개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
+기존 Unity EditMode 전체 테스트 103개와 자연어 스킬 생성 계층 대상 테스트 16개가 통과합니다. 최신 PlayMode 재실행은 권한 거부로 생략했습니다.
 
 ## 구현된 시스템
 
@@ -117,6 +117,7 @@ Unity 6 기반 3D 쿼터뷰 PvP Arena 프로토타입입니다. Battlerite 스�
 11. 바람+속성은 결합된 속성을 주변 5m 적에게 확산합니다. 대지+속성은 시전자에게 최대 체력 15% 보호막을 5초간 부여하고, 대상의 공격력을 4초간 15% 감소시킵니다. 반경, 비율, 지속시간은 Balance Profile에서 조정할 수 있습니다.
 12. `ISkillGenerationProvider` 계약과 `MockSkillGenerationProvider`, 직렬화 가능한 AI 응답 DTO를 제공합니다. Mock provider는 역할별 안전 프리셋을 반환하고 자연어의 속성, 공격 방식, CC, 이동, 보호막, 회복 키워드를 반영하므로 실제 API 없이도 생성 흐름을 개발하고 시연할 수 있습니다.
 13. `SkillDraftMapper`는 AI 응답의 공격 방식, 속성, CC 문자열을 정규화해 `SkillDraft`로 변환합니다. 지원하지 않는 enum, 음수, NaN, Infinity, 아직 제작 UI에서 제공하지 않는 Root와 Taunt는 예외 대신 오류 목록으로 반환합니다.
+14. `SkillRuleValidator`는 기존 포인트 계산, `SkillValidator`, `RoleElementPool`을 재사용해 100포인트, CC 한 개, 역할군 속성 두 개, Tank 사거리와 Assassin 광역 반경 제한을 검사합니다. 결과에는 오류 목록과 미리보기에 사용할 계산된 포인트 및 `SkillDefinition`이 포함됩니다.
 
 ### 장비 외형
 
@@ -140,4 +141,4 @@ EditMode 및 PlayMode 테스트는 `Window > General > Test Runner`에서 실행
 
 ## 다음 단계
 
-생성된 `SkillDraft`에 100포인트·역할별 사거리·역할군 속성 제한을 적용하는 `SkillRuleValidator`를 추가합니다.
+검증에 실패한 생성 초안을 안전한 범위로 줄이는 `SkillAutoCorrector`와 실패 시 역할별 프리셋 반환을 추가합니다.

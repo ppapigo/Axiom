@@ -1,9 +1,11 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Axiom.Data;
 using Axiom.Role;
 using Axiom.Skill;
 using Axiom.Skill.Generation;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace Axiom.Tests.EditMode
 {
@@ -156,6 +158,188 @@ namespace Axiom.Tests.EditMode
 
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.Errors[0], Does.Contain("not available"));
+        }
+
+        [Test]
+        public void SkillRuleValidator_AcceptsValidMageDraft()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var pool = new RoleElementPool();
+            SkillDefinition baseDefinition = CreateBaseDefinition(
+                SkillSlot.Q,
+                SkillType.Projectile,
+                range: 7f,
+                radius: 1f);
+            var draft = new SkillDraft(
+                new SkillPointModifiers(damageIncreasePercent: 20f, rangeIncrease: 1f),
+                SkillElement.Fire,
+                SkillType.Projectile,
+                SkillSlot.Q);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                baseDefinition,
+                role,
+                balance,
+                pool);
+
+            Assert.That(result.IsValid, Is.True, string.Join("\n", result.Errors));
+            Assert.That(result.HasDefinition, Is.True);
+            Assert.That(result.PointCost, Is.EqualTo(25));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsOverBudgetDraft()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(damageIncreasePercent: 300f),
+                SkillElement.Fire,
+                SkillType.Projectile,
+                SkillSlot.Q);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(SkillSlot.Q, SkillType.Projectile),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(result.PointCost, Is.GreaterThan(balance.LoadoutPointBudget));
+            Assert.That(string.Join(" ", result.Errors), Does.Contain("budget"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsMultipleCrowdControls()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var modifiers = new SkillPointModifiers(
+                appliesSlow: true,
+                appliesStun: true);
+            var draft = new SkillDraft(
+                modifiers,
+                SkillElement.Ice,
+                SkillType.Projectile,
+                SkillSlot.E);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(SkillSlot.E, SkillType.Projectile),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors), Does.Contain("at most one"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsThirdRoleElement()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            var pool = new RoleElementPool();
+            pool.TryAssign(CharacterRoleId.Mage, SkillSlot.Q, SkillElement.Fire);
+            pool.TryAssign(CharacterRoleId.Mage, SkillSlot.E, SkillElement.Ice);
+            var draft = new SkillDraft(
+                new SkillPointModifiers(),
+                SkillElement.Lightning,
+                SkillType.Projectile,
+                SkillSlot.Ultimate);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(SkillSlot.Ultimate, SkillType.Projectile),
+                role,
+                balance,
+                pool);
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors), Does.Contain("two distinct elements"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsTankRangedSkill()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            TankRoleDefinition role = ScriptableObject.CreateInstance<TankRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(rangeIncrease: 5f),
+                SkillElement.Earth,
+                SkillType.Projectile,
+                SkillSlot.Q);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(SkillSlot.Q, SkillType.Cone, range: 3f),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors), Does.Contain("range"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsAssassinAreaBeyondLimit()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            AssassinRoleDefinition role = ScriptableObject.CreateInstance<AssassinRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(radiusIncrease: 4f),
+                SkillElement.Poison,
+                SkillType.SelfArea,
+                SkillSlot.E);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(
+                    SkillSlot.E,
+                    SkillType.SelfArea,
+                    radius: 1f),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors), Does.Contain("radius"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        private static SkillDefinition CreateBaseDefinition(
+            SkillSlot slot,
+            SkillType type,
+            float range = 6f,
+            float radius = 1f)
+        {
+            return new SkillDefinition(
+                "Generated Base",
+                slot,
+                type,
+                1.2f,
+                5f,
+                0.3f,
+                range,
+                radius,
+                12f,
+                CrowdControlType.None,
+                SkillElement.Fire,
+                0);
         }
     }
 }

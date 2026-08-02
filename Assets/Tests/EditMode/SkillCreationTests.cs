@@ -392,6 +392,12 @@ namespace Axiom.Tests.EditMode
             Assert.That(balance.FireWaterDamageMultiplier, Is.EqualTo(1.25f));
             Assert.That(balance.WaterIceDamageMultiplier, Is.EqualTo(1.15f));
             Assert.That(balance.FireIceDamageMultiplier, Is.EqualTo(1.35f));
+            Assert.That(balance.WaterLightningDuration, Is.EqualTo(3f));
+            Assert.That(balance.WaterLightningAttackCoefficient, Is.EqualTo(0.06f));
+            Assert.That(balance.WaterLightningStunDuration, Is.EqualTo(0.5f));
+            Assert.That(balance.IceLightningDamageTakenMultiplier, Is.EqualTo(1.2f));
+            Assert.That(balance.IceLightningDuration, Is.EqualTo(4f));
+            Assert.That(balance.FirePoisonBurnMultiplier, Is.EqualTo(1.5f));
             Object.DestroyImmediate(balance);
         }
 
@@ -413,6 +419,24 @@ namespace Axiom.Tests.EditMode
             ElementReactionType.FireIce,
             1.35f,
             CrowdControlType.None)]
+        [TestCase(
+            SkillElement.Water,
+            SkillElement.Lightning,
+            ElementReactionType.WaterLightning,
+            1f,
+            CrowdControlType.Stun)]
+        [TestCase(
+            SkillElement.Ice,
+            SkillElement.Lightning,
+            ElementReactionType.IceLightning,
+            1f,
+            CrowdControlType.None)]
+        [TestCase(
+            SkillElement.Fire,
+            SkillElement.Poison,
+            ElementReactionType.FirePoison,
+            1f,
+            CrowdControlType.None)]
         public void ElementReactionResolver_UsesRequestedDamageReactions(
             SkillElement first,
             SkillElement second,
@@ -430,6 +454,26 @@ namespace Axiom.Tests.EditMode
             Assert.That(result.Type, Is.EqualTo(expectedType));
             Assert.That(result.DamageMultiplier, Is.EqualTo(expectedMultiplier));
             Assert.That(result.CrowdControl, Is.EqualTo(expectedCrowdControl));
+        }
+
+        [Test]
+        public void ElementDamageOverTime_AppliesWaterLightningTicks()
+        {
+            var state = new ElementDamageOverTimeState();
+            state.ApplyLightning(10f, 3f, 1f, 6f);
+
+            Assert.That(state.ConsumeDamage(13f), Is.EqualTo(18f));
+            Assert.That(state.ConsumeDamage(14f), Is.Zero);
+        }
+
+        [Test]
+        public void ElementDamageOverTime_FirePoisonAmplifiesActiveBurn()
+        {
+            var state = new ElementDamageOverTimeState();
+            state.ApplyBurn(10f, 4f, 1f, 8f);
+            state.MultiplyActiveBurnDamage(10.5f, 1.5f);
+
+            Assert.That(state.ConsumeDamage(14f), Is.EqualTo(48f));
         }
 
         [Test]

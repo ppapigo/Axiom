@@ -13,6 +13,10 @@ namespace Axiom.Skill
         private float _poisonNextTick;
         private float _poisonTickInterval;
         private float _poisonDamagePerTick;
+        private float _lightningEndTime;
+        private float _lightningNextTick;
+        private float _lightningTickInterval;
+        private float _lightningDamagePerTick;
 
         public void ApplyBurn(
             float currentTime,
@@ -40,6 +44,34 @@ namespace Axiom.Skill
             _poisonDamagePerTick = damagePerTick;
         }
 
+        public void ApplyLightning(
+            float currentTime,
+            float duration,
+            float tickInterval,
+            float damagePerTick)
+        {
+            Validate(currentTime, tickInterval, damagePerTick);
+            _lightningEndTime = currentTime + Mathf.Max(0f, duration);
+            _lightningTickInterval = tickInterval;
+            _lightningNextTick = currentTime + tickInterval;
+            _lightningDamagePerTick = damagePerTick;
+        }
+
+        public void MultiplyActiveBurnDamage(
+            float currentTime,
+            float multiplier)
+        {
+            if (multiplier < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(multiplier));
+            }
+
+            if (_burnNextTick > 0f && currentTime < _burnEndTime)
+            {
+                _burnDamagePerTick *= multiplier;
+            }
+        }
+
         public float ConsumeDamage(float currentTime)
         {
             float damage = Consume(
@@ -54,6 +86,12 @@ namespace Axiom.Skill
                 _poisonEndTime,
                 _poisonTickInterval,
                 _poisonDamagePerTick);
+            damage += Consume(
+                currentTime,
+                ref _lightningNextTick,
+                _lightningEndTime,
+                _lightningTickInterval,
+                _lightningDamagePerTick);
             return damage;
         }
 
@@ -62,6 +100,11 @@ namespace Axiom.Skill
             if (_burnNextTick > 0f && currentTime < _burnEndTime)
             {
                 return SkillElement.Fire;
+            }
+
+            if (_lightningNextTick > 0f && currentTime < _lightningEndTime)
+            {
+                return SkillElement.Lightning;
             }
 
             return _poisonNextTick > 0f && currentTime < _poisonEndTime
@@ -79,6 +122,10 @@ namespace Axiom.Skill
             _poisonNextTick = 0f;
             _poisonTickInterval = 0f;
             _poisonDamagePerTick = 0f;
+            _lightningEndTime = 0f;
+            _lightningNextTick = 0f;
+            _lightningTickInterval = 0f;
+            _lightningDamagePerTick = 0f;
         }
 
         private static float Consume(

@@ -18,6 +18,8 @@ namespace Axiom.Combat
         private float _markExpiresAt;
         private ElementReactionType _lastReaction;
         private float _reactionDisplayUntil;
+        private float _incomingDamageMultiplier = 1f;
+        private float _incomingDamageMultiplierExpiresAt;
 
         public SkillElement? ActiveDamageOverTime =>
             _damageOverTime.GetActiveElement(Time.time);
@@ -27,6 +29,13 @@ namespace Axiom.Combat
         public ElementReactionType LastReaction => Time.time < _reactionDisplayUntil
             ? _lastReaction
             : ElementReactionType.None;
+
+        public float GetIncomingDamageMultiplier(float currentTime)
+        {
+            return currentTime < _incomingDamageMultiplierExpiresAt
+                ? _incomingDamageMultiplier
+                : 1f;
+        }
 
         public void Configure(SkillBalanceProfile skillBalance)
         {
@@ -61,8 +70,17 @@ namespace Axiom.Combat
                 if (_crowdControl != null &&
                     reaction.CrowdControl != CrowdControlType.None)
                 {
-                    _crowdControl.Apply(reaction.CrowdControl, currentTime);
+                    float duration = reaction.Type == ElementReactionType.WaterLightning
+                        ? balance.WaterLightningStunDuration
+                        : balance.GetCrowdControlDuration(reaction.CrowdControl);
+                    _crowdControl.Apply(reaction.CrowdControl, currentTime, duration);
                 }
+
+                ApplyReactionEffect(
+                    reaction.Type,
+                    element,
+                    attackerAttackPower,
+                    currentTime);
             }
             else
             {
@@ -73,11 +91,14 @@ namespace Axiom.Combat
             switch (element)
             {
                 case SkillElement.Fire:
+                    float burnMultiplier = reaction.Type == ElementReactionType.FirePoison
+                        ? balance.FirePoisonBurnMultiplier
+                        : 1f;
                     _damageOverTime.ApplyBurn(
                         currentTime,
                         balance.BurnDuration,
                         balance.ElementTickInterval,
-                        attackerAttackPower * balance.BurnAttackCoefficient);
+                        attackerAttackPower * balance.BurnAttackCoefficient * burnMultiplier);
                     break;
                 case SkillElement.Poison:
                     _damageOverTime.ApplyPoison(
@@ -92,6 +113,35 @@ namespace Axiom.Combat
             }
 
             return reaction;
+        }
+
+        private void ApplyReactionEffect(
+            ElementReactionType type,
+            SkillElement incomingElement,
+            float attackerAttackPower,
+            float currentTime)
+        {
+            switch (type)
+            {
+                case ElementReactionType.WaterLightning:
+                    _damageOverTime.ApplyLightning(
+                        currentTime,
+                        balance.WaterLightningDuration,
+                        balance.ElementTickInterval,
+                        attackerAttackPower * balance.WaterLightningAttackCoefficient);
+                    break;
+                case ElementReactionType.IceLightning:
+                    _incomingDamageMultiplier = balance.IceLightningDamageTakenMultiplier;
+                    _incomingDamageMultiplierExpiresAt =
+                        currentTime + balance.IceLightningDuration;
+                    break;
+                case ElementReactionType.FirePoison
+                    when incomingElement == SkillElement.Poison:
+                    _damageOverTime.MultiplyActiveBurnDamage(
+                        currentTime,
+                        balance.FirePoisonBurnMultiplier);
+                    break;
+            }
         }
 
         private ElementReactionResult ResolveReaction(
@@ -119,6 +169,8 @@ namespace Axiom.Combat
             _markExpiresAt = 0f;
             _lastReaction = ElementReactionType.None;
             _reactionDisplayUntil = 0f;
+            _incomingDamageMultiplier = 1f;
+            _incomingDamageMultiplierExpiresAt = 0f;
         }
 
         private void Update()

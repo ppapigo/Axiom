@@ -22,6 +22,16 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void DamageCalculator_AppliesVulnerabilityBeforeDamageLimit()
+        {
+            var request = new DamageRequest(null, 100f, 1f, 1f, 1f, 110f);
+
+            float damage = DamageCalculator.Calculate(request, 1.2f);
+
+            Assert.That(damage, Is.EqualTo(110f));
+        }
+
+        [Test]
         public void Health_ClampsDamageAtZero()
         {
             var health = new HealthModel(100f);

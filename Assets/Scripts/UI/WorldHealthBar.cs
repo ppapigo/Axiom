@@ -93,6 +93,11 @@ namespace Axiom.UI
             {
                 statusText += $" [{elementStatus.LastReaction.ToString().ToUpperInvariant()}!]";
             }
+            if (elementStatus != null &&
+                elementStatus.GetIncomingDamageMultiplier(Time.time) > 1f)
+            {
+                statusText += " [VULNERABLE]";
+            }
             GUI.Label(
                 new Rect(left - 50f, top - 18f, width + 100f, 18f),
                 $"{displayName}  {Mathf.CeilToInt(health.CurrentHealth)}" +

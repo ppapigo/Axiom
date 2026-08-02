@@ -5,6 +5,9 @@ namespace Axiom.Skill
         None,
         FireWater,
         WaterIce,
-        FireIce
+        FireIce,
+        WaterLightning,
+        IceLightning,
+        FirePoison
     }
 }

@@ -30,7 +30,16 @@ namespace Axiom.Combat
                 return false;
             }
 
-            float duration = balance.GetCrowdControlDuration(type);
+            return Apply(type, currentTime, balance.GetCrowdControlDuration(type));
+        }
+
+        public bool Apply(CrowdControlType type, float currentTime, float duration)
+        {
+            if (!enabled || balance == null || type == CrowdControlType.None)
+            {
+                return false;
+            }
+
             if (duration <= 0f)
             {
                 return false;

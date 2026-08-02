@@ -11,6 +11,7 @@ namespace Axiom.Combat
         private CharacterStats _stats;
         private HealthModel _health;
         private CharacterShieldController _shield;
+        private ElementStatusController _elementStatus;
 
         public event Action<float, float> HealthChanged;
         public event Action Died;
@@ -41,7 +42,11 @@ namespace Axiom.Combat
             }
 
             bool wasAlive = !_health.IsDead;
-            float damage = DamageCalculator.Calculate(request);
+            _elementStatus ??= GetComponent<ElementStatusController>();
+            float incomingDamageMultiplier = _elementStatus == null
+                ? 1f
+                : _elementStatus.GetIncomingDamageMultiplier(Time.time);
+            float damage = DamageCalculator.Calculate(request, incomingDamageMultiplier);
             if (_shield != null)
             {
                 damage = _shield.AbsorbDamage(damage);

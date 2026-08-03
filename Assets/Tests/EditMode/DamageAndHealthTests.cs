@@ -101,7 +101,9 @@ namespace Axiom.Tests.EditMode
             Assert.That(state.DamageAmount, Is.EqualTo(42f));
             Assert.That(state.IsVisible(10.35f), Is.True);
             Assert.That(state.GetNormalizedAge(10.35f), Is.EqualTo(0.5f).Within(0.001f));
+            Assert.That(state.IsVisible(10.699f), Is.True);
             Assert.That(state.IsVisible(10.7f), Is.False);
+            Assert.That(state.IsVisible(10.701f), Is.False);
         }
 
         [Test]

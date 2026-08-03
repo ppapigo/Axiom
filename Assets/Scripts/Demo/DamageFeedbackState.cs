@@ -25,9 +25,11 @@ namespace Axiom.Demo
 
         public bool IsVisible(float currentTime)
         {
+            float elapsed = currentTime - StartedAt;
             return DamageAmount > 0f &&
-                   currentTime >= StartedAt &&
-                   currentTime < StartedAt + Duration;
+                   elapsed >= 0f &&
+                   elapsed < Duration &&
+                   !Mathf.Approximately(elapsed, Duration);
         }
 
         public float GetNormalizedAge(float currentTime)

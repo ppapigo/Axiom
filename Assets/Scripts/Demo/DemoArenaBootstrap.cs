@@ -12,6 +12,7 @@ using Axiom.Skill.Generation;
 using Axiom.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Axiom.Demo
 {
@@ -336,7 +337,7 @@ namespace Axiom.Demo
             GUI.color = previousColor;
 
             const float width = 520f;
-            const float height = 290f;
+            const float height = 304f;
             float left = (Screen.width - width) * 0.5f;
             float top = (Screen.height - height) * 0.46f;
             bool playerWon = winner == TeamId.TeamA;
@@ -360,13 +361,41 @@ namespace Axiom.Demo
                 "BEST OF 3 COMPLETE",
                 CreateCenteredStyle(12, new Color(0.72f, 0.78f, 0.86f), FontStyle.Normal));
             if (GUI.Button(
-                    new Rect(left + 145f, top + 224f, width - 290f, 48f),
-                    "PLAY AGAIN"))
+                    new Rect(left + 42f, top + 230f, 205f, 48f),
+                    "REMATCH"))
             {
-                _winner = null;
-                _roundMessage = "Restarting match";
-                _matchManager.StartMatch();
+                Rematch();
             }
+
+            if (GUI.Button(
+                    new Rect(left + 273f, top + 230f, 205f, 48f),
+                    "NEW LOADOUT"))
+            {
+                RestartFromRoleSelection();
+            }
+        }
+
+        public void Rematch()
+        {
+            if (!_winner.HasValue || _matchManager == null)
+            {
+                return;
+            }
+
+            _winner = null;
+            _roundMessage = "Restarting match";
+            _matchManager.StartMatch();
+        }
+
+        public void RestartFromRoleSelection()
+        {
+            Scene scene = gameObject.scene;
+            if (!scene.IsValid() || string.IsNullOrWhiteSpace(scene.name))
+            {
+                return;
+            }
+
+            SceneManager.LoadScene(scene.name);
         }
 
         private static string GetSlotMarker(SkillSlot current, SkillSlot slot)

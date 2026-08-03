@@ -172,6 +172,22 @@ namespace Axiom.Tests.PlayMode
             Assert.That(stickAnimators, Has.Length.EqualTo(6));
             Assert.That(stickAnimators,
                 Has.All.Matches<DemoStickFigureAnimator>(animator => animator.IsConfigured));
+
+            bootstrap.RestartFromRoleSelection();
+            yield return null;
+
+            DemoArenaBootstrap restartedBootstrap =
+                Object.FindFirstObjectByType<DemoArenaBootstrap>();
+            SkillBuilderPanel restartedBuilder =
+                Object.FindFirstObjectByType<SkillBuilderPanel>();
+            Assert.That(restartedBootstrap, Is.Not.Null);
+            Assert.That(restartedBootstrap, Is.Not.SameAs(bootstrap));
+            Assert.That(restartedBootstrap.IsChoosingAppearance, Is.False);
+            Assert.That(restartedBuilder, Is.Not.Null);
+            Assert.That(restartedBuilder.IsAvailable, Is.False);
+            Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
+            Assert.That(Object.FindObjectsByType<CharacterHealth>(
+                FindObjectsSortMode.None), Is.Empty);
         }
 
         [UnityTest]

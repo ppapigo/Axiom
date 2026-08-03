@@ -57,7 +57,8 @@ namespace Axiom.Combat
             float attackerAttackPower,
             float currentTime)
         {
-            if (!enabled || balance == null || _health == null || _health.IsDead)
+            if (element == SkillElement.None || !enabled || balance == null ||
+                _health == null || _health.IsDead)
             {
                 return ElementReactionResult.None;
             }

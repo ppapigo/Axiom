@@ -2,6 +2,7 @@ import {
   DEFAULT_ALLOWED_ORIGIN,
   DEFAULT_MODEL,
   buildResponsesRequest,
+  enforceRoleElementRules,
   extractOutputText,
   parseSkillDraft,
   validateGenerationRequest
@@ -63,7 +64,9 @@ export async function handleGenerateSkill(request, response, dependencies = {}) 
       return response.status(502).json({ error: "AI provider request failed." });
     }
 
-    const draft = parseSkillDraft(extractOutputText(responseBody));
+    const draft = enforceRoleElementRules(
+      parseSkillDraft(extractOutputText(responseBody)),
+      validation.value.role);
     return response.status(200).json(draft);
   } catch (error) {
     console.error("Axiom skill generation failed:", error?.message ?? "unknown error");

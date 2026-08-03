@@ -48,6 +48,13 @@ namespace Axiom.Skill
                 result.AddError("This skill type requires a positive radius.");
             }
 
+            if (role != null && definition.Slot != SkillSlot.BasicAttack &&
+                definition.Element != SkillElement.None &&
+                !RoleElementPool.IsElementAllowed(role.RoleId, definition.Element))
+            {
+                result.AddError("This element is not available to this role.");
+            }
+
             ValidateRoleRules(definition, role, balance, result);
             return result;
         }

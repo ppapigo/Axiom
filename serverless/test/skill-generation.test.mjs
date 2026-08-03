@@ -4,6 +4,7 @@ import { handleGenerateSkill } from "../api/generate-skill.js";
 import {
   SKILL_RESPONSE_SCHEMA,
   buildResponsesRequest,
+  enforceRoleElementRules,
   extractOutputText,
   parseSkillDraft,
   validateGenerationRequest
@@ -64,6 +65,9 @@ test("builds a strict Responses API JSON schema request", () => {
   assert.equal(request.text.format.type, "json_schema");
   assert.equal(request.text.format.strict, true);
   assert.equal(request.text.format.schema, SKILL_RESPONSE_SCHEMA);
+  assert.match(request.instructions, /Mage can use every element/);
+  assert.match(request.instructions, /Tank can use only Wind or Earth/);
+  assert.match(request.instructions, /Assassin can use only Poison or Lightning/);
 });
 
 test("extracts and validates the generated skill draft", () => {
@@ -76,6 +80,16 @@ test("extracts and validates the generated skill draft", () => {
 
   assert.deepEqual(parseSkillDraft(text), validDraft);
   assert.throws(() => parseSkillDraft("{}"), /displayName/);
+});
+
+test("enforces role element allowlists on generated drafts", () => {
+  assert.equal(enforceRoleElementRules(validDraft, "Tank").element, "None");
+  assert.equal(enforceRoleElementRules(
+    { ...validDraft, element: "Earth" }, "Tank").element, "Earth");
+  assert.equal(enforceRoleElementRules(validDraft, "Mage").element, "Fire");
+  assert.equal(enforceRoleElementRules(validDraft, "Assassin").element, "None");
+  assert.equal(enforceRoleElementRules(
+    { ...validDraft, element: "Lightning" }, "Assassin").element, "Lightning");
 });
 
 test("handles CORS preflight without calling OpenAI", async () => {

@@ -57,13 +57,10 @@ namespace Axiom.Demo
                 },
                 SkillSlot.E => role == CharacterRoleId.Mage
                     ? SkillElement.Ice
-                    : SkillElement.Wind,
-                SkillSlot.Ultimate => role switch
-                {
-                    CharacterRoleId.Mage => SkillElement.Fire,
-                    CharacterRoleId.Assassin => SkillElement.Poison,
-                    _ => SkillElement.Earth
-                },
+                    : role == CharacterRoleId.Assassin
+                        ? SkillElement.Lightning
+                        : SkillElement.Wind,
+                SkillSlot.Ultimate => SkillElement.None,
                 _ => throw new ArgumentOutOfRangeException(nameof(slot), slot, null)
             };
         }

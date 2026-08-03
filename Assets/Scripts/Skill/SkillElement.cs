@@ -8,6 +8,7 @@ namespace Axiom.Skill
         Poison,
         Water,
         Wind,
-        Earth
+        Earth,
+        None
     }
 }

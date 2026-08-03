@@ -22,6 +22,7 @@ namespace Axiom.Skill.Generation
             string normalizedPrompt = (prompt ?? string.Empty).Trim();
             SkillGenerationResponseDto response = CreateRolePreset(role, slot);
             ApplyPromptKeywords(response, normalizedPrompt);
+            EnforceRoleElement(role, response);
             response.description = string.IsNullOrWhiteSpace(normalizedPrompt)
                 ? "안전한 역할별 기본 스킬 초안"
                 : normalizedPrompt;
@@ -155,6 +156,21 @@ namespace Axiom.Skill.Generation
             }
 
             return false;
+        }
+
+        private static void EnforceRoleElement(
+            CharacterRoleId role,
+            SkillGenerationResponseDto response)
+        {
+            if (!Enum.TryParse(response.element, true, out SkillElement element) ||
+                RoleElementPool.IsElementAllowed(role, element))
+            {
+                return;
+            }
+
+            response.element = role == CharacterRoleId.Tank
+                ? nameof(SkillElement.Earth)
+                : nameof(SkillElement.Poison);
         }
     }
 }

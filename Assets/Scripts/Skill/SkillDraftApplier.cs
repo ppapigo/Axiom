@@ -43,7 +43,7 @@ namespace Axiom.Skill
                 baseDefinition.Radius + modifiers.RadiusIncrease,
                 baseDefinition.ProjectileSpeed,
                 ResolveCrowdControl(baseDefinition.CrowdControl, modifiers),
-                draft.Element ?? baseDefinition.Element,
+                draft.Element ?? SkillElement.None,
                 balance == null
                     ? baseDefinition.PointCost
                     : balance.CalculatePointCost(

@@ -443,7 +443,6 @@ namespace Axiom.Demo
             _isChoosingAppearance = false;
             _selectedEquipmentAppearance = null;
             _selectedAppearanceStyle = BuiltInAppearanceStyle.Classic;
-            RegisterDefaultElements(selectedRole);
             PrepareSkillSlot(SkillSlot.Q);
         }
 
@@ -700,22 +699,6 @@ namespace Axiom.Demo
             combatBehaviours.Add(dashController);
             combatBehaviours.Add(basicAttack);
             combatBehaviours.Add(skills);
-        }
-
-        private void RegisterDefaultElements(CharacterRoleId role)
-        {
-            _roleElementPool.TryAssign(
-                role,
-                SkillSlot.Q,
-                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.Q));
-            _roleElementPool.TryAssign(
-                role,
-                SkillSlot.E,
-                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.E));
-            _roleElementPool.TryAssign(
-                role,
-                SkillSlot.Ultimate,
-                DemoSkillDefinitionFactory.GetDefaultElement(role, SkillSlot.Ultimate));
         }
 
         private void CreateEnvironment()

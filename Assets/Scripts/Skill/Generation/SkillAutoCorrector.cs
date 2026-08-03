@@ -122,7 +122,7 @@ namespace Axiom.Skill.Generation
                  !elementPool.CanAssign(role.RoleId, baseDefinition.Slot, element.Value)))
             {
                 element = null;
-                changes.Add("Removed an unavailable role element.");
+                changes.Add("Removed an unavailable element or a third elemental skill.");
             }
 
             SkillPointModifiers sourceModifiers = source.Modifiers;

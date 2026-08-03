@@ -244,7 +244,7 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
-        public void SkillRuleValidator_RejectsThirdRoleElement()
+        public void SkillRuleValidator_RejectsThirdElementalSkill()
         {
             SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
             MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();
@@ -265,7 +265,37 @@ namespace Axiom.Tests.EditMode
                 pool);
 
             Assert.That(result.IsValid, Is.False);
-            Assert.That(string.Join(" ", result.Errors), Does.Contain("two distinct elements"));
+            Assert.That(string.Join(" ", result.Errors),
+                Does.Contain("Only two Q/E/R skills"));
+            Object.DestroyImmediate(role);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void SkillRuleValidator_RejectsElementOutsideRoleList()
+        {
+            SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
+            TankRoleDefinition role = ScriptableObject.CreateInstance<TankRoleDefinition>();
+            var draft = new SkillDraft(
+                new SkillPointModifiers(),
+                SkillElement.Fire,
+                SkillType.Cone,
+                SkillSlot.Q);
+
+            SkillRuleValidationResult result = SkillRuleValidator.Validate(
+                draft,
+                CreateBaseDefinition(
+                    SkillSlot.Q,
+                    SkillType.Cone,
+                    range: 3f,
+                    radius: 1f),
+                role,
+                balance,
+                new RoleElementPool());
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors),
+                Does.Contain("not available to this role"));
             Object.DestroyImmediate(role);
             Object.DestroyImmediate(balance);
         }
@@ -417,7 +447,7 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
-        public void SkillAutoCorrector_RemovesThirdRoleElement()
+        public void SkillAutoCorrector_RemovesThirdElementalSkill()
         {
             SkillBalanceProfile balance = ScriptableObject.CreateInstance<SkillBalanceProfile>();
             MageRoleDefinition role = ScriptableObject.CreateInstance<MageRoleDefinition>();

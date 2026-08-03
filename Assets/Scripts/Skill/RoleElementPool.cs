@@ -5,18 +5,53 @@ namespace Axiom.Skill
 {
     public sealed class RoleElementPool
     {
-        private const int MaximumDistinctElements = 2;
+        public const int MaximumElementSkillCount = 2;
         private readonly Dictionary<CharacterRoleId, Dictionary<SkillSlot, SkillElement>>
             _assignments =
                 new Dictionary<CharacterRoleId, Dictionary<SkillSlot, SkillElement>>();
+
+        public static bool IsElementAllowed(
+            CharacterRoleId role,
+            SkillElement element)
+        {
+            if (element == SkillElement.None)
+            {
+                return true;
+            }
+
+            return role switch
+            {
+                CharacterRoleId.Tank => element == SkillElement.Wind ||
+                                        element == SkillElement.Earth,
+                CharacterRoleId.Assassin => element == SkillElement.Poison ||
+                                            element == SkillElement.Lightning,
+                CharacterRoleId.Mage => true,
+                _ => false
+            };
+        }
 
         public bool CanAssign(
             CharacterRoleId role,
             SkillSlot slot,
             SkillElement element)
         {
-            HashSet<SkillElement> elements = GetDistinctElements(role, slot);
-            return elements.Contains(element) || elements.Count < MaximumDistinctElements;
+            if (slot == SkillSlot.BasicAttack && element != SkillElement.None)
+            {
+                return false;
+            }
+
+            if (!IsElementAllowed(role, element))
+            {
+                return false;
+            }
+
+            if (element == SkillElement.None)
+            {
+                return true;
+            }
+
+            return HasAssignment(role, slot) ||
+                   GetAssignedSkillCount(role) < MaximumElementSkillCount;
         }
 
         public bool TryAssign(
@@ -24,6 +59,12 @@ namespace Axiom.Skill
             SkillSlot slot,
             SkillElement element)
         {
+            if (element == SkillElement.None)
+            {
+                ClearAssignment(role, slot);
+                return true;
+            }
+
             if (!CanAssign(role, slot, element))
             {
                 return false;
@@ -47,30 +88,21 @@ namespace Axiom.Skill
             }
         }
 
-        public int GetDistinctElementCount(CharacterRoleId role)
+        public int GetAssignedSkillCount(CharacterRoleId role)
         {
-            return GetDistinctElements(role, null).Count;
+            return _assignments.TryGetValue(
+                role,
+                out Dictionary<SkillSlot, SkillElement> slots)
+                ? slots.Count
+                : 0;
         }
 
-        private HashSet<SkillElement> GetDistinctElements(
-            CharacterRoleId role,
-            SkillSlot? excludedSlot)
+        private bool HasAssignment(CharacterRoleId role, SkillSlot slot)
         {
-            var result = new HashSet<SkillElement>();
-            if (!_assignments.TryGetValue(role, out Dictionary<SkillSlot, SkillElement> slots))
-            {
-                return result;
-            }
-
-            foreach (KeyValuePair<SkillSlot, SkillElement> assignment in slots)
-            {
-                if (!excludedSlot.HasValue || assignment.Key != excludedSlot.Value)
-                {
-                    result.Add(assignment.Value);
-                }
-            }
-
-            return result;
+            return _assignments.TryGetValue(
+                       role,
+                       out Dictionary<SkillSlot, SkillElement> slots) &&
+                   slots.ContainsKey(slot);
         }
     }
 }

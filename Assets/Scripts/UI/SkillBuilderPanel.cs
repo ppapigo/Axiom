@@ -218,16 +218,21 @@ namespace Axiom.UI
                 return false;
             }
 
-            _savedDraft = draft;
-            if (_savedDraft.Element.HasValue &&
+            if (draft.Element.HasValue &&
                 !_roleElementPool.TryAssign(
                     _role,
                     _slot,
-                    _savedDraft.Element.Value))
+                    draft.Element.Value))
             {
                 return false;
             }
 
+            if (!draft.Element.HasValue)
+            {
+                _roleElementPool.ClearAssignment(_role, _slot);
+            }
+
+            _savedDraft = draft;
             _hasSavedDraft = true;
             _savedDrafts[_slot] = _savedDraft;
             _isVisible = false;
@@ -293,8 +298,10 @@ namespace Axiom.UI
 
             GUI.Label(
                 new Rect(left + 24f, top + 298f, 500f, 24f),
-                $"ELEMENT ({_balance.ElementCost}P, 1 PER SKILL)  " +
-                $"ROLE POOL {_roleElementPool.GetDistinctElementCount(_role)}/2");
+                $"ELEMENT ({_balance.ElementCost}P, MAX 1 PER SKILL)  " +
+                $"ELEMENT SLOTS {_roleElementPool.GetAssignedSkillCount(_role)}/" +
+                $"{RoleElementPool.MaximumElementSkillCount}  " +
+                GetAllowedElementLabel());
             SkillElement[] elements =
             {
                 SkillElement.Fire,
@@ -546,6 +553,17 @@ namespace Axiom.UI
             }
 
             GUI.enabled = true;
+        }
+
+        private string GetAllowedElementLabel()
+        {
+            return _role switch
+            {
+                CharacterRoleId.Tank => "ALLOWED: WIND / EARTH",
+                CharacterRoleId.Assassin => "ALLOWED: POISON / LIGHTNING",
+                CharacterRoleId.Mage => "ALLOWED: ALL",
+                _ => "ALLOWED: NONE"
+            };
         }
 
         private void DrawType(float left, float top, SkillType type, string label)

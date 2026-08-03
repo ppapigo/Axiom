@@ -166,21 +166,59 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
-        public void RoleElementPool_LimitsDistinctElementsAcrossRoleSlots()
+        public void SkillDraftWithoutElement_AppliesAsNone()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            SkillDefinition definition = SkillDraftApplier.Apply(
+                CreateSkill(SkillSlot.Q, SkillType.Projectile),
+                new SkillDraft(
+                    new SkillPointModifiers(),
+                    element: null,
+                    SkillType.Projectile,
+                    SkillSlot.Q),
+                role: null,
+                balance);
+
+            Assert.That(definition.Element, Is.EqualTo(SkillElement.None));
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
+        public void RoleElementPool_LimitsElementalSkillsAcrossRoleSlots()
         {
             var pool = new RoleElementPool();
 
             Assert.That(pool.TryAssign(
                 CharacterRoleId.Mage, SkillSlot.Q, SkillElement.Fire), Is.True);
             Assert.That(pool.TryAssign(
-                CharacterRoleId.Mage, SkillSlot.E, SkillElement.Ice), Is.True);
+                CharacterRoleId.Mage, SkillSlot.E, SkillElement.Fire), Is.True);
             Assert.That(pool.TryAssign(
                 CharacterRoleId.Mage, SkillSlot.Ultimate, SkillElement.Lightning), Is.False);
+            pool.ClearAssignment(CharacterRoleId.Mage, SkillSlot.E);
             Assert.That(pool.TryAssign(
-                CharacterRoleId.Mage, SkillSlot.Ultimate, SkillElement.Fire), Is.True);
-            Assert.That(pool.TryAssign(
-                CharacterRoleId.Assassin, SkillSlot.Ultimate, SkillElement.Lightning), Is.True);
-            Assert.That(pool.GetDistinctElementCount(CharacterRoleId.Mage), Is.EqualTo(2));
+                CharacterRoleId.Mage, SkillSlot.Ultimate, SkillElement.Lightning), Is.True);
+            Assert.That(pool.GetAssignedSkillCount(CharacterRoleId.Mage), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void RoleElementPool_EnforcesRoleElementLists()
+        {
+            var pool = new RoleElementPool();
+
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Tank, SkillSlot.Q, SkillElement.Fire), Is.False);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Tank, SkillSlot.Q, SkillElement.Wind), Is.True);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Tank, SkillSlot.Q, SkillElement.Earth), Is.True);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Assassin, SkillSlot.Q, SkillElement.Earth), Is.False);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Assassin, SkillSlot.Q, SkillElement.Poison), Is.True);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Assassin, SkillSlot.Q, SkillElement.Lightning), Is.True);
+            Assert.That(pool.CanAssign(
+                CharacterRoleId.Mage, SkillSlot.Q, SkillElement.Water), Is.True);
         }
 
         [Test]
@@ -620,9 +658,19 @@ namespace Axiom.Tests.EditMode
             TankRoleDefinition tank = ScriptableObject.CreateInstance<TankRoleDefinition>();
 
             SkillValidationResult normal = SkillValidator.Validate(
-                CreateSkill(SkillSlot.Q, SkillType.Projectile), tank, balance);
+                CreateSkill(
+                    SkillSlot.Q,
+                    SkillType.Projectile,
+                    element: SkillElement.Earth),
+                tank,
+                balance);
             SkillValidationResult ultimate = SkillValidator.Validate(
-                CreateSkill(SkillSlot.Ultimate, SkillType.Projectile), tank, balance);
+                CreateSkill(
+                    SkillSlot.Ultimate,
+                    SkillType.Projectile,
+                    element: SkillElement.Earth),
+                tank,
+                balance);
 
             Assert.That(normal.IsValid, Is.False);
             Assert.That(ultimate.IsValid, Is.True, string.Join("\n", ultimate.Errors));
@@ -697,6 +745,30 @@ namespace Axiom.Tests.EditMode
         }
 
         [Test]
+        public void Loadout_RejectsMoreThanTwoElementalSkills()
+        {
+            SkillBalanceProfile balance = CreateBalance();
+            MageRoleDefinition mage = ScriptableObject.CreateInstance<MageRoleDefinition>();
+            SkillDefinition q = CreateSkill(
+                SkillSlot.Q, SkillType.Projectile, element: SkillElement.Fire);
+            SkillDefinition e = CreateSkill(
+                SkillSlot.E, SkillType.Projectile, element: SkillElement.Ice);
+            SkillDefinition ultimate = CreateSkill(
+                SkillSlot.Ultimate,
+                SkillType.Projectile,
+                element: SkillElement.Lightning);
+
+            SkillValidationResult result = SkillLoadoutValidator.Validate(
+                new[] { q, e, ultimate }, mage, balance);
+
+            Assert.That(result.IsValid, Is.False);
+            Assert.That(string.Join(" ", result.Errors),
+                Does.Contain("Only two Q/E/R skills"));
+            Object.DestroyImmediate(mage);
+            Object.DestroyImmediate(balance);
+        }
+
+        [Test]
         public void CastPlanner_RejectsAimBeyondRange()
         {
             SkillDefinition skill = CreateSkill(SkillSlot.Q, SkillType.Projectile);
@@ -741,7 +813,8 @@ namespace Axiom.Tests.EditMode
             SkillType type,
             float coefficient = 1.2f,
             float radius = 1f,
-            int pointCost = 1)
+            int pointCost = 1,
+            SkillElement element = SkillElement.Fire)
         {
             return new SkillDefinition(
                 "Test Skill",
@@ -754,7 +827,7 @@ namespace Axiom.Tests.EditMode
                 radius,
                 10f,
                 CrowdControlType.None,
-                SkillElement.Fire,
+                element,
                 pointCost);
         }
     }

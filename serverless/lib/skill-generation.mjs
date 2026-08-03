@@ -22,6 +22,11 @@ const ELEMENTS = Object.freeze([
   "Wind",
   "Earth"
 ]);
+const ROLE_ELEMENTS = Object.freeze({
+  Tank: Object.freeze(["Wind", "Earth"]),
+  Mage: ELEMENTS,
+  Assassin: Object.freeze(["Poison", "Lightning"])
+});
 
 export const SKILL_RESPONSE_SCHEMA = Object.freeze({
   type: "object",
@@ -58,8 +63,10 @@ export const SKILL_RESPONSE_SCHEMA = Object.freeze({
 
 const INSTRUCTIONS = `You create one balanced PvP arena skill draft for Axiom.
 Return only the requested JSON schema. Use exactly one skill type, at most one crowd
-control, and at most one element for this draft. The Unity client enforces the final
-100 point budget and may auto-correct values. Tank cannot use long-range attacks,
+control, and at most one element for this draft. Across Q, E, and R, only two skills
+may have an element; the Unity client enforces this loadout limit and the final
+100 point budget. Mage can use every element. Tank can use only Wind or Earth.
+Assassin can use only Poison or Lightning. Tank cannot use long-range attacks,
 Mage may use area attacks, and Assassin should prefer focused or small-area attacks.
 Do not include markdown, commentary, or fields outside the schema.`;
 
@@ -162,6 +169,15 @@ export function parseSkillDraft(outputText) {
   assertBoolean(draft, "createsShield");
   assertBoolean(draft, "heals");
   return draft;
+}
+
+export function enforceRoleElementRules(draft, role) {
+  const allowed = ROLE_ELEMENTS[role] ?? [];
+  if (draft.element === "None" || allowed.includes(draft.element)) {
+    return draft;
+  }
+
+  return { ...draft, element: "None" };
 }
 
 function invalid(error) {

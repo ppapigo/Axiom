@@ -54,10 +54,15 @@ namespace Axiom.Skill.Generation
                 errors.Add("A generated skill can select at most one crowd control effect.");
             }
 
-            if (role != null && elementPool != null && draft.Element.HasValue &&
-                !elementPool.CanAssign(role.RoleId, draft.Slot, draft.Element.Value))
+            if (role != null && draft.Element.HasValue &&
+                !RoleElementPool.IsElementAllowed(role.RoleId, draft.Element.Value))
             {
-                errors.Add("This role already uses two distinct elements.");
+                errors.Add("This element is not available to this role.");
+            }
+            else if (role != null && elementPool != null && draft.Element.HasValue &&
+                     !elementPool.CanAssign(role.RoleId, draft.Slot, draft.Element.Value))
+            {
+                errors.Add("Only two Q/E/R skills can have an element.");
             }
 
             if (role != null && balance != null && hasSupportedType)

@@ -144,6 +144,7 @@ namespace Axiom.Demo
                 effectObject.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
             }
             ParticleSystem particles = effectObject.AddComponent<ParticleSystem>();
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             ConfigureMain(particles, element, stage, size);
             ConfigureEmission(particles, element, stage);
             ConfigureShape(particles, stage, size);

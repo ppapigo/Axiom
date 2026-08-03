@@ -18,14 +18,6 @@ namespace Axiom.Demo
     [DisallowMultipleComponent]
     public sealed class DemoArenaBootstrap : MonoBehaviour
     {
-        private enum BuiltInAppearanceStyle
-        {
-            Classic,
-            Obsidian,
-            Ivory,
-            Custom
-        }
-
         private readonly List<InputAction> _runtimeActions = new List<InputAction>();
         private readonly List<CharacterHealth> _teamAHealth = new List<CharacterHealth>();
         private readonly List<CharacterHealth> _teamBHealth = new List<CharacterHealth>();
@@ -50,7 +42,7 @@ namespace Axiom.Demo
         private SkillBuilderPanel _skillBuilderPanel;
         private CharacterRoleId? _selectedRole;
         private EquipmentAppearanceDefinition _selectedEquipmentAppearance;
-        private BuiltInAppearanceStyle _selectedAppearanceStyle;
+        private BuiltInEquipmentStyle _selectedBuiltInStyle;
         private bool _isChoosingAppearance;
         private bool _gameStarted;
         private TeamId? _winner;
@@ -236,17 +228,17 @@ namespace Axiom.Demo
 
             DrawBuiltInAppearanceButton(
                 new Rect(left + 35f, top + 126f, 235f, 104f),
-                BuiltInAppearanceStyle.Classic,
+                BuiltInEquipmentStyle.Classic,
                 "CLASSIC KIT",
                 "Default role equipment");
             DrawBuiltInAppearanceButton(
                 new Rect(left + 293f, top + 126f, 235f, 104f),
-                BuiltInAppearanceStyle.Obsidian,
+                BuiltInEquipmentStyle.Obsidian,
                 "OBSIDIAN KIT",
                 "Dark equipment finish");
             DrawBuiltInAppearanceButton(
                 new Rect(left + 551f, top + 126f, 235f, 104f),
-                BuiltInAppearanceStyle.Ivory,
+                BuiltInEquipmentStyle.Ivory,
                 "IVORY KIT",
                 "Ivory equipment finish");
 
@@ -261,14 +253,12 @@ namespace Axiom.Demo
                     }
 
                     float customLeft = left + 35f + (customCount * 258f);
-                    bool selected = _selectedAppearanceStyle == BuiltInAppearanceStyle.Custom &&
-                                    _selectedEquipmentAppearance == appearance;
+                    bool selected = _selectedEquipmentAppearance == appearance;
                     string marker = selected ? "[SELECTED]" : "[CUSTOM EQUIPMENT]";
                     if (GUI.Button(
                             new Rect(customLeft, top + 250f, 235f, 72f),
                             $"{marker} {appearance.DisplayName}\n{appearance.Description}"))
                     {
-                        _selectedAppearanceStyle = BuiltInAppearanceStyle.Custom;
                         _selectedEquipmentAppearance = appearance;
                     }
                     customCount++;
@@ -296,40 +286,35 @@ namespace Axiom.Demo
 
         private void DrawBuiltInAppearanceButton(
             Rect rect,
-            BuiltInAppearanceStyle style,
+            BuiltInEquipmentStyle style,
             string title,
             string description)
         {
-            bool selected = _selectedAppearanceStyle == style;
+            bool selected = _selectedEquipmentAppearance == null &&
+                            _selectedBuiltInStyle == style;
             string marker = selected ? "[SELECTED]" : "[SELECT]";
             if (GUI.Button(rect, $"{marker}\n{title}\n{description}"))
             {
-                _selectedAppearanceStyle = style;
-                _selectedEquipmentAppearance = null;
+                SelectBuiltInAppearance(style);
             }
+        }
+
+        public void SelectBuiltInAppearance(BuiltInEquipmentStyle style)
+        {
+            _selectedBuiltInStyle = style;
+            _selectedEquipmentAppearance = null;
         }
 
         private string GetSelectedAppearanceName()
         {
-            return _selectedAppearanceStyle == BuiltInAppearanceStyle.Custom &&
-                   _selectedEquipmentAppearance != null
+            return _selectedEquipmentAppearance != null
                 ? _selectedEquipmentAppearance.DisplayName
-                : _selectedAppearanceStyle switch
+                : _selectedBuiltInStyle switch
                 {
-                    BuiltInAppearanceStyle.Obsidian => "OBSIDIAN KIT",
-                    BuiltInAppearanceStyle.Ivory => "IVORY KIT",
+                    BuiltInEquipmentStyle.Obsidian => "OBSIDIAN KIT",
+                    BuiltInEquipmentStyle.Ivory => "IVORY KIT",
                     _ => "CLASSIC KIT"
                 };
-        }
-
-        private Color? GetSelectedBuiltInTint()
-        {
-            return _selectedAppearanceStyle switch
-            {
-                BuiltInAppearanceStyle.Obsidian => new Color(0.08f, 0.09f, 0.12f),
-                BuiltInAppearanceStyle.Ivory => new Color(0.78f, 0.75f, 0.65f),
-                _ => null
-            };
         }
 
         private void DrawRoundBanner()
@@ -442,7 +427,7 @@ namespace Axiom.Demo
             _selectedRole = selectedRole;
             _isChoosingAppearance = false;
             _selectedEquipmentAppearance = null;
-            _selectedAppearanceStyle = BuiltInAppearanceStyle.Classic;
+            _selectedBuiltInStyle = BuiltInEquipmentStyle.Classic;
             PrepareSkillSlot(SkillSlot.Q);
         }
 
@@ -489,7 +474,7 @@ namespace Axiom.Demo
         {
             _isChoosingAppearance = true;
             _selectedEquipmentAppearance = null;
-            _selectedAppearanceStyle = BuiltInAppearanceStyle.Classic;
+            _selectedBuiltInStyle = BuiltInEquipmentStyle.Classic;
             _roundMessage = $"{_selectedRole}: Choose appearance";
         }
 
@@ -572,7 +557,9 @@ namespace Axiom.Demo
                 roleId,
                 team == TeamId.TeamA,
                 isPlayer ? _selectedEquipmentAppearance : null,
-                isPlayer ? GetSelectedBuiltInTint() : null);
+                isPlayer
+                    ? _selectedBuiltInStyle
+                    : BuiltInEquipmentStyle.Classic);
 
             CharacterController controller = character.AddComponent<CharacterController>();
             controller.height = 2f;

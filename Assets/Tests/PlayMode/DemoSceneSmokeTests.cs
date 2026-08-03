@@ -57,6 +57,10 @@ namespace Axiom.Tests.PlayMode
 
             Assert.That(bootstrap.IsChoosingAppearance, Is.True);
             Assert.That(bootstrap.SelectedAppearanceName, Is.EqualTo("CLASSIC KIT"));
+            bootstrap.SelectBuiltInAppearance(BuiltInEquipmentStyle.Obsidian);
+            Assert.That(bootstrap.SelectedAppearanceName, Is.EqualTo("OBSIDIAN KIT"));
+            bootstrap.SelectBuiltInAppearance(BuiltInEquipmentStyle.Ivory);
+            Assert.That(bootstrap.SelectedAppearanceName, Is.EqualTo("IVORY KIT"));
             Assert.That(Object.FindFirstObjectByType<ThreeVsThreeMatchManager>(), Is.Null);
             Assert.That(Object.FindObjectsByType<CharacterHealth>(
                 FindObjectsSortMode.None), Is.Empty);
@@ -155,6 +159,9 @@ namespace Axiom.Tests.PlayMode
             Assert.That(GameObject.Find("Stick Torso"), Is.Not.Null);
             Assert.That(GameObject.Find("Tank Shield"), Is.Not.Null);
             Assert.That(GameObject.Find("Mage Staff"), Is.Not.Null);
+            Assert.That(GameObject.Find("Mage Ivory Crown"), Is.Not.Null);
+            Assert.That(GameObject.Find("Mage Ivory Halo"), Is.Not.Null);
+            Assert.That(GameObject.Find("Mage Obsidian Crown"), Is.Null);
             Assert.That(GameObject.Find("Assassin Left Dagger"), Is.Not.Null);
             Assert.That(GameObject.Find("Assassin Right Dagger"), Is.Not.Null);
             Assert.That(GameObject.Find("Tank Shoulder"), Is.Null);

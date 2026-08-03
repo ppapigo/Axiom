@@ -11,7 +11,7 @@ namespace Axiom.Demo
             CharacterRoleId role,
             bool blueTeam,
             EquipmentAppearanceDefinition equipmentAppearance = null,
-            Color? builtInTint = null)
+            BuiltInEquipmentStyle builtInStyle = BuiltInEquipmentStyle.Classic)
         {
             var visualRoot = new GameObject($"{role} Visual").transform;
             visualRoot.SetParent(character, false);
@@ -35,13 +35,13 @@ namespace Axiom.Demo
             switch (role)
             {
                 case CharacterRoleId.Tank:
-                    BuildTank(visualRoot, teamAccent, builtInTint);
+                    BuildTank(visualRoot, teamAccent, builtInStyle);
                     break;
                 case CharacterRoleId.Mage:
-                    BuildMage(visualRoot, teamAccent, builtInTint);
+                    BuildMage(visualRoot, teamAccent, builtInStyle);
                     break;
                 case CharacterRoleId.Assassin:
-                    BuildAssassin(visualRoot, teamAccent, builtInTint);
+                    BuildAssassin(visualRoot, teamAccent, builtInStyle);
                     break;
             }
 
@@ -145,16 +145,28 @@ namespace Axiom.Demo
             }
         }
 
-        private static void BuildTank(Transform root, Color accent, Color? builtInTint)
+        private static void BuildTank(
+            Transform root,
+            Color accent,
+            BuiltInEquipmentStyle style)
         {
-            Color armour = builtInTint ?? new Color(0.32f, 0.36f, 0.43f);
-            CreatePart(
+            Color armour = GetEquipmentColor(style, new Color(0.32f, 0.36f, 0.43f));
+            PrimitiveType shieldPrimitive = style == BuiltInEquipmentStyle.Ivory
+                ? PrimitiveType.Sphere
+                : PrimitiveType.Cube;
+            Vector3 shieldScale = style switch
+            {
+                BuiltInEquipmentStyle.Obsidian => new Vector3(0.8f, 1.18f, 0.16f),
+                BuiltInEquipmentStyle.Ivory => new Vector3(0.82f, 1.06f, 0.18f),
+                _ => new Vector3(0.72f, 1.05f, 0.16f)
+            };
+            Transform shield = CreatePart(
                 root,
                 "Tank Shield",
-                PrimitiveType.Cube,
+                shieldPrimitive,
                 new Vector3(-0.62f, 0f, 0.3f),
                 Quaternion.Euler(0f, -12f, 0f),
-                new Vector3(0.72f, 1.05f, 0.16f),
+                shieldScale,
                 armour);
             CreatePart(
                 root,
@@ -164,51 +176,173 @@ namespace Axiom.Demo
                 Quaternion.Euler(0f, -12f, 0f),
                 new Vector3(0.28f, 0.28f, 0.05f),
                 accent);
+
+            if (style == BuiltInEquipmentStyle.Obsidian)
+            {
+                CreatePart(
+                    shield,
+                    "Tank Obsidian Crest",
+                    PrimitiveType.Cube,
+                    new Vector3(0f, 0.52f, 0.7f),
+                    Quaternion.Euler(0f, 0f, 45f),
+                    new Vector3(0.32f, 0.32f, 0.4f),
+                    accent);
+                CreatePart(
+                    shield,
+                    "Tank Obsidian Spine",
+                    PrimitiveType.Cube,
+                    new Vector3(0f, 0f, 0.7f),
+                    Quaternion.identity,
+                    new Vector3(0.14f, 0.82f, 0.38f),
+                    accent);
+            }
+            else if (style == BuiltInEquipmentStyle.Ivory)
+            {
+                CreatePart(
+                    shield,
+                    "Tank Ivory Boss",
+                    PrimitiveType.Sphere,
+                    new Vector3(0f, 0f, 0.68f),
+                    Quaternion.identity,
+                    new Vector3(0.42f, 0.3f, 0.5f),
+                    accent);
+            }
         }
 
-        private static void BuildMage(Transform root, Color accent, Color? builtInTint)
+        private static void BuildMage(
+            Transform root,
+            Color accent,
+            BuiltInEquipmentStyle style)
         {
-            Color staff = builtInTint ?? new Color(0.35f, 0.2f, 0.1f);
+            Color staff = GetEquipmentColor(style, new Color(0.35f, 0.2f, 0.1f));
+            float staffLength = style == BuiltInEquipmentStyle.Obsidian ? 0.9f : 0.78f;
             CreatePart(
                 root,
                 "Mage Staff",
                 PrimitiveType.Cylinder,
                 new Vector3(0.68f, 0.05f, 0f),
                 Quaternion.Euler(0f, 0f, -8f),
-                new Vector3(0.07f, 0.78f, 0.07f),
+                new Vector3(0.07f, staffLength, 0.07f),
                 staff);
-            CreatePart(
+            Transform orb = CreatePart(
                 root,
                 "Mage Orb",
-                PrimitiveType.Sphere,
+                style == BuiltInEquipmentStyle.Obsidian
+                    ? PrimitiveType.Cube
+                    : PrimitiveType.Sphere,
                 new Vector3(0.83f, 0.92f, 0f),
-                Quaternion.identity,
-                Vector3.one * 0.26f,
+                style == BuiltInEquipmentStyle.Obsidian
+                    ? Quaternion.Euler(0f, 0f, 45f)
+                    : Quaternion.identity,
+                Vector3.one * (style == BuiltInEquipmentStyle.Ivory ? 0.32f : 0.26f),
                 accent);
+
+            if (style == BuiltInEquipmentStyle.Obsidian)
+            {
+                CreatePart(
+                    orb,
+                    "Mage Obsidian Crown",
+                    PrimitiveType.Cube,
+                    new Vector3(0f, 0.75f, 0f),
+                    Quaternion.Euler(0f, 0f, 45f),
+                    new Vector3(0.35f, 0.35f, 0.35f),
+                    staff);
+            }
+            else if (style == BuiltInEquipmentStyle.Ivory)
+            {
+                CreatePart(
+                    orb,
+                    "Mage Ivory Crown",
+                    PrimitiveType.Sphere,
+                    new Vector3(0f, 0.78f, 0f),
+                    Quaternion.identity,
+                    new Vector3(0.48f, 0.28f, 0.48f),
+                    staff);
+                CreatePart(
+                    orb,
+                    "Mage Ivory Halo",
+                    PrimitiveType.Cylinder,
+                    new Vector3(0f, 0f, 0f),
+                    Quaternion.Euler(90f, 0f, 0f),
+                    new Vector3(1.35f, 0.12f, 1.35f),
+                    staff);
+            }
         }
 
-        private static void BuildAssassin(Transform root, Color accent, Color? builtInTint)
+        private static void BuildAssassin(
+            Transform root,
+            Color accent,
+            BuiltInEquipmentStyle style)
         {
-            Color blade = builtInTint ?? accent;
-            CreatePart(
+            Color blade = GetEquipmentColor(style, accent);
+            Vector3 bladeScale = style switch
+            {
+                BuiltInEquipmentStyle.Obsidian => new Vector3(0.07f, 0.55f, 0.07f),
+                BuiltInEquipmentStyle.Ivory => new Vector3(0.14f, 0.36f, 0.08f),
+                _ => new Vector3(0.09f, 0.42f, 0.08f)
+            };
+            PrimitiveType bladePrimitive = style == BuiltInEquipmentStyle.Ivory
+                ? PrimitiveType.Capsule
+                : PrimitiveType.Cube;
+            Transform leftDagger = CreatePart(
                 root,
                 "Assassin Left Dagger",
-                PrimitiveType.Cube,
+                bladePrimitive,
                 new Vector3(-0.4f, -0.18f, 0.55f),
                 Quaternion.Euler(28f, 0f, 28f),
-                new Vector3(0.09f, 0.42f, 0.08f),
+                bladeScale,
                 blade);
-            CreatePart(
+            Transform rightDagger = CreatePart(
                 root,
                 "Assassin Right Dagger",
-                PrimitiveType.Cube,
+                bladePrimitive,
                 new Vector3(0.4f, -0.18f, 0.55f),
                 Quaternion.Euler(28f, 0f, -28f),
-                new Vector3(0.09f, 0.42f, 0.08f),
+                bladeScale,
                 blade);
+
+            if (style != BuiltInEquipmentStyle.Classic)
+            {
+                string styleName = style == BuiltInEquipmentStyle.Obsidian
+                    ? "Obsidian"
+                    : "Ivory";
+                PrimitiveType guardPrimitive = style == BuiltInEquipmentStyle.Obsidian
+                    ? PrimitiveType.Cube
+                    : PrimitiveType.Sphere;
+                CreateDaggerGuard(leftDagger, $"Assassin {styleName} Left Guard", guardPrimitive, accent);
+                CreateDaggerGuard(rightDagger, $"Assassin {styleName} Right Guard", guardPrimitive, accent);
+            }
         }
 
-        private static void CreatePart(
+        private static void CreateDaggerGuard(
+            Transform dagger,
+            string partName,
+            PrimitiveType primitive,
+            Color color)
+        {
+            CreatePart(
+                dagger,
+                partName,
+                primitive,
+                new Vector3(0f, -0.72f, 0f),
+                Quaternion.Euler(0f, 0f, 90f),
+                new Vector3(2.4f, 0.15f, 1.8f),
+                color);
+        }
+
+        private static Color GetEquipmentColor(
+            BuiltInEquipmentStyle style,
+            Color classicColor)
+        {
+            return style switch
+            {
+                BuiltInEquipmentStyle.Obsidian => new Color(0.08f, 0.09f, 0.12f),
+                BuiltInEquipmentStyle.Ivory => new Color(0.78f, 0.75f, 0.65f),
+                _ => classicColor
+            };
+        }
+
+        private static Transform CreatePart(
             Transform parent,
             string partName,
             PrimitiveType primitive,
@@ -226,6 +360,7 @@ namespace Axiom.Demo
             Object.Destroy(part.GetComponent<Collider>());
             part.GetComponent<Renderer>().material =
                 DemoArenaBootstrap.CreateDemoMaterial(color);
+            return part.transform;
         }
     }
 }
